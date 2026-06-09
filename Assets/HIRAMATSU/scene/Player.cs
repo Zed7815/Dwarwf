@@ -10,7 +10,8 @@ public class Player : MonoBehaviour
 {
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
-    moveState state = moveState.idol;
+    public int direction = 1;
+    moveState state = moveState.straight;
     // Update is called once per frame
     void Update()
     {
@@ -37,7 +38,7 @@ public class Player : MonoBehaviour
     }
     void walk()
     {
-        transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime);
+        transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime* direction);
     }
 
 
@@ -56,6 +57,17 @@ public class Player : MonoBehaviour
             case 2:
                 state = moveState.jump;
                 break;
+        }
+    }
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("wall"))
+        {
+            direction *= -1;
+
+            Vector3 scale = transform.localScale;
+            scale.x *= -1;
+            transform.localScale = scale;
         }
     }
 }
