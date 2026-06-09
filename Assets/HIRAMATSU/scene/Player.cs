@@ -32,9 +32,9 @@ public class Player : MonoBehaviour
                 break;
 
         }
-        if()
+        if(Input.GetKeyDown(KeyCode.Space))
         {
-
+            StateChange(2);
         }
     }
     void stay()
