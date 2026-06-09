@@ -8,8 +8,10 @@ public enum moveState
 }
 public class Player : MonoBehaviour
 {
+    private Rigidbody2D rb;
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
+    public float PlayerJumpPower=5.0f;
     public int direction = 1;
     moveState state = moveState.straight;
     // Update is called once per frame
@@ -26,11 +28,14 @@ public class Player : MonoBehaviour
                 break;
 
             case moveState.jump:
-
+                jump();
                 break;
 
         }
+        if()
+        {
 
+        }
     }
     void stay()
     {
@@ -39,6 +44,10 @@ public class Player : MonoBehaviour
     void walk()
     {
         transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime* direction);
+    }
+    void jump()
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, PlayerJumpPower);
     }
 
 
