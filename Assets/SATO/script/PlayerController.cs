@@ -6,11 +6,13 @@ public class PlayerController : MonoBehaviour
     public Player_walk playerWalk;  // PlayerWalkを参照 
 
     private Vector3 startPosition; // 最初の位置を覚えておく変数
+    private Vector3 startScale;      // 最初のスケールを保管
 
     void Start()
     {
         // ゲーム開始時の位置を保存しておく
         startPosition = transform.position;
+        startScale = transform.localScale;
     }
 
     public void StartMove()
@@ -28,6 +30,7 @@ public class PlayerController : MonoBehaviour
     public void ResetPosition()
     {
         transform.position = startPosition;
+        transform.localScale = startScale;
         StopMove();
         // 物理演算（Rigidbody2D）を使っている場合、速度も0
         // GetComponent<Rigidbody2D>().velocity = Vector2.zero;
