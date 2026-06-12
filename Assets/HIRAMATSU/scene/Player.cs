@@ -1,19 +1,28 @@
 using UnityEngine;
-
+public enum action
+{
+    Walk,
+    jump
+}
 public class Player : MonoBehaviour
 {
+    private SpriteRenderer sr;
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
     public float PlayerJumpPower=5.0f;
     public int direction = 1;
-       // Update is called once per frame
-    private void Start()
+    public action action = action.Walk;
+    // Update is called once per frame
+    void Start()
     {
-        
+        sr = GetComponent<SpriteRenderer>();
     }
     void Update()
     {
-        Walk();
+        if (action.Walk==action)
+        {
+            Walk();
+        }
     }
     void stay()
     {
@@ -25,12 +34,19 @@ public class Player : MonoBehaviour
     }
     void jump()
     {
-                
+        
+    }
+
+    void actionchange(int n)
+    {
+        switch (n)
+        { 
+            
+        }
+
     }
 
 
-
-   
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("wall"))
@@ -38,8 +54,15 @@ public class Player : MonoBehaviour
             direction *= -1;
 
             Vector3 scale = transform.localScale;
-            scale.x *= -1;
             transform.localScale = scale;
+            if(sr.flipX == true)
+            {
+                sr.flipX = false;
+            }
+            else if(sr.flipX == false)
+            {
+                sr.flipX = true;
+            }
         }
     }
 }

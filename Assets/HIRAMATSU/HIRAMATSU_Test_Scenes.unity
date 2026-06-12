@@ -152,7 +152,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::move
   PlayerSpeed: 5
+  PlayerJumpPower: 5
   direction: 1
+  action: 0
 --- !u!50 &160573482
 Rigidbody2D:
   serializedVersion: 5
@@ -179,7 +181,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 3
 --- !u!212 &160573483
 SpriteRenderer:
   serializedVersion: 2
