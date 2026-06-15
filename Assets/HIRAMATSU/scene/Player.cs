@@ -1,14 +1,18 @@
 using UnityEngine;
+using System.Collections;
 public enum action
 {
+    Stay,
     Walk,
-    jump
+    Agojump,
+    Jump
 }
 public class Player : MonoBehaviour
 {
     private SpriteRenderer sr;
     private Rigidbody2D rb;
-    public bool jumpRequest = false;
+    public bool jumpRequest = true;
+    public bool agojumpRequest = false;
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
     public float PlayerJumpPower=5.0f;
@@ -27,10 +31,10 @@ public class Player : MonoBehaviour
         {
             Walk();
         }
-        if (jumpRequest)
+        if (agojumpRequest)
         {
-            jump();
-            jumpRequest = false; // 実行したら消す
+            StartCoroutine(AgoJump());
+            agojumpRequest = false; // 実行したら消す
         }
     }
     void stay()
@@ -41,16 +45,48 @@ public class Player : MonoBehaviour
     {
         transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime* direction);
     }
-    void jump()
+    IEnumerator Jump()
     {
-        rb.AddForce(Vector2.up * PlayerJumpPower, ForceMode2D.Impulse);
+        yield return new WaitForSeconds(0.75f);
+        jumpRequest = true;
+        rb.linearVelocity = new Vector2(direction * 1f, playerJumpPower);
+        action = action.Walk;
+    }
+    IEnumerator AgoJump()
+    {
+
+        Vector3 startPos = transform.position;
+
+        float duration = 1f;//ジャンプの時間
+        float height = 1.5f;  // ジャンプの高さ
+        float distance = 4f; // 前に進む距離
+
+        // 0.5までにすると放物線の頂点で終わる
+        for (float x = 0; x <= 0.5f; x += Time.deltaTime / duration)
+        {
+            float y = 4 * height * x * (1 - x);
+
+            transform.position = startPos +
+                new Vector3(distance * direction * x, y, 0);
+
+            yield return null;
+        }
+
+        action = action.Agojump;
     }
 
-    void actionchange(int n)
+    public void actionchange(int n)
     {
+        //Stay,
+        //Walk,
+        //Agojump,
+        //Jump
         switch (n)
         { 
-            
+            case 0: action = action.Stay; break;
+            case 1: action = action.Walk; break;
+            case 2: agojumpRequest = true; break;
+            case 3: action = action.Jump; break;
         }
 
     }
@@ -66,6 +102,14 @@ public class Player : MonoBehaviour
             transform.localScale = scale;
             scale.x = -1;
             sr.flipX = !sr.flipX;
+        }
+        if(collision.gameObject.CompareTag("bane"))
+        {
+            if(jumpRequest)
+            {
+                jumpRequest = false;
+            StartCoroutine(Jump());
+            }
         }
     }
 }
