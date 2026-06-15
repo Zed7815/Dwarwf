@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Player_jump : MonoBehaviour
 {
@@ -8,7 +8,7 @@ public class Player_jump : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("bane"))
         {
-            Debug.Log("‚¤‚È‚¬ƒpƒC");
+            Debug.Log("ã†ãªããƒ‘ã‚¤");
             player.actionchange(2);
         }
     }

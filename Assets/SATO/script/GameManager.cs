@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     public GameObject startButton;
     public GameObject resetButton;
 
+    public BlockManager blockManager;
+
     void Start()
     {
         SetUI();
@@ -31,6 +33,7 @@ public class GameManager : MonoBehaviour
     {
         currentState = GameState.Edit;
         player.ResetPosition();
+        blockManager.ResetAllBlocks();
         SetUI();
     }
 
