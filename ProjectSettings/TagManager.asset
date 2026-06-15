@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 3
   tags:
   - wall
+  - bane
+  - PlacedBlock
+  - DropFrame
   layers:
   - Default
   - TransparentFX
