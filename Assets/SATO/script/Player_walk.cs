@@ -69,4 +69,9 @@ public class Player_walk : MonoBehaviour
             transform.localScale = scale;
         }
     }
+
+    public void ResetDirection()
+    {
+        direction = 1; // 右向きに戻す
+    }
 }

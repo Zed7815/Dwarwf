@@ -24,6 +24,12 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        if (blockManager != null && !blockManager.IsAllBlocksPlaced())
+        {
+            Debug.Log("まだすべてのブロックを配置していません");
+            return;
+        }
+
         currentState = GameState.Play;
         player.StartMove();
         SetUI();

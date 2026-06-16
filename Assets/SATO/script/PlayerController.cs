@@ -31,6 +31,9 @@ public class PlayerController : MonoBehaviour
     {
         transform.position = startPosition;
         transform.localScale = startScale;
+
+        playerWalk.ResetDirection();
+
         StopMove();
         // 物理演算（Rigidbody2D）を使っている場合、速度も0
         // GetComponent<Rigidbody2D>().velocity = Vector2.zero;
