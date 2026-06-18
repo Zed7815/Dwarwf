@@ -1,15 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    public enum GameState
-    {
-        Edit,
-        Play
-    }
-
+    public static GameManager instance;
+    public enum GameState { Edit,Play}
     public GameState currentState = GameState.Edit;
+
     public PlayerController player;
 
     public GameObject startButton;
@@ -17,9 +16,40 @@ public class GameManager : MonoBehaviour
 
     public BlockManager blockManager;
 
+    // アイテム管理
+    public int totalItemCount = 0; // 拾った数
+    public TextMeshProUGUI itemCountText; // 拾った数を表すUI用
+
+    // ステージ上にあるアイテムをすべて記憶
+    private List<GameObject> allItems = new List<GameObject>();
+
+    void Awake()
+    {
+        // instanceとして登録
+        if (instance == null)instance = this;
+    }
+
     void Start()
     {
+        GameObject[] items = GameObject.FindGameObjectsWithTag("Item");
+        allItems.AddRange(items);
+
+        UpdateItemUI(); // 起動時に表示をリセット
         SetUI();
+    }
+
+    public void AddItem()
+    {
+        totalItemCount++;
+        UpdateItemUI();
+    }
+
+    void UpdateItemUI()
+    {
+        if (itemCountText != null)
+        {
+            itemCountText.text = "Star: " + totalItemCount;
+        }
     }
 
     public void StartGame()
@@ -40,6 +70,19 @@ public class GameManager : MonoBehaviour
         currentState = GameState.Edit;
         player.ResetPosition();
         blockManager.ResetAllBlocks();
+
+        totalItemCount = 0;
+        UpdateItemUI();
+
+        // itemタグのアイテムをすべて表示する
+        foreach (GameObject item in allItems)
+        {
+            if (item != null)
+            {
+                item.SetActive(true);
+            }
+        }
+
         SetUI();
     }
 

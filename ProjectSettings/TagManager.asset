@@ -8,6 +8,7 @@ TagManager:
   - bane
   - PlacedBlock
   - DropFrame
+  - Item
   layers:
   - Default
   - TransparentFX
