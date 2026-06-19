@@ -32,10 +32,31 @@ public class ReverseGimmick : MonoBehaviour
             // プレイヤーがが中心に近づくのを待つ
             yield return null;
         }
-        
+
         // 中心地に達した場合に停止
         p.transform.position = new Vector3(centerX,p.transform.position.y,p.transform.position.z);
         p.StateChange(0); // 停止
+
+        Rigidbody2D rb = p.GetComponent<Rigidbody2D>();
+
+        if (rb != null) rb.linearVelocity = Vector3.zero;
+
+        // 立ち止まり時のタメ
+        yield return new WaitForSeconds(0.8f);
+
+        // 向きの変更
+        p.direction *= -1; // 内部の進行方向
+        Vector3 s = p.transform.localScale;
+        s.x *= -1;
+        p.transform.localScale = s; // 見た目の反転
+
+        // 少しのタメの後に再度歩き出す
+        yield return new WaitForSeconds(0.35f);
+        p.StateChange(1);
+
+        yield return new WaitForSeconds(0.5f);
+        isProcessing = false;
+
 
     }
 }

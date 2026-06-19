@@ -2,6 +2,8 @@
 
 public class Player_walk : MonoBehaviour
 {
+    private Animator anim;
+
     public enum moveState
     {
         idol,
@@ -14,19 +16,27 @@ public class Player_walk : MonoBehaviour
     public int direction = 1;
     private moveState state = moveState.idol;
 
+    void Start()
+    {
+        anim = GetComponent<Animator>();
+    }
+
     void Update()
     {
         switch (state)
         {
             case moveState.idol:
+                anim.SetBool("isWalk", false);
                 stay();
                 break;
 
             case moveState.straight:
+                anim.SetBool("isWalk", true);
                 walk();
                 break;
 
             case moveState.jump:
+                anim.SetBool("isWalk", false);
                 break;
         }
     }
@@ -47,14 +57,17 @@ public class Player_walk : MonoBehaviour
         {
             case 0:
                 state = moveState.idol;
+                anim.SetBool("isWalk", false);
                 break;
 
             case 1:
                 state = moveState.straight;
+                anim.SetBool("isWalk", true);
                 break;
 
             case 2:
                 state = moveState.jump;
+                anim.SetBool("isWalk", false);
                 break;
         }
     }
