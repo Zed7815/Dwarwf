@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -26,6 +27,8 @@ public class BlockManager : MonoBehaviour
     private SpriteRenderer previewSR; // 色
     private GameObject previewBlock; // グリッドの影
     private int activeTypeIndex; // 今ドラッグしているブロックの番号
+
+    private List<GameObject> ghostBlocks = new List<GameObject>(); // ゴーストたちをおぼえるリスト
 
 
     void Update()
@@ -206,8 +209,20 @@ public class BlockManager : MonoBehaviour
 
     public void ResetAllBlocks()
     {
+        // 古いゴールドを全部消去
+        ClearGhostBlocks();
+
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
-        foreach (GameObject b in placedBlocks){ Destroy(b); }
+        foreach (GameObject b in placedBlocks)
+        {
+            BlockInfo info = b.GetComponent<BlockInfo>();
+            if (info != null)
+            {
+                CreateGhostBlock(b.transform.position, info.typeIndex);
+            }
+
+            Destroy(b); 
+        }
         
         foreach (var type in blockTypes)
         {
@@ -215,6 +230,58 @@ public class BlockManager : MonoBehaviour
         }
 
         UpdateUI();
+    }
+
+    // ゴースト生成
+    void CreateGhostBlock(Vector3 pos, int typeIndex)
+    {
+        // 本物と同じプレハブを生成
+        GameObject ghost = Instantiate(blockTypes[typeIndex].prefab, pos, Quaternion.identity);
+
+        // ゴーストが邪魔しないようにする
+        Collider2D col = ghost.GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        //タグの変更
+        ghost.tag = "Untagged";
+
+        // リストに入れる
+        ghostBlocks.Add(ghost);
+
+        StartCoroutine(FadeInGhost(ghost));
+    }
+
+    IEnumerator FadeInGhost(GameObject ghost)
+    {
+        SpriteRenderer sr = ghost.GetComponent<SpriteRenderer>();
+        if (sr == null) yield break;
+
+        sr.sortingOrder = -1; // 本物より少し奥に
+
+        float duration = 0.5f; // 0.5秒かけて現れる
+        float elapsed = 0f;
+
+        Color targetColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+        Color starColor = new Color(0.6f, 0.6f, 0.6f, 0f); // 最初は透明
+
+        while (elapsed < duration)
+        {
+            if (ghost == null) yield break ;
+
+            elapsed += Time.deltaTime;  
+            sr.color = Color.Lerp(starColor, targetColor, elapsed / duration);
+            yield return null;
+        }
+
+    }
+
+    public void ClearGhostBlocks()
+    {
+        foreach (GameObject g in ghostBlocks)
+        {
+            if (g != null) Destroy(g);
+        }
+        ghostBlocks.Clear();
     }
 
 

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5357653431688628075}
   - component: {fileID: 8568501683660065016}
   - component: {fileID: 1895428051660382687}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: "\u30D0\u30CD"
   m_TagString: PlacedBlock
   m_Icon: {fileID: 0}
