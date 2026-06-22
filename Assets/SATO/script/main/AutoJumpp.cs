@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class AutoJump : MonoBehaviour
+public class AutoJumpp : MonoBehaviour
 {
     public Player_walk pl;
     private bool isProcessing = false; // 二重発動防止

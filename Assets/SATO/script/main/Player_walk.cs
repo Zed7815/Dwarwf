@@ -28,7 +28,7 @@ public class Player_walk : MonoBehaviour
     public float playerJumpForwardPower = 2f;
     public float jumpCenterTolerance = 0.05f;
     public int direction = 1;
-    public bool jumpRequest = true;
+    public bool JpRequest = true;
     private moveState state = moveState.idol;
     private bool isJumping = false;
     private bool jumpCanceled = false;
@@ -54,7 +54,7 @@ public class Player_walk : MonoBehaviour
     void Update()
     {
         CheckGround();
-        if (isGrounded) jumpRequest = true;
+        if (isGrounded) JpRequest = true;
 
         // アニメーションの状態を一括管理
         if (state == moveState.straight)
@@ -108,7 +108,7 @@ public class Player_walk : MonoBehaviour
             yield return new WaitForSeconds(0.2f);
 
             // バネに飛び乗る
-            yield return StartCoroutine(MoveToTarget(spring.position + Vector3.up * 0.8f,0.4f,1.5f));
+           // yield return StartCoroutine(MoveToTarget(spring.position + Vector3.up * 0.8f,0.4f,1.5f));
         }
         else
         {
@@ -294,7 +294,7 @@ public class Player_walk : MonoBehaviour
 
 
  
-    public IEnumerator Jump()
+    public IEnumerator Jumpp()
     {
         state = moveState.jump;
         yield return new WaitForSeconds(0.75f);
@@ -307,7 +307,7 @@ public class Player_walk : MonoBehaviour
         state = moveState.straight;
     }
 
-    public IEnumerator AutoJump(Transform target)
+    public IEnumerator AutoJumpp(Transform target)
     {
         state = moveState.autoMoving;
         Vector3 startPos = transform.position;
@@ -369,10 +369,10 @@ public class Player_walk : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
         }
 
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            jumpRequest = true;
-        }
+       // if (collision.gameObject.CompareTag("Ground"))
+       // {
+       //     jumpRequest = true;
+       // }
     }
 
     public void ResetDirection()
