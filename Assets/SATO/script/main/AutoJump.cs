@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class AutoJump : MonoBehaviour
 {
     public Player_walk pl;
+    private bool isProcessing = false; // 二重発動防止
 
     void Start()
     {
@@ -30,7 +32,7 @@ public class AutoJump : MonoBehaviour
         Collider2D hit = Physics2D.OverlapPoint(checkPos);
 
         if (hit != null && hit.CompareTag("PlacedBlock"))
-        {
+    {
             pl.StartCoroutine(pl.AutoJump(hit.transform));
         }
     }

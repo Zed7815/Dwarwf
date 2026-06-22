@@ -27,36 +27,33 @@ public class ReverseGimmick : MonoBehaviour
 
         // 中心にプレイヤーが来るまでループ
         float centerX = transform.position.x;
-        while (Mathf.Abs(p.transform.position.x - centerX) > 0.1f)
+        // 中心に十分近づくまで待つ
+        while (Mathf.Abs(p.transform.position.x - centerX) > 0.2f)
         {
-            // プレイヤーがが中心に近づくのを待つ
             yield return null;
         }
 
-        // 中心地に達した場合に停止
-        p.transform.position = new Vector3(centerX,p.transform.position.y,p.transform.position.z);
-        p.StateChange(0); // 停止
+        // ぴったり中心に合わせる
+        p.transform.position = new Vector3(centerX, p.transform.position.y, p.transform.position.z);
 
+        // 物理速度を完全にゼロにする
         Rigidbody2D rb = p.GetComponent<Rigidbody2D>();
 
-        if (rb != null) rb.linearVelocity = Vector3.zero;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
 
-        // 立ち止まり時のタメ
+        p.StateChange(0); // idol
         yield return new WaitForSeconds(0.8f);
 
-        // 向きの変更
-        p.direction *= -1; // 内部の進行方向
+        // 向き反転
+        p.direction *= -1;
         Vector3 s = p.transform.localScale;
-        s.x *= -1;
-        p.transform.localScale = s; // 見た目の反転
+        s.x = Mathf.Abs(s.x) * p.direction; // directionに基づいた絶対的な向き設定
+        p.transform.localScale = s;
 
-        // 少しのタメの後に再度歩き出す
         yield return new WaitForSeconds(0.35f);
-        p.StateChange(1);
+        p.StateChange(1); // straight
 
         yield return new WaitForSeconds(0.5f);
         isProcessing = false;
-
-
     }
 }

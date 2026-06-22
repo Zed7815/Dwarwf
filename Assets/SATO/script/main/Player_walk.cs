@@ -2,18 +2,25 @@
 using System.Collections;
 using System.IO.IsolatedStorage;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Player_walk : MonoBehaviour
 {
     private Animator anim;
     private Rigidbody2D rb; // 物理挙動確認用
 
+    private SpriteRenderer sr;
+
+    private float lastFlipTime = 0f;
+
     public enum moveState
     {
-        idol,
-        straight,
-        jump
+        idol,     // 停止
+        straight, // 前進
+        jump,     // 物理ジャンプ
+        autoMoving// 自動ジャンプ 
     }
+
 
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
@@ -34,32 +41,33 @@ public class Player_walk : MonoBehaviour
     private bool isGrounded; // 地面に接しているか
     private Collider2D currentGround; // 今踏んでいる足場
 
+    [Header("状態管理フラグ")]
+    public bool jumpRequest = true;
+
     void Start()
     {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        sr = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
-        // 地面に接しているか常にチェック
         CheckGround();
+        if (isGrounded) jumpRequest = true;
 
-        switch (state)
+        // アニメーションの状態を一括管理
+        if (state == moveState.straight)
         {
-            case moveState.idol:
-                anim.SetBool("isWalk", false);
-                stay();
-                break;
-
-            case moveState.straight:
-                anim.SetBool("isWalk", isGrounded);
-                walk();
-                break;
-
-            case moveState.jump:
-                anim.SetBool("isWalk", false);
-                break;
+            anim.SetBool("isWalk", isGrounded); // 地面にいるときだけ歩きアニメ
+            walk();
+        }
+        else
+        {
+            anim.SetBool("isWalk", false);
+            // idol状態のときは横移動を止める
+            if (state == moveState.idol && rb != null)
+                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
     }
 
@@ -70,9 +78,37 @@ public class Player_walk : MonoBehaviour
 
     void walk()
     {
-        if (isGrounded)
+       if (state == moveState.straight)
         {
-            transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime * direction);
+            if (isGrounded)
+            {
+                rb.linearVelocity = new Vector2(direction * PlayerSpeed,rb.linearVelocity.y);
+            }
+            else
+            {
+                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            }
+        }
+    }
+
+   
+
+    public IEnumerator SpringSequence(Transform spring)
+    {
+        state = moveState.autoMoving;
+
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        rb.linearVelocity = Vector2.zero;
+
+        float heightDiff = spring.position.y - transform.position.y;
+
+        if (heightDiff > 0.5f)
+        {
+            // バネの手前で止まる
+            yield return new WaitForSeconds(0.2f);
+
+            // バネに飛び乗る
+            yield return StartCoroutine(MoveToTarget(spring.position + Vector3.up * 0.8f,0.4f,1.5f));
         }
         else
         {
@@ -209,11 +245,11 @@ public class Player_walk : MonoBehaviour
         StateChange(0);
     }
 
-    void CheckGround()
-    {
-        Vector2 rayOrigin = transform.position + Vector3.down * 0.2f;
-        // BoxCastを使用し地面があるかを確認
-        RaycastHit2D hit = Physics2D.BoxCast(rayOrigin, boxSize, 0f, Vector2.down, groundCheckDistance, groundLayer);
+        void CheckGround()
+        {
+            Vector2 rayOrigin = transform.position + Vector3.down * 0.2f;
+            // BoxCastを使用し地面があるかを確認
+            RaycastHit2D hit = Physics2D.BoxCast(rayOrigin, boxSize, 0f, Vector2.down, groundCheckDistance, groundLayer);
 
         isGrounded = (hit.collider != null);
         currentGround = hit.collider;
@@ -254,15 +290,83 @@ public class Player_walk : MonoBehaviour
                 break;
         }
     }
+
+
+
+ 
+    public IEnumerator Jump()
+    {
+        state = moveState.jump;
+        yield return new WaitForSeconds(0.75f);
+
+        jumpRequest = false;
+        rb.linearVelocity = new Vector2(direction * 1f, playerJumpPower);
+
+        // 地面に付くまで待つ
+        yield return new WaitUntil(() => isGrounded);
+        state = moveState.straight;
+    }
+
+    public IEnumerator AutoJump(Transform target)
+    {
+        state = moveState.autoMoving;
+        Vector3 startPos = transform.position;
+        Vector3 endPos = target.position + Vector3.up * 1.2f;
+
+        float duration = 0.5f;
+        float jumpHeight = 2f;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+            Vector3 pos = Vector3.Lerp(startPos, endPos, t);
+            pos.y += 1 * jumpHeight * t * (1 - t);
+            transform.position = pos;
+            yield return null;
+        }
+
+        transform.position = endPos;
+        state = moveState.straight;
+    }
+   
+   
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("wall"))
         {
-            direction *=-1;
+            if (Time.time - lastFlipTime > 0.3f)
+            {
+                lastFlipTime = Time.time;
 
-            Vector3 scale = transform.localScale;
-            scale.x *= -1;
-            transform.localScale = scale;
+                direction *= -1;
+
+                Vector3 scale = transform.localScale;
+                scale.x = Mathf.Abs(scale.x) * direction;
+                transform.localScale = scale;
+            }
+        }
+    }
+
+    public void ResetPlayerStatus()
+    {
+        StopAllCoroutines();
+
+        // 状態を初期化
+        state = moveState.idol;
+        anim.SetBool("isWalk",false);
+        direction = 1;
+
+        Vector3 scale = transform.localScale;
+        scale.x = Mathf.Abs(scale.x);
+        transform.localScale = scale;
+
+        // 物理当初期化
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = Vector2.zero;
         }
 
         if (collision.gameObject.CompareTag("Ground"))
