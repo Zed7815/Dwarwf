@@ -1,24 +1,17 @@
-using UnityEngine;
 using System.Collections;
-public enum action
-{
-    Stay,
-    Walk,
-    Agojump,
-    Jump
-}
+using UnityEngine;
+
 public class Player : MonoBehaviour
 {
     private SpriteRenderer sr;
     private Rigidbody2D rb;
     public bool jumpRequest = true;
-    public bool agojumpRequest = false;
+    public bool isWalk = false;
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
     public float PlayerJumpPower=5.0f;
     public int direction = 1;
     public float playerJumpPower = 10f;
-    public action action = action.Walk;
     // Update is called once per frame
     void Start()
     {
@@ -27,89 +20,65 @@ public class Player : MonoBehaviour
     }
     void Update()
     {
-        if (action.Walk==action)
-        {
-            Walk();
-        }
-        if (agojumpRequest)
-        {
-            StartCoroutine(AgoJump());
-            agojumpRequest = false; // 実行したら消す
-        }
+        Walk();
     }
-    void stay()
+    public IEnumerator AutoJump(Transform target)
     {
-
-    }
-    void Walk()
-    {
-        transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime* direction);
-    }
-    IEnumerator Jump()
-    {
-        yield return new WaitForSeconds(0.75f);
-        jumpRequest = true;
-        rb.linearVelocity = new Vector2(direction * 1f, playerJumpPower);
-        action = action.Walk;
-    }
-    IEnumerator AgoJump()
-    {
-
         Vector3 startPos = transform.position;
+        Vector3 endPos = target.position + Vector3.up * 1.2f; // ゴール
 
-        float duration = 1f;//ジャンプの時間
-        float height = 1.5f;  // ジャンプの高さ
-        float distance = 4f; // 前に進む距離
+        float duration = 0.5f;
+        float jumpHeight = 2f; // 放物線の高さ
 
-        // 0.5までにすると放物線の頂点で終わる
-        for (float x = 0; x <= 0.5f; x += Time.deltaTime / duration)
+        float time = 0f;
+
+        while (time < duration)
         {
-            float y = 4 * height * x * (1 - x);
+            time += Time.deltaTime;
+            float t = time / duration;
 
-            transform.position = startPos +
-                new Vector3(distance * direction * x, y, 0);
+            // 開始→終了を補間
+            Vector3 pos = Vector3.Lerp(startPos, endPos, t);
+
+            // 放物線を追加
+            pos.y += 1 * jumpHeight * t * (1 - t);
+
+            transform.position = pos;
 
             yield return null;
         }
 
-        action = action.Agojump;
+        transform.position = endPos;
     }
-
-    public void actionchange(int n)
+    void Walk()
     {
-        //Stay,
-        //Walk,
-        //Agojump,
-        //Jump
-        switch (n)
-        { 
-            case 0: action = action.Stay; break;
-            case 1: action = action.Walk; break;
-            case 2: agojumpRequest = true; break;
-            case 3: action = action.Jump; break;
+        if(isWalk)
+        {
+            transform.Translate(Vector2.right * PlayerSpeed * Time.deltaTime * direction);
         }
-
     }
-
-
-    void OnCollisionEnter2D(Collision2D collision)
+    public IEnumerator Jump()
+    {
+        isWalk = false;
+        yield return new WaitForSeconds(0.75f);
+        isWalk = true;
+        jumpRequest = false;
+        rb.linearVelocity = new Vector2(direction * 1f, playerJumpPower);
+        yield return new WaitUntil(() => jumpRequest);
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("wall"))
         {
             direction *= -1;
 
             Vector3 scale = transform.localScale;
+            scale.x *= -1;
             transform.localScale = scale;
-            scale.x = -1;
-            sr.flipX = !sr.flipX;
         }
-        if(collision.gameObject.CompareTag("bane"))
+        if(collision.gameObject.CompareTag("Ground"))
         {
-            if(jumpRequest)
-            {
-                jumpRequest = false;
-            StartCoroutine(Jump());
-            }
+            jumpRequest = true;
         }
     }
 }
