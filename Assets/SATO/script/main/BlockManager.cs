@@ -201,10 +201,33 @@ public class BlockManager : MonoBehaviour
     // マウスの座標をワールド座標に変換
     Vector3 GetMouseWorldPosition()
     {
+        if (Camera.main == null)
+        {
+            Debug.LogWarning("Camera.main is null");
+            return Vector3.zero;
+        }
+
         Vector2 mousePos = Mouse.current.position.ReadValue();
-        Vector3 worldPos = Camera.main.ScreenToWorldPoint(mousePos);
-        worldPos.z = 0;
-        return worldPos;
+
+        // スクリーン座標が範囲内かチェック
+        if (mousePos.x < 0 || mousePos.x > Screen.width ||
+            mousePos.y < 0 || mousePos.y > Screen.height)
+        {
+            // 画面外の場合は現在のドラッグ位置かゼロを返す
+            return draggingBlock != null ? draggingBlock.transform.position : Vector3.zero;
+        }
+
+        try
+        {
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 0));
+            worldPos.z = 0;
+            return worldPos;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"ScreenToWorldPoint error: {e.Message}");
+            return Vector3.zero;
+        }
     }
 
     public void ResetAllBlocks()

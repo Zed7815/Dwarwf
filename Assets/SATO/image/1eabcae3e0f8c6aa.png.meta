@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: d674e4f7bf8879043a62fd577df6b53c
+guid: 25b1aaacb897d1c46a90dc794b95e3d2
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4931166770357681161
-    second: 2dbdc380eac53988_0
-  - first:
-      213: -8229377009635806254
-    second: 2dbdc380eac53988_1
+      213: 8898438849274114651
+    second: 1eabcae3e0f8c6aa_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -54,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 25
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -103,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 2dbdc380eac53988_0
+      name: 1eabcae3e0f8c6aa_0
       rect:
         serializedVersion: 2
-        x: 2
+        x: 0
         y: 0
-        width: 48
-        height: 58
+        width: 30
+        height: 30
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -118,30 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 90c316b1d060f6440800000000000000
-      internalID: 4931166770357681161
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 2dbdc380eac53988_1
-      rect:
-        serializedVersion: 2
-        x: 50
-        y: 0
-        width: 49
-        height: 58
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2d334e9f5316bcd80800000000000000
-      internalID: -8229377009635806254
+      spriteID: b52f48accfa9d7b70800000000000000
+      internalID: 8898438849274114651
       vertices: []
       indices: 
       edges: []
@@ -160,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      2dbdc380eac53988_0: 4931166770357681161
-      2dbdc380eac53988_1: -8229377009635806254
+      1eabcae3e0f8c6aa_0: 8898438849274114651
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
