@@ -29,13 +29,10 @@ public class PlayerController : MonoBehaviour
     // 初期位置に戻るための関数
     public void ResetPosition()
     {
+        // コルーチンを止めて状態を初期化
+        playerWalk.ResetPlayerStatus();
+
+        // 位置を戻す
         transform.position = startPosition;
-        transform.localScale = startScale;
-
-        playerWalk.ResetDirection();
-
-        StopMove();
-        // 物理演算（Rigidbody2D）を使っている場合、速度も0
-        // GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 }
