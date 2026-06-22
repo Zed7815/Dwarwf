@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AutoJump : MonoBehaviour
+public class AutoJump2 : MonoBehaviour
 {
     public Player pl;
     public Transform targetPoint;
