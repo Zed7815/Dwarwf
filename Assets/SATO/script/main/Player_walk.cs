@@ -1,45 +1,43 @@
-﻿using JetBrains.Annotations;
-using System.Collections;
-using System.IO.IsolatedStorage;
+﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Player_walk : MonoBehaviour
 {
     private Animator anim;
-    private Rigidbody2D rb; // 物理挙動確認用
-
+    private Rigidbody2D rb;
     private SpriteRenderer sr;
 
     private float lastFlipTime = 0f;
 
     public enum moveState
     {
-        idol,     // 停止
-        straight, // 前進
-        jump,     // 物理ジャンプ
-        autoMoving// 自動ジャンプ 
+        idol,       // 0: 停止
+        straight,   // 1: 通常移動（地上を歩いている状態）
+        jump,       // 2: 物理大ジャンプ（空中慣性をジャンプ着地まで100%保持＆壁キック可能）
+        fall,       // 3: 通常落下（ジャンプブロックを経由しない通常落下・空中慣性0）
+        autoMoving  // 4: 自動ジャンプ
     }
-
 
     [Header("プレイヤーの数値")]
     public float PlayerSpeed = 5.0f;
-    public float playerJumpPower = 10f;
-    public float playerJumpForwardPower = 2f;
+    public float playerJumpPower = 11.5f;       // ジャンプ高さ
+    public float playerJumpForwardPower = 3.6f; // ジャンプの横の勢い
+    public float wallBounceMultiplier = 1.5f;   // 【新規】壁跳ね返りの勢いを決める倍率
     public float jumpCenterTolerance = 0.05f;
     public int direction = 1;
     public bool JpRequest = true;
+
     private moveState state = moveState.idol;
     private bool isJumping = false;
     private bool jumpCanceled = false;
     private bool keepAirXVelocity = false;
 
     [Header("地面判定の設定")]
-    public LayerMask groundLayer; // 地面とみなすレイヤー
-    public float groundCheckDistance = 0.6f; // 下方向に飛ばす光の長さ
-    public Vector2 boxSize = new Vector2(0.5f, 0.1f); // 足元のチェック範囲 (横、縦)
-    private bool isGrounded; // 地面に接しているか
-    private Collider2D currentGround; // 今踏んでいる足場
+    public LayerMask groundLayer;
+    public float groundCheckDistance = 0.6f;
+    public Vector2 boxSize = new Vector2(0.5f, 0.1f);
+    private bool isGrounded;
+    private Collider2D currentGround;
 
     [Header("状態管理フラグ")]
     public bool jumpRequest = true;
@@ -54,160 +52,118 @@ public class Player_walk : MonoBehaviour
     void Update()
     {
         CheckGround();
-        if (isGrounded) JpRequest = true;
 
-        // アニメーションの状態を一括管理
+        if (isGrounded)
+        {
+            JpRequest = true;
+            jumpRequest = true;
+
+            // 【問題２解決策】着地している間、ジャンプコルーチンがいないのに状態が不自然なままであれば通常歩行にオート回復！
+            if (!isJumping && (state == moveState.jump || state == moveState.fall))
+            {
+                StateChange(1); // 直ちに moveState.straight (歩行) へ引き上げ
+            }
+        }
+        else
+        {
+            // 空中かつ、ジャンプブロックの意図的な大ジャンプ（isJumping）ではない場合
+            // 【通常落下時（fall）：慣性0】へ強制移行させます
+            if (!isJumping && (state == moveState.straight || state == moveState.idol))
+            {
+                state = moveState.fall;
+            }
+        }
+
+        // 状態に応じたリアルタイム挙動・グラフィックス制御
         if (state == moveState.straight)
         {
-            anim.SetBool("isWalk", isGrounded); // 地面にいるときだけ歩きアニメ
+            anim.SetBool("isWalk", isGrounded);
             walk();
+        }
+        else if (state == moveState.fall)
+        {
+            anim.SetBool("isWalk", false);
+            // 通常落下：空中落下は横の勢いを完全にカットして直下へ落とす
+            if (rb != null)
+                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
         else
         {
             anim.SetBool("isWalk", false);
-            // idol状態のときは横移動を止める
+            // それ以外の時は不自然に滑らないようX速度を完全にセーブ
             if (state == moveState.idol && rb != null)
                 rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
     }
 
-    void stay()
-    {
-
-    }
-
     void walk()
     {
-       if (state == moveState.straight)
+        if (state == moveState.straight && isGrounded)
         {
-            if (isGrounded)
-            {
-                rb.linearVelocity = new Vector2(direction * PlayerSpeed,rb.linearVelocity.y);
-            }
-            else
-            {
-                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            }
+            rb.linearVelocity = new Vector2(direction * PlayerSpeed, rb.linearVelocity.y);
         }
     }
 
-   
-
-    public IEnumerator SpringSequence(Transform spring)
+    // 壁への衝突判定
+    // 地面、または高台のコライダーとの接触処理
+    void OnCollisionEnter2D(Collision2D collision)
     {
-        state = moveState.autoMoving;
-
-        rb.bodyType = RigidbodyType2D.Kinematic;
-        rb.linearVelocity = Vector2.zero;
-
-        float heightDiff = spring.position.y - transform.position.y;
-
-        if (heightDiff > 0.5f)
+        // 【エラー100%完全回避】CompareTag("Wall")による例外エラーを防ぐ安全な壁判定
+        bool isWall = false;
+        if (collision.gameObject != null)
         {
-            // バネの手前で止まる
-            yield return new WaitForSeconds(0.2f);
-
-            // バネに飛び乗る
-           // yield return StartCoroutine(MoveToTarget(spring.position + Vector3.up * 0.8f,0.4f,1.5f));
-        }
-        else
-        {
-            if (rb != null && !keepAirXVelocity)
+            string objName = collision.gameObject.name.ToLower();
+            if (objName.Contains("wall") || objName.Contains("kabe"))
             {
-                rb.linearVelocity = new Vector2 (0, rb.linearVelocity.y);
+                isWall = true;
+            }
+            else if (collision.gameObject.tag == "wall" || collision.gameObject.tag == "Wall")
+            {
+                isWall = true;
             }
         }
-    }
 
-    public IEnumerator AutoJump(Transform target)
-    {
-        if (isJumping) yield break;
-        isJumping = true;
-        jumpRequest = false;
-
-        StateChange(2);
-
-        Vector3 startPos = transform.position;
-        Vector3 endPos = target.position + Vector3.up * 1.2f;
-
-        float duration = 0.5f;
-        float jumpHeight = 2f;
-        float time = 0f;
-
-        while (time < duration)
+        if (isWall)
         {
-            time += Time.deltaTime;
-            float t = time / duration;
+            // 大ジャンプ中（isJumping == true）に壁に触れたら、マリオのように跳ね返る！
+            if (isJumping && rb != null)
+            {
+                if (Time.time - lastFlipTime > 0.15f)
+                {
+                    lastFlipTime = Time.time;
 
-            Vector3 pos = Vector3.Lerp(startPos, endPos, t);
-            pos.y += jumpHeight * t * (1 - t);
+                    // 1. 進行方向を反転し、スケール（画像の向き）も反転
+                    direction *= -1;
+                    Vector3 scale = transform.localScale;
+                    scale.x = Mathf.Abs(scale.x) * direction;
+                    transform.localScale = scale;
 
-            transform.position = pos;
+                    // 2. マリオ壁ジャンプ：縦の勢い(Y速度)は100%保持したまま、横(X速度)だけを反転させて跳ね返す！
+                    float keepYVelocity = rb.linearVelocity.y;
 
-            yield return null;
+                    // 🔴 ★★★ コレがココに入ります！ ★★★ 🔴
+                    float bounceXVelocity = direction * playerJumpForwardPower * wallBounceMultiplier;
+
+                    rb.linearVelocity = new Vector2(bounceXVelocity, keepYVelocity);
+                }
+            }
+            // 地面歩行中の壁衝突時の通常の折り返し
+            else if (isGrounded)
+            {
+                if (Time.time - lastFlipTime > 0.3f)
+                {
+                    lastFlipTime = Time.time;
+                    direction *= -1;
+
+                    Vector3 scale = transform.localScale;
+                    scale.x = Mathf.Abs(scale.x) * direction;
+                    transform.localScale = scale;
+                }
+            }
         }
-
-        transform.position = endPos;
-        jumpRequest = true;
-        isJumping = false;
-        StateChange(1);
     }
 
-    public IEnumerator Jump()
-    {
-        yield return Jump(null);
-    }
-
-    public IEnumerator Jump(Transform jumpBlock)
-    {
-        if (isJumping) yield break;
-        isJumping = true;
-        jumpCanceled = false;
-
-        if (jumpBlock != null)
-        {
-            yield return WalkToBlockCenter(jumpBlock);
-        }
-
-        if (jumpCanceled)
-        {
-            jumpRequest = true;
-            isJumping = false;
-            keepAirXVelocity = false;
-            StateChange(1);
-            yield break;
-        }
-
-        yield return new WaitForSeconds(0.75f);
-
-        jumpRequest = false;
-        keepAirXVelocity = true;
-        StateChange(2);
-
-        if (rb != null)
-        {
-            float jumpDirection = GetJumpDirection(jumpBlock);
-            rb.linearVelocity = new Vector2(jumpDirection * playerJumpForwardPower, playerJumpPower);
-        }
-
-        yield return new WaitUntil(() => !isGrounded);
-        yield return new WaitUntil(() => jumpRequest || isGrounded);
-
-        StateChange(1);
-        keepAirXVelocity = false;
-        isJumping = false;
-    }
-
-    float GetJumpDirection(Transform jumpBlock)
-    {
-        if (jumpBlock == null) return direction;
-
-        float jumpDirection = Mathf.Sign(jumpBlock.position.x - transform.position.x);
-        if (jumpDirection == 0) jumpDirection = direction;
-
-        return jumpDirection;
-    }
-
+    // 【問題４対策：中央に来たら美しくピタッと静止してためる】
     IEnumerator WalkToBlockCenter(Transform jumpBlock)
     {
         if (jumpBlock == null)
@@ -216,8 +172,8 @@ public class Player_walk : MonoBehaviour
             yield break;
         }
 
-        state = moveState.idol;
-        anim.SetBool("isWalk", true);
+        state = moveState.idol; // 入力をキャンセルして中央合わせ
+        anim.SetBool("isWalk", true); // アニメだけは歩きをオン
 
         float targetX = jumpBlock.position.x;
 
@@ -241,15 +197,131 @@ public class Player_walk : MonoBehaviour
             yield break;
         }
 
+        // 完全なブロックの中心にキチッとあわせる
         transform.position = new Vector3(jumpBlock.position.x, transform.position.y, transform.position.z);
-        StateChange(0);
+
+        // 中心到達した瞬間：力学慣性を完全に殺して（0）アニメを即時「待機(State0)」にして不自然なブレを防ぐ
+        if (rb != null)
+        {
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        }
+        StateChange(0); // idol状態へ
     }
 
-        void CheckGround()
+    public IEnumerator Jump(Transform jumpBlock)
+    {
+        if (isJumping) yield break;
+        isJumping = true;
+        jumpCanceled = false;
+
+        if (jumpBlock != null)
         {
-            Vector2 rayOrigin = transform.position + Vector3.down * 0.2f;
-            // BoxCastを使用し地面があるかを確認
-            RaycastHit2D hit = Physics2D.BoxCast(rayOrigin, boxSize, 0f, Vector2.down, groundCheckDistance, groundLayer);
+            yield return WalkToBlockCenter(jumpBlock);
+        }
+
+        if (jumpCanceled)
+        {
+            jumpRequest = true;
+            isJumping = false;
+            keepAirXVelocity = false;
+            StateChange(1);
+            yield break;
+        }
+
+        // 綺麗にピタッと静止し、ためる
+        yield return new WaitForSeconds(0.75f);
+
+        jumpRequest = false;
+        keepAirXVelocity = true;
+        StateChange(2); // 空中慣性をオンにするジャンプ状態へ
+
+        if (rb != null)
+        {
+            float jumpDirection = GetJumpDirection(jumpBlock);
+            rb.linearVelocity = new Vector2(jumpDirection * playerJumpForwardPower, playerJumpPower);
+        }
+
+        // 離陸の瞬間に判定が即誤作動しないよう0.2秒待機
+        yield return new WaitForSeconds(0.2f);
+        yield return new WaitUntil(() => isGrounded); // 着地までループを止める
+
+        StateChange(1); // 歩行状態へ復帰
+        keepAirXVelocity = false;
+        isJumping = false;
+        jumpRequest = true;
+    }
+
+    public IEnumerator HandleDoubleJumpSequence(Transform targetBlock)
+    {
+        if (isJumping) yield break;
+        isJumping = true;
+        jumpRequest = false;
+
+        // 1段階目(乗り上げ)：完璧な放物線ジャンプコルーチン
+        StateChange(2);
+
+        Vector3 startPos = transform.position;
+        Vector3 endPos = targetBlock.position + Vector3.up * 1.2f;
+
+        float duration = 0.5f;
+        float jumpHeight = 1.8f;
+        float time = 0f;
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            Vector3 pos = Vector3.Lerp(startPos, endPos, t);
+            pos.y += jumpHeight * t * (1 - t);
+
+            transform.position = pos;
+            yield return null;
+        }
+
+        transform.position = endPos;
+
+        // 2段階目：ブロック乗り上げ後に「ピタッと」ためる静止
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
+        StateChange(0); // idol
+        anim.SetBool("isWalk", false);
+
+        yield return new WaitForSeconds(0.75f);
+
+        // 3段階目：空中慣性100%の物理大ジャンプをトリガー！
+        StateChange(2);
+
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+
+            float xVelocity = direction * playerJumpForwardPower;
+            float yVelocity = playerJumpPower;
+
+            rb.linearVelocity = new Vector2(xVelocity, yVelocity);
+        }
+
+        yield return new WaitForSeconds(0.2f);
+        yield return new WaitUntil(() => isGrounded); // 着地を待つ
+
+        jumpRequest = true;
+        isJumping = false;
+        StateChange(1); // 通常歩行
+    }
+
+    void CheckGround()
+    {
+        Vector2 rayOrigin = transform.position + Vector3.down * 0.2f;
+        RaycastHit2D hit = Physics2D.BoxCast(rayOrigin, boxSize, 0f, Vector2.down, groundCheckDistance, groundLayer);
 
         isGrounded = (hit.collider != null);
         currentGround = hit.collider;
@@ -257,14 +329,14 @@ public class Player_walk : MonoBehaviour
         Debug.DrawRay(rayOrigin, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
     }
 
-    public bool IsOneBlockHigherThanCurrentGround(Transform target, float oneBlockHeight, float tolerance)
+    float GetJumpDirection(Transform jumpBlock)
     {
-        if (currentGround == null) return false;
-
-        float heightDifference = target.position.y - currentGround.transform.position.y;
-        return Mathf.Abs(heightDifference - oneBlockHeight) <= tolerance;
+        if (jumpBlock == null) return direction;
+        float jumpDirection = Mathf.Sign(jumpBlock.position.x - transform.position.x);
+        if (jumpDirection == 0) jumpDirection = direction;
+        return jumpDirection;
     }
-   
+
     public bool IsJumping()
     {
         return isJumping;
@@ -278,74 +350,18 @@ public class Player_walk : MonoBehaviour
                 state = moveState.idol;
                 anim.SetBool("isWalk", false);
                 break;
-
             case 1:
                 state = moveState.straight;
                 anim.SetBool("isWalk", isGrounded);
                 break;
-
             case 2:
                 state = moveState.jump;
                 anim.SetBool("isWalk", false);
                 break;
-        }
-    }
-
-
-
- 
-    public IEnumerator Jumpp()
-    {
-        state = moveState.jump;
-        yield return new WaitForSeconds(0.75f);
-
-        jumpRequest = false;
-        rb.linearVelocity = new Vector2(direction * 1f, playerJumpPower);
-
-        // 地面に付くまで待つ
-        yield return new WaitUntil(() => isGrounded);
-        state = moveState.straight;
-    }
-
-    public IEnumerator AutoJumpp(Transform target)
-    {
-        state = moveState.autoMoving;
-        Vector3 startPos = transform.position;
-        Vector3 endPos = target.position + Vector3.up * 1.2f;
-
-        float duration = 0.5f;
-        float jumpHeight = 2f;
-        float time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            float t = time / duration;
-            Vector3 pos = Vector3.Lerp(startPos, endPos, t);
-            pos.y += 1 * jumpHeight * t * (1 - t);
-            transform.position = pos;
-            yield return null;
-        }
-
-        transform.position = endPos;
-        state = moveState.straight;
-    }
-   
-   
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("wall"))
-        {
-            if (Time.time - lastFlipTime > 0.3f)
-            {
-                lastFlipTime = Time.time;
-
-                direction *= -1;
-
-                Vector3 scale = transform.localScale;
-                scale.x = Mathf.Abs(scale.x) * direction;
-                transform.localScale = scale;
-            }
+            case 3:
+                state = moveState.fall;
+                anim.SetBool("isWalk", false);
+                break;
         }
     }
 
@@ -353,31 +369,26 @@ public class Player_walk : MonoBehaviour
     {
         StopAllCoroutines();
 
-        // 状態を初期化
         state = moveState.idol;
-        anim.SetBool("isWalk",false);
+        anim.SetBool("isWalk", false);
         direction = 1;
 
         Vector3 scale = transform.localScale;
         scale.x = Mathf.Abs(scale.x);
         transform.localScale = scale;
 
-        // 物理当初期化
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
         }
-
-       // if (collision.gameObject.CompareTag("Ground"))
-       // {
-       //     jumpRequest = true;
-       // }
+        jumpRequest = true;
+        isJumping = false;
     }
 
     public void ResetDirection()
     {
-        direction = 1; // 右向きに戻す
+        direction = 1;
         jumpRequest = true;
         isJumping = false;
         jumpCanceled = true;
