@@ -83,9 +83,7 @@ public class Player_walk : MonoBehaviour
         else if (state == moveState.fall)
         {
             anim.SetBool("isWalk", false);
-            // 【最新のバグ修正対策】ジャンプブロックの上へ滑らかに乗り上げさせるため、X速度を即座に0にするのではなく、
-            // 直前の歩行速度から滑らかに0へと減衰（イージング）させます。
-            // これにより、崖から踏み外した瞬間に「真下にストン」と不自然に垂直落下してブロックの側面に挟まるバグを完全に修正！
+  
             if (rb != null)
             {
                 float currentX = rb.linearVelocity.x;
@@ -97,8 +95,18 @@ public class Player_walk : MonoBehaviour
         }
         else
         {
-            anim.SetBool("isWalk", false);
-            // それ以外の時は不自然に滑らないようX速度を完全にセーブ
+            // ジャンプ中でない（コルーチン制御下でない）場合のみ、歩行アニメを完全にOFFにします
+            if (!isJumping)
+            {
+                anim.SetBool("isWalk", false);
+            }
+            else
+            {
+                // ジャンプコルーチンが走っている（isJumping == true）時は、接地中だけ歩きアニメを許可します
+                anim.SetBool("isWalk", isGrounded);
+            }
+
+            // 待機状態(idol)の時は不自然に滑らないようX速度を完全にセーブ
             if (state == moveState.idol && rb != null)
                 rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
@@ -185,14 +193,15 @@ public class Player_walk : MonoBehaviour
         while (jumpBlock != null && Mathf.Abs(transform.position.x - targetX) > jumpCenterTolerance)
         {
             targetX = jumpBlock.position.x;
-
             float nextX = Mathf.MoveTowards(
                 transform.position.x,
                 targetX,
                 PlayerSpeed * Time.deltaTime
             );
-
             transform.position = new Vector3(nextX, transform.position.y, transform.position.z);
+
+            anim.SetBool("isWalk", isGrounded);
+
             yield return null;
         }
 
@@ -216,6 +225,12 @@ public class Player_walk : MonoBehaviour
     public IEnumerator Jump(Transform jumpBlock)
     {
         if (isJumping) yield break;
+
+        if (!isGrounded)
+        {
+            yield return new WaitUntil(() => isGrounded);
+        }
+
         isJumping = true;
         jumpCanceled = false;
 
@@ -261,6 +276,12 @@ public class Player_walk : MonoBehaviour
     public IEnumerator HandleDoubleJumpSequence(Transform targetBlock)
     {
         if (isJumping) yield break;
+
+        if (!isGrounded)
+        {
+            yield return new WaitUntil(() => isGrounded);
+        }
+
         isJumping = true;
         jumpRequest = false;
 
