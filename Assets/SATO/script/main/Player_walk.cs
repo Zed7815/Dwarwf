@@ -53,6 +53,19 @@ public class Player_walk : MonoBehaviour
     {
         CheckGround();
 
+        anim.SetBool("isFalling", !isGrounded);
+
+        if (isGrounded)
+        {
+            JpRequest = true;
+            jumpRequest = true;
+
+            if (!isJumping && state == moveState.fall)
+            {
+                StartCoroutine(LandSequence());
+            }
+        }
+
         if (isGrounded)
         {
             JpRequest = true;
@@ -232,28 +245,29 @@ public class Player_walk : MonoBehaviour
         }
 
         isJumping = true;
-        jumpCanceled = false;
+        jumpRequest = false;
 
-        if (jumpBlock != null)
-        {
-            yield return WalkToBlockCenter(jumpBlock);
-        }
+        // --- 1. 中心へのピタッとした位置合わせ ---
+        yield return StartCoroutine(WalkToBlockCenter(jumpBlock));
 
         if (jumpCanceled)
         {
-            jumpRequest = true;
+            jumpCanceled = false;
             isJumping = false;
-            keepAirXVelocity = false;
-            StateChange(1);
+            jumpRequest = true;
             yield break;
         }
 
-        // 綺麗にピタッと静止し、ためる
-        yield return new WaitForSeconds(0.75f);
+        // --- 2. 溜めフェーズ (isCharging = true) ---
+        anim.SetBool("isCharging", true); // 溜めアニメの再生スイッチON!
+        rb.linearVelocity = Vector2.zero; // 溜め中は動かないようにピタッと止める
+        yield return new WaitForSeconds(0.75f); // 0.75秒ためる
+        anim.SetBool("isCharging", false); // 離陸と同時にスイッチOFF
 
+        // --- 3. 離陸フェーズ (大ジャンプ発動) ---
         jumpRequest = false;
         keepAirXVelocity = true;
-        StateChange(2); // 空中慣性をオンにするジャンプ状態へ
+        StateChange(2); // moveState.jump にする
 
         if (rb != null)
         {
@@ -261,13 +275,16 @@ public class Player_walk : MonoBehaviour
             rb.linearVelocity = new Vector2(jumpDirection * playerJumpForwardPower, playerJumpPower);
         }
 
-        // 離陸の瞬間に判定が即誤作動しないよう0.2秒待機
         yield return new WaitForSeconds(0.2f);
-
-        // 落下中（または完全に最高点に達した状態）に接地したときのみ着地判定を終了
         yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);
 
-        StateChange(1); // 歩行状態へ復帰
+        // --- 4. 着地しゃがみフェーズ (isLanding = true) ---
+        anim.SetBool("isLanding", true); // しゃがみアニメの再生スイッチON!
+        rb.linearVelocity = Vector2.zero; // その場にピタッと止める
+        yield return new WaitForSeconds(0.3f); // 0.3秒間しゃがみ待機
+        anim.SetBool("isLanding", false); // しゃがみスイッチOFF
+
+        StateChange(1); // 通常歩行に戻す
         keepAirXVelocity = false;
         isJumping = false;
         jumpRequest = true;
@@ -367,7 +384,7 @@ public class Player_walk : MonoBehaviour
         isGrounded = (hit.collider != null);
         currentGround = hit.collider;
 
-        Debug.DrawRay(rayOrigin, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
+        //Debug.DrawRay(rayOrigin, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
     }
 
     float GetJumpDirection(Transform jumpBlock)
@@ -441,5 +458,25 @@ public class Player_walk : MonoBehaviour
         isJumping = false;
         jumpCanceled = true;
         keepAirXVelocity = false;
+    }
+
+    private IEnumerator LandSequence()
+    {
+        isJumping = true; // 通常歩行による速度上書きをロック
+
+        jumpRequest = false;
+        StateChange(0); // idol
+
+        anim.SetBool("isLanding", true); // しゃがみアニメーション
+
+        if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+        yield return new WaitForSeconds(0.3f); // 0.3秒しゃがみ
+
+        anim.SetBool("isLanding", false);
+        jumpRequest = true;
+        isJumping=false;
+        StateChange(1); // 歩行状態に戻る
+
     }
 }

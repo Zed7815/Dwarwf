@@ -45,8 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60d2c7c353fe6e540b09514fbb72a658, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoJump
-  player: {fileID: 6387768747418741716}
-  targetPoint: {fileID: 0}
+  pl: {fileID: 0}
 --- !u!61 &7838864290128590769
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -107,7 +106,6 @@ GameObject:
   - component: {fileID: 6387768747418741716}
   - component: {fileID: 7077150521434997667}
   - component: {fileID: 5982510652067845826}
-  - component: {fileID: 1415292623070146408}
   m_Layer: 0
   m_Name: PLAYER
   m_TagString: Player
@@ -218,13 +216,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Player_walk
   PlayerSpeed: 5
   playerJumpPower: 10
+  playerJumpForwardPower: 3.6
+  wallBounceMultiplier: 1.5
+  jumpCenterTolerance: 0.05
   direction: 1
-  jumpRequest: 1
+  JpRequest: 1
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDistance: 1.5
   boxSize: {x: 0.75, y: 0.1}
+  jumpRequest: 1
 --- !u!50 &7077150521434997667
 Rigidbody2D:
   serializedVersion: 5
@@ -298,25 +300,3 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.23093256, y: 0.64}
   m_EdgeRadius: 0
---- !u!95 &1415292623070146408
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7957576783239162006}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 512d102cbc66aff4abedac325a9fbbf0, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
