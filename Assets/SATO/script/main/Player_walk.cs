@@ -83,9 +83,17 @@ public class Player_walk : MonoBehaviour
         else if (state == moveState.fall)
         {
             anim.SetBool("isWalk", false);
-            // 通常落下：空中落下は横の勢いを完全にカットして直下へ落とす
+            // 【最新のバグ修正対策】ジャンプブロックの上へ滑らかに乗り上げさせるため、X速度を即座に0にするのではなく、
+            // 直前の歩行速度から滑らかに0へと減衰（イージング）させます。
+            // これにより、崖から踏み外した瞬間に「真下にストン」と不自然に垂直落下してブロックの側面に挟まるバグを完全に修正！
             if (rb != null)
-                rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            {
+                float currentX = rb.linearVelocity.x;
+                float targetX = 0f;
+                // 滑らかに減速（イージング）しながら0に持っていく
+                float easedX = Mathf.MoveTowards(currentX, targetX, PlayerSpeed * Time.deltaTime * 4.0f);
+                rb.linearVelocity = new Vector2(easedX, rb.linearVelocity.y);
+            }
         }
         else
         {
@@ -262,6 +270,9 @@ public class Player_walk : MonoBehaviour
 
         // 1段階目(乗り上げ)：完璧な放物線ジャンプコルーチン
         StateChange(2);
+
+        // 1. トリガーに接した瞬間、Kinematicな制御に切り替えて綺麗な放物線で乗り上げる
+        StateChange(2); // moveState.jump
 
         Vector3 startPos = transform.position;
         Vector3 endPos = targetBlock.position + Vector3.up * 1.2f;
