@@ -22,7 +22,7 @@ public class Player_walk : MonoBehaviour
     public float PlayerSpeed = 5.0f;
     public float playerJumpPower = 11.5f;       // ジャンプ高さ
     public float playerJumpForwardPower = 3.6f; // ジャンプの横の勢い
-    public float wallBounceMultiplier = 1.5f;   // 【新規】壁跳ね返りの勢いを決める倍率
+    public float wallBounceMultiplier = 1.5f;   // 壁跳ね返りの勢いを決める倍率
     public float jumpCenterTolerance = 0.05f;
     public int direction = 1;
     public bool JpRequest = true;
@@ -35,7 +35,7 @@ public class Player_walk : MonoBehaviour
     [Header("地面判定の設定")]
     public LayerMask groundLayer;
     public float groundCheckDistance = 0.6f;
-    public Vector2 boxSize = new Vector2(0.5f, 0.1f);
+    public Vector2 boxSize = new Vector2(0.25f, 0.1f); // 空中浮遊防止のために検出横幅を0.25fに最適化
     private bool isGrounded;
     private Collider2D currentGround;
 
@@ -58,16 +58,16 @@ public class Player_walk : MonoBehaviour
             JpRequest = true;
             jumpRequest = true;
 
-            // 【問題２解決策】着地している間、ジャンプコルーチンがいないのに状態が不自然なままであれば通常歩行にオート回復！
+            // 着地している間、ジャンプコルーチンがいないのに状態が不自然なままであれば通常歩行
             if (!isJumping && (state == moveState.jump || state == moveState.fall))
             {
-                StateChange(1); // 直ちに moveState.straight (歩行) へ引き上げ
+                StateChange(1); // 直ちに moveState.straight (歩行) へ安全に復帰！
             }
         }
         else
         {
             // 空中かつ、ジャンプブロックの意図的な大ジャンプ（isJumping）ではない場合
-            // 【通常落下時（fall）：慣性0】へ強制移行させます
+            // 【通常落下時（fall）：慣性0】へ強制移行
             if (!isJumping && (state == moveState.straight || state == moveState.idol))
             {
                 state = moveState.fall;
@@ -108,7 +108,6 @@ public class Player_walk : MonoBehaviour
     // 地面、または高台のコライダーとの接触処理
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // 【エラー100%完全回避】CompareTag("Wall")による例外エラーを防ぐ安全な壁判定
         bool isWall = false;
         if (collision.gameObject != null)
         {
@@ -125,7 +124,7 @@ public class Player_walk : MonoBehaviour
 
         if (isWall)
         {
-            // 大ジャンプ中（isJumping == true）に壁に触れたら、マリオのように跳ね返る！
+            // 大ジャンプ中（isJumping == true）に壁に触れたら、マリオのように跳ね返る
             if (isJumping && rb != null)
             {
                 if (Time.time - lastFlipTime > 0.15f)
@@ -138,10 +137,8 @@ public class Player_walk : MonoBehaviour
                     scale.x = Mathf.Abs(scale.x) * direction;
                     transform.localScale = scale;
 
-                    // 2. マリオ壁ジャンプ：縦の勢い(Y速度)は100%保持したまま、横(X速度)だけを反転させて跳ね返す！
+                    // 2. マリオ壁ジャンプ：縦の勢い(Y速度)は保持したまま、横(X速度)だけを反転させて跳ね返す
                     float keepYVelocity = rb.linearVelocity.y;
-
-                    // 🔴 ★★★ コレがココに入ります！ ★★★ 🔴
                     float bounceXVelocity = direction * playerJumpForwardPower * wallBounceMultiplier;
 
                     rb.linearVelocity = new Vector2(bounceXVelocity, keepYVelocity);
@@ -163,7 +160,7 @@ public class Player_walk : MonoBehaviour
         }
     }
 
-    // 【問題４対策：中央に来たら美しくピタッと静止してためる】
+    // 中央に来たら美しくピタッと静止してためる
     IEnumerator WalkToBlockCenter(Transform jumpBlock)
     {
         if (jumpBlock == null)
@@ -243,7 +240,9 @@ public class Player_walk : MonoBehaviour
 
         // 離陸の瞬間に判定が即誤作動しないよう0.2秒待機
         yield return new WaitForSeconds(0.2f);
-        yield return new WaitUntil(() => isGrounded); // 着地までループを止める
+
+        // 落下中（または完全に最高点に達した状態）に接地したときのみ着地判定を終了
+        yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);
 
         StateChange(1); // 歩行状態へ復帰
         keepAirXVelocity = false;
@@ -256,6 +255,10 @@ public class Player_walk : MonoBehaviour
         if (isJumping) yield break;
         isJumping = true;
         jumpRequest = false;
+
+        // 崖の角やブロック等に衝突して乗り上げ中にコライダーが引っかかるのを防ぐため、一時的にTrigger化
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.isTrigger = true;
 
         // 1段階目(乗り上げ)：完璧な放物線ジャンプコルーチン
         StateChange(2);
@@ -279,7 +282,7 @@ public class Player_walk : MonoBehaviour
             float t = time / duration;
 
             Vector3 pos = Vector3.Lerp(startPos, endPos, t);
-            pos.y += jumpHeight * t * (1 - t);
+            pos.y += jumpHeight * t * (1 - t); // 綺麗な放物線の弧を描くように修正
 
             transform.position = pos;
             yield return null;
@@ -287,9 +290,13 @@ public class Player_walk : MonoBehaviour
 
         transform.position = endPos;
 
-        // 2段階目：ブロック乗り上げ後に「ピタッと」ためる静止
+        // 乗り上げが完了したので物理衝突をONに戻す
+        if (col != null) col.isTrigger = false;
+
+        // 2段階目：ブロック乗り上げ後に静止
         if (rb != null)
         {
+            rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
         }
         StateChange(0); // idol
@@ -297,7 +304,7 @@ public class Player_walk : MonoBehaviour
 
         yield return new WaitForSeconds(0.75f);
 
-        // 3段階目：空中慣性100%の物理大ジャンプをトリガー！
+        // 3段階目:物理大ジャンプをトリガー
         StateChange(2);
 
         if (rb != null)
@@ -311,7 +318,9 @@ public class Player_walk : MonoBehaviour
         }
 
         yield return new WaitForSeconds(0.2f);
-        yield return new WaitUntil(() => isGrounded); // 着地を待つ
+
+        //落下中（または完全に最高点に達した状態）に接地したときのみ着地判定を終了する
+        yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);
 
         jumpRequest = true;
         isJumping = false;
@@ -332,6 +341,13 @@ public class Player_walk : MonoBehaviour
     float GetJumpDirection(Transform jumpBlock)
     {
         if (jumpBlock == null) return direction;
+
+        // 極微小な位置ズレによる反転を防ぐため、現在の進行方向(direction)を優先する
+        if (Mathf.Abs(jumpBlock.position.x - transform.position.x) < 0.1f)
+        {
+            return direction;
+        }
+
         float jumpDirection = Mathf.Sign(jumpBlock.position.x - transform.position.x);
         if (jumpDirection == 0) jumpDirection = direction;
         return jumpDirection;
