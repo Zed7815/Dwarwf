@@ -33,9 +33,10 @@ public class Player_walk : MonoBehaviour
     private bool keepAirXVelocity = false;
 
     [Header("地面判定の設定")]
+    public Transform groundCheck;                // 【エラー修正】変数宣言を追加（自動割り当て対応）
     public LayerMask groundLayer;
-    public float groundCheckDistance = 0.6f;
-    public Vector2 boxSize = new Vector2(0.25f, 0.1f); // 空中浮遊防止のために検出横幅を0.25fに最適化
+    public float groundCheckDistance = 0.15f;    // 【崖際バグ対策】0.6fから0.15f（足元ギリギリ）へ短縮
+    public Vector2 boxSize = new Vector2(0.16f, 0.05f); // 【崖際バグ対策】0.25fから0.16f（体幅よりスリム）へ修正
     private bool isGrounded;
     private Collider2D currentGround;
 
@@ -47,6 +48,12 @@ public class Player_walk : MonoBehaviour
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
+
+        // もしInspectorで未割り当ての場合、子オブジェクトから自動検索
+        if (groundCheck == null)
+        {
+            groundCheck = transform.Find("GroundCheck");
+        }
     }
 
     void Update()
@@ -79,11 +86,13 @@ public class Player_walk : MonoBehaviour
         }
         else
         {
-            // 空中かつ、ジャンプブロックの意図的な大ジャンプ（isJumping）ではない場合
-            // 【通常落下時（fall）：慣性0】へ強制移行
+            
             if (!isJumping && (state == moveState.straight || state == moveState.idol))
             {
-                state = moveState.fall;
+                if (rb != null && rb.linearVelocity.y < -0.1f)
+                {
+                    state = moveState.fall;
+                }
             }
         }
 
@@ -96,7 +105,7 @@ public class Player_walk : MonoBehaviour
         else if (state == moveState.fall)
         {
             anim.SetBool("isWalk", false);
-  
+
             if (rb != null)
             {
                 float currentX = rb.linearVelocity.x;
@@ -241,11 +250,10 @@ public class Player_walk : MonoBehaviour
 
         if (!isGrounded)
         {
-            yield return new WaitUntil(() => isGrounded);
+            yield break;
         }
 
         isJumping = true;
-        jumpRequest = false;
 
         // --- 1. 中心へのピタッとした位置合わせ ---
         yield return StartCoroutine(WalkToBlockCenter(jumpBlock));
@@ -296,11 +304,10 @@ public class Player_walk : MonoBehaviour
 
         if (!isGrounded)
         {
-            yield return new WaitUntil(() => isGrounded);
+            yield break;
         }
 
         isJumping = true;
-        jumpRequest = false;
 
         // 崖の角やブロック等に衝突して乗り上げ中にコライダーが引っかかるのを防ぐため、一時的にTrigger化
         Collider2D col = GetComponent<Collider2D>();
@@ -378,13 +385,27 @@ public class Player_walk : MonoBehaviour
 
     void CheckGround()
     {
-        Vector2 rayOrigin = transform.position + Vector3.down * 0.2f;
-        RaycastHit2D hit = Physics2D.BoxCast(rayOrigin, boxSize, 0f, Vector2.down, groundCheckDistance, groundLayer);
+        Vector2 rayOrigin;
+        float actualDistance = groundCheckDistance;
+        Vector2 actualSize = boxSize;
+
+        // groundCheck オブジェクト（子オブジェクト）が割り当てられていればそれを使用
+        if (groundCheck != null)
+        {
+            rayOrigin = groundCheck.position;
+            actualDistance = 0.05f; // 専用オブジェクトがある場合は極短レンジで判定
+        }
+        else
+        {
+            // groundCheckオブジェクトが無い場合：プレイヤーの足元(0.45f下)を起点に自動計算
+            rayOrigin = (Vector2)transform.position + Vector2.down * 0.45f;
+        }
+
+        // 下方向にキャストして接地を検知（横幅をスリムに、距離を短く）
+        RaycastHit2D hit = Physics2D.BoxCast(rayOrigin, actualSize, 0f, Vector2.down, actualDistance, groundLayer);
 
         isGrounded = (hit.collider != null);
         currentGround = hit.collider;
-
-        //Debug.DrawRay(rayOrigin, Vector2.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
     }
 
     float GetJumpDirection(Transform jumpBlock)
@@ -475,8 +496,7 @@ public class Player_walk : MonoBehaviour
 
         anim.SetBool("isLanding", false);
         jumpRequest = true;
-        isJumping=false;
+        isJumping = false;
         StateChange(1); // 歩行状態に戻る
-
     }
 }
