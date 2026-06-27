@@ -1,21 +1,18 @@
-﻿using UnityEngine;
+﻿
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using UnityEngine.Scripting.APIUpdating;
-using Unity.IO.LowLevel.Unsafe;
-
+using UnityEngine;
 
 public class BirdCarrier : MonoBehaviour
 {
     [Header("移動設定")]
     [Tooltip("運ぶスピード")]
     public float speed = 4.0f;
-    [Tooltip("溜め時間")]
+    [Tooltip("つかむ前・到着後のタメ（待ち時間）")]
     public float waitTime = 0.5f;
-    [Tooltip("足場のレイヤー")]
+    [Tooltip("障害物や着地させる足場のレイヤー")]
     public LayerMask obstacleLayer;
-    [Tooltip("索敵最大距離")]
+    [Tooltip("横方向の索敵最大距離")]
     public float maxSearchDistance = 20.0f;
     [Tooltip("飛び上がる高さ（高度）")]
     public float heightOffset = 1.5f;
@@ -24,53 +21,58 @@ public class BirdCarrier : MonoBehaviour
     [Tooltip("着地時のY座標オフセット調整（出発時の高さに対する微調整値）")]
     public float landYOffset = 0.0f;
 
-    [Header("演出")]
-    [Tooltip("鳥のグラフィック")]
+    [Header("ビジュアル・演出設定")]
+    [Tooltip("鳥のグラフィック用SpriteRenderer（左右反転に使用。未設定時は自身から取得）")]
     public SpriteRenderer birdSprite;
+    [Tooltip("鳥のアニメーション用Animator（未設定時は自身から取得）")]
+    public Animator animator;
+    [Tooltip("飛行アニメーションを制御するAnimatorのBoolパラメータ名")]
+    public string flyBoolParam = "isFlying";
 
     private Vector3 targetPos;
     private bool isMoving = false;
 
-    private void Start()
+    void Start()
     {
         if (birdSprite == null)
         {
             birdSprite = GetComponent<SpriteRenderer>();
         }
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+        }
     }
 
+    // プレイヤーが向いている方向に向かって一番近い足場を探す
     bool FindNextDestination(Player_walk pWalk)
     {
-        // プレイヤーの進行方向
+        // プレイヤーの進行方向（1: 右, -1: 左）
         int dir = pWalk.direction;
         Vector2 rayDir = dir > 0 ? Vector2.right : Vector2.left;
 
         float rayOffset = 1.5f;
         Vector3 rayStart = new Vector3(transform.position.x + (rayDir.x * rayOffset), pWalk.transform.position.y, transform.position.z);
 
-
-        // ray
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, rayDir, maxSearchDistance, obstacleLayer);
-
+        //UnityのSceneビューでRay（索敵レーザー）を赤い線で表示（10秒間表示）
         Debug.DrawRay(rayStart, rayDir * maxSearchDistance, Color.red, 10.0f);
+
+        // レイキャストを飛ばして足場（ブロック）を探索
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, rayDir, maxSearchDistance, obstacleLayer);
 
         if (hit.collider != null)
         {
-            // 足場発見
-            // X座標を検知したブロックの中心位置に合わせる
             float targetX = hit.point.x + (dir * 0.8f);
 
-            // 降下した後のY座標が、最初のポジションと同じY座標 ＋ インスペクター調整値
             float targetY = pWalk.transform.position.y + landYOffset;
 
             targetPos = new Vector3(targetX, targetY, transform.position.z);
 
             Debug.Log($"[BirdCarrier] 足場を発見！ 衝突点: {hit.point} -> 補正後の目的地: {targetPos}");
-
             return true;
         }
 
-
+        Debug.LogWarning($"[BirdCarrier] 索敵失敗。Rayの開始位置: {rayStart}, 方向: {rayDir}。障害物レイヤー(ObstacleLayer)の設定やコライダーを確認してください。");
         return false;
     }
 
@@ -78,16 +80,17 @@ public class BirdCarrier : MonoBehaviour
     {
         if (isMoving) return;
 
-        // 接触したら必ずコンソールに出力するログ
-        Debug.Log($"触れたオブジェクト: {trigger.gameObject.name}、タグ: {trigger.gameObject.tag}");
+        // 接触時、コンソールに必ず出力
+        Debug.Log($"[BirdCarrier] 接触オブジェクト: {trigger.gameObject.name}、タグ: {trigger.gameObject.tag}");
 
         if (trigger.gameObject.CompareTag("Player"))
         {
             Player_walk p = trigger.gameObject.GetComponent<Player_walk>();
+
             if (p != null)
             {
                 bool found = FindNextDestination(p);
-                Debug.Log($"足場の検索結果: {found}"); // 足場が見つかったかどうか
+                Debug.Log($"[BirdCarrier] 足場の探索結果: {found}");
 
                 if (found)
                 {
@@ -119,6 +122,12 @@ public class BirdCarrier : MonoBehaviour
         float takeoffElapsed = 0f;
 
         Vector3 startPlayerPos = pWalk.transform.position; // 掴み上げ開始時のプレイヤーの元の位置
+
+        // 飛行開始（羽ばたきループ）
+        if (animator != null && !string.IsNullOrEmpty(flyBoolParam))
+        {
+            animator.SetBool(flyBoolParam, true);
+        }
 
         while (takeoffElapsed < takeoffDuration)
         {
@@ -154,7 +163,7 @@ public class BirdCarrier : MonoBehaviour
             float curve = Mathf.SmoothStep(0, 1, elapsed / duration);
             transform.position = Vector3.Lerp(birdStartPos, birdEndPos, curve);
 
-            // プレイヤーも同期させて移動
+            // プレイヤーも同期させて移動（カメラ追従を自然に保つ）
             pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
 
             yield return null;
@@ -164,10 +173,11 @@ public class BirdCarrier : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f); // 移動完了後の短いタメ
 
-        // プレイヤーを歩行状態に戻。重力により、プレイヤーは自力で落下・着地
+       
+        // プレイヤーを歩行（自由行動）状態に戻
         pWalk.StateChange(1);
 
-        // --- 4.鳥だけが目標足場（targetPos）に向けてゆっくり降下し、着地する ---
+        // --- 4.に向けてゆっくり降下し、着地する ---
         Vector3 landStartBird = transform.position;
         Vector3 landEndBird = targetPos; // 鳥自身の着地座標（targetPos＝ブロックの上）
         float landDuration = 0.5f; // 降下にかける時間
@@ -179,16 +189,21 @@ public class BirdCarrier : MonoBehaviour
             float t = Mathf.SmoothStep(0, 1, landElapsed / landDuration);
             transform.position = Vector3.Lerp(landStartBird, landEndBird, t);
 
-          
+            // 💡 プレイヤーの同期処理は行わない（もう離したため自由に行動できます）
             yield return null;
         }
         transform.position = landEndBird;
 
+        // 着地完了（待機Idolへ戻る）
+        if (animator != null && !string.IsNullOrEmpty(flyBoolParam))
+        {
+            animator.SetBool(flyBoolParam, false);
+        }
+
         // 到着後の溜め（着陸の余韻）
         yield return new WaitForSeconds(waitTime);
 
-        // --- 5. 鳥の見た目を反転して終了 ---
-      
+        // --- 5.鳥の見た目を反転して終了 ---
         SetBirdFacing(-moveDir);
 
         // 連続発動防止用のインターバル
@@ -196,14 +211,13 @@ public class BirdCarrier : MonoBehaviour
         isMoving = false;
     }
 
-    // 鳥の見た目の反転用
+    // 鳥のグラフィックの向きを左右反転させるヘルパーメソッド
     void SetBirdFacing(int dir)
     {
         if (birdSprite != null)
         {
             Vector3 scale = birdSprite.transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * dir; // 絶対値に方向を掛けて反転
-
+            scale.x = Mathf.Abs(scale.x) * dir; // 絶対値に方向を掛けて左右反転
             birdSprite.transform.localScale = scale;
         }
     }
