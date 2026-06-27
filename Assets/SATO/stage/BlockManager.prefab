@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6269638778560251959
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7581928759647888383}
+  - component: {fileID: 8772879449745350864}
+  m_Layer: 0
+  m_Name: BlockManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7581928759647888383
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6269638778560251959}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.03866, y: 0.63156, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8772879449745350864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6269638778560251959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fe65365309255c4a89d41742c5c599a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockManager
+  gameManager: {fileID: 0}
+  blockTypes:
+  - name: "\u30CD\u30BA\u30DF"
+    prefab: {fileID: 7864217175585364333, guid: ed4cd00eb773c1e4ebd3881a7af579c6, type: 3}
+    maxCount: 3
+    currentCount: 0
+    individualCountText: {fileID: 0}
+  - name: "\u30D8\u30D3"
+    prefab: {fileID: 6244122579635717758, guid: 35a0b46c95c4e6b4f936144c960d162e, type: 3}
+    maxCount: 0
+    currentCount: 0
+    individualCountText: {fileID: 0}
+  - name: "\u30AF\u30E2"
+    prefab: {fileID: 4538915699052470045, guid: 97efd77aa0f81bc4bab8a612be958d31, type: 3}
+    maxCount: 0
+    currentCount: 0
+    individualCountText: {fileID: 0}
