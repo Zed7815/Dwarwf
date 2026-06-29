@@ -2909,6 +2909,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1904973439}
     - target: {fileID: 8772879449745350864, guid: 810c6f082cf8fb84a9ca7a4772188ac6, type: 3}
+      propertyPath: blockTypes.Array.data[1].maxCount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8772879449745350864, guid: 810c6f082cf8fb84a9ca7a4772188ac6, type: 3}
+      propertyPath: blockTypes.Array.data[2].maxCount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8772879449745350864, guid: 810c6f082cf8fb84a9ca7a4772188ac6, type: 3}
       propertyPath: blockTypes.Array.data[0].individualCountText
       value: 
       objectReference: {fileID: 1593715957}

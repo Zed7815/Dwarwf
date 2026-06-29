@@ -30,6 +30,8 @@ public class BlockManager : MonoBehaviour
 
     private List<GameObject> ghostBlocks = new List<GameObject>(); // ゴーストたちをおぼえるリスト
 
+    private DynamicDropFrame activeFrame;
+
 
     void Update()
     {

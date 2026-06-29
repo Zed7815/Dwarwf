@@ -9,6 +9,7 @@ TagManager:
   - DropFrame
   - Item
   - Ground
+  - WarpExit
   layers:
   - Default
   - TransparentFX
