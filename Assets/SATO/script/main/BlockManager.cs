@@ -5,11 +5,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using static UnityEngine.AdaptivePerformance.Provider.AdaptivePerformanceSubsystemDescriptor;
 
 public class BlockManager : MonoBehaviour
 {
-
     [System.Serializable]
     public class BlockData
     {
@@ -18,20 +16,24 @@ public class BlockManager : MonoBehaviour
         public int maxCount;      // 置ける最大数
         public int currentCount;  // 現在置いている数
         public TextMeshProUGUI individualCountText; // テキストUI
+
+        [Header("拡張サイズ設定")]
+        [Tooltip("この動物・ギミックブロックをドラッグした際、枠（DropFrame）をどれくらい広げるか（縦横の拡張倍率）")]
+        public Vector3 targetFrameScale = new Vector3(1.5f, 1.5f, 1.0f); // 例えば1.5倍に拡大
     }
 
     public GameManager gameManager; // モード判定
     public List<BlockData> blockTypes; // インスペクターで種類を増やす
 
-    private GameObject draggingBlock; // ドラックしているブロック
+    private GameObject draggingBlock; // ドラッグしているブロック
     private SpriteRenderer previewSR; // 色
     private GameObject previewBlock; // グリッドの影
     private int activeTypeIndex; // 今ドラッグしているブロックの番号
 
     private List<GameObject> ghostBlocks = new List<GameObject>(); // ゴーストたちをおぼえるリスト
 
+    // 現在ドラッグによってのDropFrameを一時保存する
     private DynamicDropFrame activeFrame;
-
 
     void Update()
     {
@@ -41,7 +43,6 @@ public class BlockManager : MonoBehaviour
         {
             DeleteBlock();
         }
-
 
         // マウスの位置にブロックを追従
         if (draggingBlock != null)
@@ -55,7 +56,6 @@ public class BlockManager : MonoBehaviour
             DropBlock();
         }
     }
-
 
     public void StartDragging(int typeIndex)
     {
@@ -76,10 +76,10 @@ public class BlockManager : MonoBehaviour
         draggingBlock.GetComponent<Collider2D>().enabled = false;
 
         // グリッド予告
-        previewBlock = Instantiate(blockTypes[typeIndex].prefab,mouseWorldPos, Quaternion.identity);
+        previewBlock = Instantiate(blockTypes[typeIndex].prefab, mouseWorldPos, Quaternion.identity);
 
         previewSR = previewBlock.GetComponent<SpriteRenderer>();
-        previewBlock.GetComponent<Collider2D>().enabled=false;
+        previewBlock.GetComponent<Collider2D>().enabled = false;
 
         previewBlock.transform.position += new Vector3(0, 0, 0.1f);
     }
@@ -87,41 +87,56 @@ public class BlockManager : MonoBehaviour
     void UpdateDraggingPosition()
     {
         Vector3 mousePos = GetMouseWorldPosition();
-        // マウスの位置に追従
         draggingBlock.transform.position = mousePos;
 
-       // マウスの下にある枠を探す 
-       Collider2D frameHit = GetColliderAtPos(mousePos,"DropFrame");
+        Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
 
-
-        // 重なりの判定で予告の色を変更
         if (frameHit != null)
         {
-            previewBlock.SetActive(true); // 予告表示
-
-            // 枠の真ん中の座標を取得して吸い付かせる
+            previewBlock.SetActive(true);
             Vector3 snapPos = frameHit.transform.position;
             previewBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0.1f);
 
-            // ブロックがすでにあるかチェック
-            Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
+            // 枠を拡大させる制御 
+            DynamicDropFrame hitFrame = frameHit.GetComponent<DynamicDropFrame>();
+            if (hitFrame != null)
+            {
+                // 新しく枠に入った、または別の枠に乗り換えた場合
+                if (activeFrame != hitFrame)
+                {
+                    // もし直前に他の枠に重なっていたら、それを一旦元に戻す
+                    if (activeFrame != null)
+                    {
+                        activeFrame.ResetScale();
+                    }
 
+                    activeFrame = hitFrame;
+                    // インスペクターで設定したその動物の拡張倍率（targetFrameScale）を渡す
+                    activeFrame.Expand(blockTypes[activeTypeIndex].targetFrameScale);
+                }
+            }
+
+            Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
             if (blockHit != null)
             {
-                previewSR.color = new Color(1f, 0f, 0f, 0.5f); // すでにあるなら赤        
+                previewSR.color = new Color(1f, 0f, 0f, 0.5f);
             }
-
             else
             {
-                previewSR.color = new Color(0.5f, 1f, 0.5f, 0.5f); // 空いていれば緑
+                previewSR.color = new Color(0.5f, 1f, 0.5f, 0.5f);
             }
         }
-
         else
         {
-            previewBlock.SetActive(false);// 予告を隠す
+            previewBlock.SetActive(false);
+
+            // ドラッグ中のマウスが枠から完全に外れたら、ぬるっと元の大きさに縮小
+            if (activeFrame != null)
+            {
+                activeFrame.ResetScale();
+                activeFrame = null;
+            }
         }
-  
     }
 
     // 最大値まで設置されているかを確認する
@@ -129,7 +144,6 @@ public class BlockManager : MonoBehaviour
     {
         foreach (var type in blockTypes)
         {
-            // 一つでも最大数に達していない種類があれば
             if (type.currentCount < type.maxCount) return false;
         }
         return true;
@@ -137,13 +151,12 @@ public class BlockManager : MonoBehaviour
 
     void DropBlock()
     {
-        // 1x1のグリッドにスナップさせる座標計算
         Vector3 mousePos = GetMouseWorldPosition();
 
         // その場所にブロックがないかチェック
-        Collider2D frameHit = GetColliderAtPos(mousePos,"DropFrame");
+        Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
 
-        if(frameHit != null)
+        if (frameHit != null)
         {
             Vector3 snapPos = frameHit.transform.position;
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
@@ -151,7 +164,7 @@ public class BlockManager : MonoBehaviour
             if (blockHit == null)
             {
                 // 配置成功
-                draggingBlock.transform.position = new Vector3(snapPos.x,snapPos.y,0);
+                draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
                 draggingBlock.GetComponent<Collider2D>().enabled = true; // 当たり判定を戻す
                 draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
 
@@ -160,23 +173,37 @@ public class BlockManager : MonoBehaviour
                 BlockInfo info = draggingBlock.AddComponent<BlockInfo>();
                 info.typeIndex = activeTypeIndex;
 
-                // ドラッグ中の種類の個数を増やす
                 blockTypes[activeTypeIndex].currentCount++;
                 draggingBlock = null;
-            }
 
+                // 配置に成功した場合は、枠を拡大させたまま（Expand維持）に
+                // したがって、ここではResetScaleは呼ばず、ドラッグ用の記憶(activeFrame)だけをクリア
+                activeFrame = null;
+            }
             else
             {
                 Destroy(draggingBlock);
                 draggingBlock = null;
+
+                // ドロップ先が重複していて失敗した場合は、ぬるっと元の大きさに縮小
+                if (activeFrame != null)
+                {
+                    activeFrame.ResetScale();
+                    activeFrame = null;
+                }
             }
-
         }
-
         else
         {
-            Destroy(draggingBlock);// 枠以外で放したら消去
-            draggingBlock= null;
+            Destroy(draggingBlock); // 枠以外で放したら消去
+            draggingBlock = null;
+
+            //  枠以外の場所でドラッグを離して消去された場合も、ぬるっと元の大きさに戻
+            if (activeFrame != null)
+            {
+                activeFrame.ResetScale();
+                activeFrame = null;
+            }
         }
 
         if (previewBlock != null)
@@ -186,21 +213,18 @@ public class BlockManager : MonoBehaviour
         }
 
         UpdateUI();
-
     }
 
-    // 特定のタグを持ったコライダーをその場所から探すための関数
     Collider2D GetColliderAtPos(Vector3 pos, string tag)
     {
         Collider2D[] hits = Physics2D.OverlapPointAll(pos);
-        foreach(var hit in hits)
+        foreach (var hit in hits)
         {
             if (hit.CompareTag(tag)) return hit;
         }
         return null;
     }
 
-    // マウスの座標をワールド座標に変換
     Vector3 GetMouseWorldPosition()
     {
         if (Camera.main == null)
@@ -211,11 +235,9 @@ public class BlockManager : MonoBehaviour
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
 
-        // スクリーン座標が範囲内かチェック
         if (mousePos.x < 0 || mousePos.x > Screen.width ||
             mousePos.y < 0 || mousePos.y > Screen.height)
         {
-            // 画面外の場合は現在のドラッグ位置かゼロを返す
             return draggingBlock != null ? draggingBlock.transform.position : Vector3.zero;
         }
 
@@ -234,7 +256,6 @@ public class BlockManager : MonoBehaviour
 
     public void ResetAllBlocks()
     {
-        // 古いゴールドを全部消去
         ClearGhostBlocks();
 
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
@@ -245,32 +266,33 @@ public class BlockManager : MonoBehaviour
             {
                 CreateGhostBlock(b.transform.position, info.typeIndex);
             }
-
-            Destroy(b); 
+            Destroy(b);
         }
-        
+
         foreach (var type in blockTypes)
         {
             type.currentCount = 0;
         }
 
+        // 盤面を一括クリアした際は、シーン内全ての枠（DynamicDropFrame）を初期サイズにリセット
+        DynamicDropFrame[] allFrames = FindObjectsOfType<DynamicDropFrame>();
+        foreach (DynamicDropFrame frame in allFrames)
+        {
+            if (frame != null) frame.ResetScale();
+        }
+        activeFrame = null;
+
         UpdateUI();
     }
 
-    // ゴースト生成
     void CreateGhostBlock(Vector3 pos, int typeIndex)
     {
-        // 本物と同じプレハブを生成
         GameObject ghost = Instantiate(blockTypes[typeIndex].prefab, pos, Quaternion.identity);
 
-        // ゴーストが邪魔しないようにする
         Collider2D col = ghost.GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
-        //タグの変更
         ghost.tag = "Untagged";
-
-        // リストに入れる
         ghostBlocks.Add(ghost);
 
         StartCoroutine(FadeInGhost(ghost));
@@ -281,23 +303,22 @@ public class BlockManager : MonoBehaviour
         SpriteRenderer sr = ghost.GetComponent<SpriteRenderer>();
         if (sr == null) yield break;
 
-        sr.sortingOrder = -1; // 本物より少し奥に
+        sr.sortingOrder = -1;
 
-        float duration = 0.5f; // 0.5秒かけて現れる
+        float duration = 0.5f;
         float elapsed = 0f;
 
         Color targetColor = new Color(0.6f, 0.6f, 0.6f, 1f);
-        Color starColor = new Color(0.6f, 0.6f, 0.6f, 0f); // 最初は透明
+        Color starColor = new Color(0.6f, 0.6f, 0.6f, 0f);
 
         while (elapsed < duration)
         {
-            if (ghost == null) yield break ;
+            if (ghost == null) yield break;
 
-            elapsed += Time.deltaTime;  
+            elapsed += Time.deltaTime;
             sr.color = Color.Lerp(starColor, targetColor, elapsed / duration);
             yield return null;
         }
-
     }
 
     public void ClearGhostBlocks()
@@ -309,10 +330,9 @@ public class BlockManager : MonoBehaviour
         ghostBlocks.Clear();
     }
 
-
     void UpdateUI()
     {
-       foreach (var type in blockTypes)
+        foreach (var type in blockTypes)
         {
             if (type.individualCountText != null)
             {
@@ -325,25 +345,30 @@ public class BlockManager : MonoBehaviour
     void DeleteBlock()
     {
         Vector3 mousePos = GetMouseWorldPosition();
-
-        // マウスの下にあるブロックを探す
         Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
 
         if (hit != null)
         {
-             // そのブロックが持っている情報を読み取る
-             BlockInfo info = hit.GetComponent<BlockInfo>();
+            Vector3 blockPos = hit.transform.position; //  削除されたブロックの位置を記憶
 
+            BlockInfo info = hit.GetComponent<BlockInfo>();
             if (info != null)
             {
-                // 対応する種類のカウントを1つ減らす
                 blockTypes[info.typeIndex].currentCount--;
             }
-
-            // オブジェクトを削除
             Destroy(hit.gameObject);
-            
-            // UI更新
+
+        
+            Collider2D frameHit = GetColliderAtPos(blockPos, "DropFrame");
+            if (frameHit != null)
+            {
+                DynamicDropFrame frame = frameHit.GetComponent<DynamicDropFrame>();
+                if (frame != null)
+                {
+                    frame.ResetScale();
+                }
+            }
+
             UpdateUI();
         }
     }

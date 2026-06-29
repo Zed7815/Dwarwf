@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8259120524193330274}
   - component: {fileID: 7670026890998447338}
   - component: {fileID: 6911822388434623276}
+  - component: {fileID: -5121022472524463353}
   m_Layer: 0
   m_Name: DropFrame (2)
   m_TagString: DropFrame
@@ -138,3 +139,16 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &-5121022472524463353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5147770036743013007}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  lerpSpeed: 8
