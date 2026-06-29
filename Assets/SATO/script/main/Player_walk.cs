@@ -277,6 +277,15 @@ public class Player_walk : MonoBehaviour
         keepAirXVelocity = true;
         StateChange(2); // moveState.jump にする
 
+        if (jumpBlock != null)
+        {
+            PlayerJumpBlock targetBlock = jumpBlock.GetComponent<PlayerJumpBlock>();
+            if (targetBlock != null)
+            {
+                targetBlock.TriggerJumpAnimation();
+            }
+        }
+
         if (rb != null)
         {
             float jumpDirection = GetJumpDirection(jumpBlock);
