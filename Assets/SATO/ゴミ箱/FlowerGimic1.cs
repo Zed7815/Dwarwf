@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class wata : MonoBehaviour
+public class FlowerGimic : MonoBehaviour
 {
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -10,3 +10,4 @@ public class wata : MonoBehaviour
         }
     }
 }
+
