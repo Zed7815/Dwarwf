@@ -25,22 +25,19 @@ public class DynamicDropFrame : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// 指定された倍率（乗数）に枠を広げる
-    /// </summary>
     public void Expand(Vector3 multiplier)
     {
         // 初期サイズに倍率を掛け合わせて、ピッタリと動物サイズに合わせる
         targetScale = new Vector3(
-            initialScale.x * multiplier.x,
-            initialScale.y * multiplier.y,
-            initialScale.z * multiplier.z
+            initialScale.x * 0.75f * multiplier.x,
+            initialScale.y * 0.75f * multiplier.y,
+            initialScale.z * 0.75f * multiplier.z
         );
     }
 
-    /// <summary>
     /// 枠を元の初期サイズに戻す
-    /// </summary>
+
     public void ResetScale()
     {
         targetScale = initialScale;

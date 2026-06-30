@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6430733142846910005}
   - component: {fileID: 7774030283271536555}
   - component: {fileID: 1079022428763827138}
+  - component: {fileID: -7264789259706623761}
   m_Layer: 3
   m_Name: "\u30EA\u30D5\u30C8"
   m_TagString: PlacedBlock
@@ -100,7 +101,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4538915699052470045}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 464dcc3c60e5b1b489f3f804fdbf3b32, type: 3}
   m_Name: 
@@ -156,3 +157,23 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &-7264789259706623761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4538915699052470045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abfd979f0f2eb84448726ec7a7043645, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpiderLift
+  speed: 2
+  waitTime: 0.5
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  spiderPrefab: {fileID: 0}
+  threadRenderer: {fileID: 0}
+  threadDeploySpeed: 4
