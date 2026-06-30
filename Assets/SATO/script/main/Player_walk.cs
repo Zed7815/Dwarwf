@@ -280,6 +280,9 @@ public class Player_walk : MonoBehaviour
         if (jumpBlock != null)
         {
             PlayerJumpBlock targetBlock = jumpBlock.GetComponent<PlayerJumpBlock>();
+            if (targetBlock == null) targetBlock = jumpBlock.GetComponentInParent<PlayerJumpBlock>();
+            if (targetBlock == null) targetBlock = jumpBlock.GetComponentInChildren<PlayerJumpBlock>();
+            
             if (targetBlock != null)
             {
                 targetBlock.TriggerJumpAnimation();
@@ -309,8 +312,10 @@ public class Player_walk : MonoBehaviour
 
     public IEnumerator HandleDoubleJumpSequence(Transform targetBlock)
     {
+        // 多重起動を確実にブロック
         if (isJumping) yield break;
 
+        // 地地にいない（空中での接触）の場合は処理をスキップ
         if (!isGrounded)
         {
             yield break;
@@ -322,43 +327,44 @@ public class Player_walk : MonoBehaviour
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.isTrigger = true;
 
-        // 1段階目(乗り上げ)：完璧な放物線ジャンプコルーチン
-        StateChange(2);
-
-        // 1. トリガーに接した瞬間、Kinematicな制御に切り替えて綺麗な放物線で乗り上げる
-        StateChange(2); // moveState.jump
+        // 1段階目（乗り上げ開始）：アニメーションと物理を制御
+        StateChange(2); // moveState.jump に変更
 
         Vector3 startPos = transform.position;
+        // ターゲットブロックの少し上（乗り上げる高さ）を目標地点に設定
         Vector3 endPos = targetBlock.position + Vector3.up * 1.2f;
 
         float duration = 0.5f;
         float jumpHeight = 1.8f;
         float time = 0f;
 
+        // 乗り上げ中は物理演算に邪魔されないようKinematicに変更
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.linearVelocity = Vector2.zero;
         }
 
+        // Lerp ＋ 二次関数による美しい放物線補間
         while (time < duration)
         {
             time += Time.deltaTime;
             float t = time / duration;
 
             Vector3 pos = Vector3.Lerp(startPos, endPos, t);
-            pos.y += jumpHeight * t * (1 - t); // 綺麗な放物線の弧を描くように修正
+            pos.y += jumpHeight * t * (1 - t); // 綺麗な放物線の弧を描く補間式
 
             transform.position = pos;
             yield return null;
         }
 
+        // ぴったり目標位置に合わせる
         transform.position = endPos;
 
-        // 乗り上げが完了したので物理衝突をONに戻す
+        // 乗り上げが完了したのでコライダーの物理衝突をONに戻す
         if (col != null) col.isTrigger = false;
 
-        // 2段階目：ブロック乗り上げ後に静止
+        // 2段階目（ブロック乗り上げ後に静止 ＆ 溜め待機）
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -367,11 +373,26 @@ public class Player_walk : MonoBehaviour
         StateChange(0); // idol
         anim.SetBool("isWalk", false);
 
+        // ジャンプ台の上で0.75秒ピタッとためる
         yield return new WaitForSeconds(0.75f);
 
-        // 3段階目:物理大ジャンプをトリガー
-        StateChange(2);
+        // 3段階目：物理大ジャンプをトリガー
+        StateChange(2); // moveState.jump
 
+        // 🌟 ジャンプ台自身のアニメーション（PlayerJumpBlock）を周囲の親子オブジェクト含めて高精度に自動検出し、トリガー
+        if (targetBlock != null)
+        {
+            PlayerJumpBlock blockScript = targetBlock.GetComponent<PlayerJumpBlock>();
+            if (blockScript == null) blockScript = targetBlock.GetComponentInParent<PlayerJumpBlock>();
+            if (blockScript == null) blockScript = targetBlock.GetComponentInChildren<PlayerJumpBlock>();
+
+            if (blockScript != null)
+            {
+                blockScript.TriggerJumpAnimation();
+            }
+        }
+
+        // 大ジャンプ力を物理的に加える
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -382,14 +403,16 @@ public class Player_walk : MonoBehaviour
             rb.linearVelocity = new Vector2(xVelocity, yVelocity);
         }
 
+        // 着地判定のバッティングを防ぐため、僅かな猶予を設ける
         yield return new WaitForSeconds(0.2f);
 
-        //落下中（または完全に最高点に達した状態）に接地したときのみ着地判定を終了する
+        // 落下中（または最高点に達した状態）に接地したときのみ着地を完了する
         yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);
 
+        // 各種状態を初期化して通常歩行にバトンタッチ
         jumpRequest = true;
         isJumping = false;
-        StateChange(1); // 通常歩行
+        StateChange(1); // 通常歩行（straight）へ復帰
     }
 
     void CheckGround()
