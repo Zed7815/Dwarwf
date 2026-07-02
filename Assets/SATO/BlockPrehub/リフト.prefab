@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 358004054961983669}
   - component: {fileID: 6430733142846910005}
   - component: {fileID: 7774030283271536555}
-  - component: {fileID: 1079022428763827138}
-  - component: {fileID: -7264789259706623761}
+  - component: {fileID: 2545665709584966522}
+  - component: {fileID: -2795853232954153594}
   m_Layer: 3
   m_Name: "\u30EA\u30D5\u30C8"
   m_TagString: PlacedBlock
@@ -101,7 +101,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4538915699052470045}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 464dcc3c60e5b1b489f3f804fdbf3b32, type: 3}
   m_Name: 
@@ -111,7 +111,8 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 8
---- !u!61 &1079022428763827138
+  yOffset: 2.55
+--- !u!61 &2545665709584966522
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -155,25 +156,32 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1.0285715, y: 1.0285715}
   m_EdgeRadius: 0
---- !u!114 &-7264789259706623761
-MonoBehaviour:
+--- !u!50 &-2795853232954153594
+Rigidbody2D:
+  serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4538915699052470045}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abfd979f0f2eb84448726ec7a7043645, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpiderLift
-  speed: 2
-  waitTime: 0.5
-  obstacleLayer:
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 8
-  spiderPrefab: {fileID: 0}
-  threadRenderer: {fileID: 0}
-  threadDeploySpeed: 4
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0

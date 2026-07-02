@@ -36,7 +36,7 @@ public class main_Player_walk : MonoBehaviour
     public Transform groundCheck;                // 【エラー修正】変数宣言を追加（自動割り当て対応）
     public LayerMask groundLayer;
     public float groundCheckDistance = 0.15f;    // 【崖際バグ対策】0.6fから0.15f（足元ギリギリ）へ短縮
-    public Vector2 boxSize = new Vector2(0.16f, 0.05f); // 【崖際バグ対策】0.25fから0.16f（体幅よりスリム）へ修正
+    public Vector2 boxSize = new Vector2(0.3f, 0.08f); // 【崖際バグ対策】0.25fから0.16f（体幅よりスリム）へ修正
     private bool isGrounded;
     private Collider2D currentGround;
 
@@ -402,7 +402,7 @@ public class main_Player_walk : MonoBehaviour
         if (groundCheck != null)
         {
             rayOrigin = groundCheck.position;
-            actualDistance = 0.05f; // 専用オブジェクトがある場合は極短レンジで判定
+            actualDistance = 0.12f; // 専用オブジェクトがある場合は極短レンジで判定
         }
         else
         {

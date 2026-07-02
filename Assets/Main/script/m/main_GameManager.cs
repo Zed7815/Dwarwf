@@ -1,7 +1,8 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using System.Collections.Generic;
 using TMPro;
-using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class main_GameManager : MonoBehaviour
 {
@@ -25,7 +26,6 @@ public class main_GameManager : MonoBehaviour
 
     void Awake()
     {
-        // instanceとして登録
         if (instance == null) instance = this;
     }
 

@@ -1,42 +1,61 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Tilemaps;
 using UnityEngine;
 
 public class LiftBlock : MonoBehaviour
 {
+    [Header("移動設定")]
+    public float speed = 2.5f;
+    public float waitTime = 0.5f;
+    public LayerMask obstacleLayer;
 
-    [Header("設定")]
-    public float speed = 2f;
-    public float waitTime = 0.5f; // 到着後の待ち時間
-    public LayerMask obstacleLayer; // どのレイヤーを天井とみなすか
+    [Header("高さの微調整")]
+    public float yOffset = 0f;
 
-    private Vector3 fixedXPos; // X座標を固定するための変数
-    private Vector3 targetPos;
+    [Header("Tilemap")]
+    public Tilemap tilemap;
+
+    public int maxSearchDistance = 20;
+
     private bool isMoving = false;
-    private bool toTarget = true; // 今から目的地へ向かうのか、戻るのか
-    private bool isInitialized = false; // 初期化フラグ
 
-    void Start()
+    private void OnCollisionEnter2D(Collision2D collision)
     {
+        // 1. Playモード以外は動かさない
+        if (GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
+
+        // 2. 移動中なら無視
+        if (isMoving) return;
+
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            // 🌟 踏んだ「その瞬間」のリフトの座標を、このインスタンス専用の軸として取得
+            float myX = transform.position.x;
+            float myZ = transform.position.z;
+
+            Vector3 target;
+            if (FindNextDestination(myX, out target))
+            {
+                Player_walk pWalk = collision.gameObject.GetComponent<Player_walk>();
+                if (pWalk != null)
+                {
+                    // 🌟 コルーチンに「今このリフトがどこにいるか」を直接渡す
+                    StartCoroutine(MoveRoutine(pWalk, myX, myZ, target.y));
+                }
+            }
+        }
     }
 
-    void InitializeLift()
+    bool FindNextDestination(float lockX, out Vector3 foundTarget)
     {
-        fixedXPos = transform.position;
-        isInitialized = true;
-    }
+        foundTarget = Vector3.zero;
 
-    // 真上にある一番近いブロックを探し、それを目的地に設定
-    bool FindNextDestination()
-    {
-        // 左右１マスずれた場所を起点
-        Vector3 leftLine = transform.position + Vector3.left * 1.0f;
-        Vector3 rightLine = transform.position + Vector3.right * 1.0f;
+        // lockX（今このリフトがあるX座標）を基準に上下を調べる
+        Vector3 leftLine = new Vector3(lockX - 0.7f, transform.position.y, 0);
+        Vector3 rightLine = new Vector3(lockX + 0.7f, transform.position.y, 0);
 
-        // 全ての衝突情報を集めるためのリスト
         List<RaycastHit2D> allHits = new List<RaycastHit2D>();
-
-        // 左右それぞれの列で、上と下をスキャン
         allHits.AddRange(Physics2D.RaycastAll(leftLine, Vector2.up, 20f, obstacleLayer));
         allHits.AddRange(Physics2D.RaycastAll(leftLine, Vector2.down, 20f, obstacleLayer));
         allHits.AddRange(Physics2D.RaycastAll(rightLine, Vector2.up, 20f, obstacleLayer));
@@ -45,84 +64,74 @@ public class LiftBlock : MonoBehaviour
         float closestDist = float.MaxValue;
         bool found = false;
 
+        Collider2D myCol = GetComponent<Collider2D>();
+        float myHalfHeight = myCol != null ? myCol.bounds.extents.y : 0.5f;
+
         foreach (var hit in allHits)
         {
-            // 今の高さ(transform.position.y)とほぼ同じ高さにあるブロックは「現在の階」なので無視する
-            float distFromCurrentY = Mathf.Abs(hit.collider.transform.position.y - transform.position.y);
+            if (hit.collider == null || hit.collider.gameObject == gameObject) continue;
 
-            if (distFromCurrentY > 0.8f) // 0.8マス以上離れている＝別の階層
+            // 🌟 TileMapの個別タイルに対応するため、当たった点（hit.point）を利用
+            float targetY = hit.point.y;
+            
+            // レイの方向を確認して着地位置を計算
+            float sideOffset = (targetY > transform.position.y) ? -myHalfHeight : myHalfHeight;
+            float candidateY = targetY + sideOffset + yOffset;
+
+            float dist = Mathf.Abs(candidateY - transform.position.y);
+
+            if (dist > 0.8f && dist < closestDist)
             {
-                // その中で、一番近い距離にあるものを探す
-                if (distFromCurrentY < closestDist)
-                {
-                    closestDist = distFromCurrentY;
-                    // Xはリフトの固定位置、Yは検知したブロックの高さ
-                    targetPos = new Vector3(fixedXPos.x, hit.collider.transform.position.y, fixedXPos.z);
-                    found = true;
-                }
+                closestDist = dist;
+                foundTarget = new Vector3(lockX, candidateY, 0);
+                found = true;
             }
         }
         return found;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            if (!isInitialized)InitializeLift();
-
-            // プレイヤーをリフトを親子関係に
-            Player_walk pWalk = collision.gameObject.GetComponent<Player_walk>();
-
-            // まだ動いていなければ移動開始
-            if (FindNextDestination())
-            {
-                // プレイヤーを止める
-                pWalk.StateChange(0); // idol
-                // プレイヤーをリフトの真ん中に吸着
-                pWalk.transform.position = new Vector3(transform.position.x, pWalk.transform.position.y, pWalk.transform.position.z);
-
-
-                // 親子関係に
-                collision.gameObject.transform.SetParent(transform);
-
-               StartCoroutine(MoveRoutine(pWalk));
-            }
-        }
-    }
-
-    IEnumerator MoveRoutine(Player_walk pWalk)
+    IEnumerator MoveRoutine(Player_walk pWalk, float lockX, float lockZ, float targetY)
     {
         isMoving = true;
-        yield return new WaitForSeconds(waitTime); // 動き出す前のタメ
+
+        // 移動開始時点の情報を完全にロック
+        float startY = transform.position.y;
+        pWalk.StateChange(0); // プレイヤー停止
         
-        Vector3 currentStart = transform.position;
-        Vector3 currentEnd = targetPos;
+        // プレイヤーの初期位置との差分を記憶
+        float playerYOffset = pWalk.transform.position.y - startY;
 
-        // X座標を固定
-        currentEnd.x = fixedXPos.x;
+        // 🌟 ここでプレイヤーを「このリフトのX軸」に一瞬で合わせる（lockXを使う）
+        pWalk.transform.position = new Vector3(lockX, pWalk.transform.position.y, lockZ);
 
-        float distance = Vector3.Distance(currentStart, currentEnd);
+        yield return new WaitForSeconds(waitTime);
+
+        float distance = Mathf.Abs(startY - targetY);
         float duration = distance / speed;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float curve = Mathf.SmoothStep(0,1,elapsed / duration);
+            float t = Mathf.SmoothStep(0, 1, elapsed / duration);
+            float currentY = Mathf.Lerp(startY, targetY, t);
 
-            // SmoothStepで動き出しと止まる前をなめらかに
-            transform.position = Vector3.Lerp(currentStart, currentEnd, curve);
+            // 🌟 常に「このリフト自身のlockX」を代入し続ける
+            // これで他のリフトへ飛ぶことは物理的に不可能になります
+            transform.position = new Vector3(lockX, currentY, lockZ);
+            
+            if (pWalk != null)
+            {
+                pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
+            }
 
             yield return null;
         }
 
-        transform.position = currentEnd;
-        toTarget = !toTarget; // 逆方向にリセット
-        isMoving = false;
+        transform.position = new Vector3(lockX, targetY, lockZ);
+        yield return new WaitForSeconds(waitTime);
 
-        // 親子関係の解除、再歩
-        pWalk.transform.SetParent(null);
-        pWalk.StateChange(1); 
+        if (pWalk != null) pWalk.StateChange(1); 
+        isMoving = false;
     }
 }
