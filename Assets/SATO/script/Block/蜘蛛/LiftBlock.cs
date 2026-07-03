@@ -20,6 +20,9 @@ public class LiftBlock : MonoBehaviour
 
     private bool isMoving = false;
 
+    [Header("下り時のみ追加オフセット")]
+    public float downYOffset = 0f;
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         // 1. Playモード以外は動かさない
@@ -30,7 +33,6 @@ public class LiftBlock : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            // 🌟 踏んだ「その瞬間」のリフトの座標を、このインスタンス専用の軸として取得
             float myX = transform.position.x;
             float myZ = transform.position.z;
 
@@ -40,7 +42,6 @@ public class LiftBlock : MonoBehaviour
                 Player_walk pWalk = collision.gameObject.GetComponent<Player_walk>();
                 if (pWalk != null)
                 {
-                    // 🌟 コルーチンに「今このリフトがどこにいるか」を直接渡す
                     StartCoroutine(MoveRoutine(pWalk, myX, myZ, target.y));
                 }
             }
@@ -51,39 +52,66 @@ public class LiftBlock : MonoBehaviour
     {
         foundTarget = Vector3.zero;
 
-        // lockX（今このリフトがあるX座標）を基準に上下を調べる
-        Vector3 leftLine = new Vector3(lockX - 0.7f, transform.position.y, 0);
-        Vector3 rightLine = new Vector3(lockX + 0.7f, transform.position.y, 0);
+        Collider2D myCol = GetComponent<Collider2D>();
+        float myHalfHeight = myCol != null ? myCol.bounds.extents.y : 0.5f;
+
+        float startUpperY = transform.position.y + myHalfHeight + 0.05f;
+        float startLowerY = transform.position.y - myHalfHeight - 0.05f;
+
+        Vector3 leftUpper = new Vector3(lockX - 0.6f, startUpperY, 0);
+        Vector3 rightUpper = new Vector3(lockX + 0.6f, startUpperY, 0);
+        Vector3 leftLower = new Vector3(lockX - 0.6f, startLowerY, 0);
+        Vector3 rightLower = new Vector3(lockX + 0.6f, startLowerY, 0);
 
         List<RaycastHit2D> allHits = new List<RaycastHit2D>();
-        allHits.AddRange(Physics2D.RaycastAll(leftLine, Vector2.up, 20f, obstacleLayer));
-        allHits.AddRange(Physics2D.RaycastAll(leftLine, Vector2.down, 20f, obstacleLayer));
-        allHits.AddRange(Physics2D.RaycastAll(rightLine, Vector2.up, 20f, obstacleLayer));
-        allHits.AddRange(Physics2D.RaycastAll(rightLine, Vector2.down, 20f, obstacleLayer));
+
+        // 上方向のスキャン（上部の開始点から上へ発射）
+        allHits.AddRange(Physics2D.RaycastAll(leftUpper, Vector2.up, maxSearchDistance, obstacleLayer));
+        allHits.AddRange(Physics2D.RaycastAll(rightUpper, Vector2.up, maxSearchDistance, obstacleLayer));
+
+        // 下方向のスキャン（下部の開始点から下へ発射）
+        allHits.AddRange(Physics2D.RaycastAll(leftLower, Vector2.down, maxSearchDistance, obstacleLayer));
+        allHits.AddRange(Physics2D.RaycastAll(rightLower, Vector2.down, maxSearchDistance, obstacleLayer));
 
         float closestDist = float.MaxValue;
         bool found = false;
 
-        Collider2D myCol = GetComponent<Collider2D>();
-        float myHalfHeight = myCol != null ? myCol.bounds.extents.y : 0.5f;
-
         foreach (var hit in allHits)
         {
-            if (hit.collider == null || hit.collider.gameObject == gameObject) continue;
+            if (hit.collider == null) continue;
 
-            // 🌟 TileMapの個別タイルに対応するため、当たった点（hit.point）を利用
+            // 自分自身、および「プレイヤー自身（Playerタグ）」をスキャン対象から完全に除外
+            if (hit.collider.gameObject == gameObject || hit.collider.CompareTag("Player")) continue;
+
+            // 他のリフトブロックも除外（お互いを床として誤認識するのを防ぐ）
+            if (hit.collider.GetComponent<LiftBlock>() != null) continue;
+
             float targetY = hit.point.y;
-            
-            // レイの方向を確認して着地位置を計算
-            float sideOffset = (targetY > transform.position.y) ? -myHalfHeight : myHalfHeight;
+
+            // Rayの発射方向（衝突点の高低）を正確に判定してオフセットを適用
+            // 床埋まりや天井めり込みを正確に防止
+            bool isGoingUp = targetY > transform.position.y;
+
+            float sideOffset = isGoingUp ? -myHalfHeight : myHalfHeight;
+
+            // 通常オフセット
             float candidateY = targetY + sideOffset + yOffset;
+
+            // 下りの時だけ追加オフセット
+            if (!isGoingUp)
+            {
+                candidateY += downYOffset;
+            }
 
             float dist = Mathf.Abs(candidateY - transform.position.y);
 
+            // 0.8マス以上離れている、最も近い有効な足場をターゲットにする
             if (dist > 0.8f && dist < closestDist)
             {
                 closestDist = dist;
-                foundTarget = new Vector3(lockX, candidateY, 0);
+                // わずかな物理演算の誤差（0.01マス単位のズレ）を吸収するため、0.5マス単位に丸める（推奨）
+                float snappedY = Mathf.Round(candidateY * 2.0f) / 2.0f;
+                foundTarget = new Vector3(lockX, snappedY, 0);
                 found = true;
             }
         }
@@ -94,14 +122,12 @@ public class LiftBlock : MonoBehaviour
     {
         isMoving = true;
 
-        // 移動開始時点の情報を完全にロック
         float startY = transform.position.y;
-        pWalk.StateChange(0); // プレイヤー停止
-        
-        // プレイヤーの初期位置との差分を記憶
+        pWalk.StateChange(0); // プレイヤーを一時停止
+
         float playerYOffset = pWalk.transform.position.y - startY;
 
-        // 🌟 ここでプレイヤーを「このリフトのX軸」に一瞬で合わせる（lockXを使う）
+        // プレイヤーのX軸をリフトに完全に合わせる
         pWalk.transform.position = new Vector3(lockX, pWalk.transform.position.y, lockZ);
 
         yield return new WaitForSeconds(waitTime);
@@ -116,10 +142,8 @@ public class LiftBlock : MonoBehaviour
             float t = Mathf.SmoothStep(0, 1, elapsed / duration);
             float currentY = Mathf.Lerp(startY, targetY, t);
 
-            // 🌟 常に「このリフト自身のlockX」を代入し続ける
-            // これで他のリフトへ飛ぶことは物理的に不可能になります
             transform.position = new Vector3(lockX, currentY, lockZ);
-            
+
             if (pWalk != null)
             {
                 pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
@@ -131,7 +155,7 @@ public class LiftBlock : MonoBehaviour
         transform.position = new Vector3(lockX, targetY, lockZ);
         yield return new WaitForSeconds(waitTime);
 
-        if (pWalk != null) pWalk.StateChange(1); 
+        if (pWalk != null) pWalk.StateChange(1); // プレイヤーの移動制限を解除
         isMoving = false;
     }
 }

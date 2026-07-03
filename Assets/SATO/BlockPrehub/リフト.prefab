@@ -111,7 +111,10 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 8
-  yOffset: 2.55
+  yOffset: 1
+  tilemap: {fileID: 0}
+  maxSearchDistance: 20
+  downYOffset: -2
 --- !u!61 &2545665709584966522
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -146,7 +149,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.008188367}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -156,7 +159,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.0285715, y: 1.0285715}
+  m_Size: {x: 1.0285715, y: 1.0449481}
   m_EdgeRadius: 0
 --- !u!50 &-2795853232954153594
 Rigidbody2D:
