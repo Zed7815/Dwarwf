@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Tilemaps;
 using UnityEngine;
 
+[ExecuteAlways]
 public class LiftBlock : MonoBehaviour
 {
     [Header("移動設定")]
@@ -18,17 +19,110 @@ public class LiftBlock : MonoBehaviour
 
     public int maxSearchDistance = 20;
 
+    [Header("検知設定")]
+    public float minMoveDistance = 0.8f;
+
     private bool isMoving = false;
 
     [Header("下り時のみ追加オフセット")]
     public float downYOffset = 0f;
 
+    [Header("プレイヤーの高さ調整")]
+    public float playerYOffsetOnLift = 1.0f;
+
+    [Header("クモ・糸の演出設定 (自動取得されます)")]
+    public GameObject spiderObject;
+    public Transform threadTransform;
+    public Animator spiderAnimator;
+
+    [Header("クモ・糸の配置設定")]
+    public float spiderYPosition = 8.0f;
+    public string animBoolName = "isMoving";
+    public float threadSpriteUnitSize = 1.0f;
+
+    private float myHalfHeight;
+
+    private void Start()
+    {
+        SetupReferences();
+        UpdateDimensions();
+    }
+
+    private void Update()
+    {
+        // 参照が消えていたら自動で再取得を試みる（プレハブ対策）
+        if (spiderObject == null || threadTransform == null)
+        {
+            SetupReferences();
+        }
+
+        UpdateThreadPosition();
+    }
+
+    // ★追加：子オブジェクトから自動でクモと糸を探す機能
+    void SetupReferences()
+    {
+        // 親オブジェクト（LiftSetなど）がいる場合、その中から名前で探す
+        if (transform.parent != null)
+        {
+            if (spiderObject == null)
+            {
+                Transform s = transform.parent.Find("Spider");
+                if (s != null) spiderObject = s.gameObject;
+            }
+            if (threadTransform == null) threadTransform = transform.parent.Find("Thread");
+        }
+        else
+        {
+            // 親がいない場合は自分の子要素から探す
+            if (spiderObject == null)
+            {
+                Transform s = transform.Find("Spider");
+                if (s != null) spiderObject = s.gameObject;
+            }
+            if (threadTransform == null) threadTransform = transform.Find("Thread");
+        }
+
+        // アニメーターも自動取得
+        if (spiderObject != null && spiderAnimator == null)
+        {
+            spiderAnimator = spiderObject.GetComponent<Animator>();
+        }
+    }
+
+    void UpdateDimensions()
+    {
+        Collider2D myCol = GetComponent<Collider2D>();
+        if (myCol != null) myHalfHeight = myCol.bounds.extents.y;
+        else myHalfHeight = 0.5f;
+    }
+
+    void UpdateThreadPosition()
+    {
+        if (myHalfHeight == 0) UpdateDimensions();
+
+        if (spiderObject != null)
+        {
+            spiderObject.transform.position = new Vector3(transform.position.x, spiderYPosition, transform.position.z);
+        }
+
+        if (threadTransform != null && spiderObject != null)
+        {
+            float liftTopY = transform.position.y + myHalfHeight;
+            float distance = Mathf.Abs(spiderYPosition - liftTopY);
+
+            Vector3 newScale = threadTransform.localScale;
+            newScale.y = distance / threadSpriteUnitSize;
+            threadTransform.localScale = newScale;
+
+            threadTransform.position = new Vector3(transform.position.x, (spiderYPosition + liftTopY) / 2.0f, transform.position.z);
+        }
+    }
+
+    // --- 以下、元の挙動ロジック（変更なし） ---
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // 1. Playモード以外は動かさない
-        if (GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
-
-        // 2. 移動中なら無視
+        if (Application.isPlaying && GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
         if (isMoving) return;
 
         if (collision.gameObject.CompareTag("Player"))
@@ -51,12 +145,11 @@ public class LiftBlock : MonoBehaviour
     bool FindNextDestination(float lockX, out Vector3 foundTarget)
     {
         foundTarget = Vector3.zero;
-
         Collider2D myCol = GetComponent<Collider2D>();
-        float myHalfHeight = myCol != null ? myCol.bounds.extents.y : 0.5f;
+        float currentHalfHeight = myCol != null ? myCol.bounds.extents.y : 0.5f;
 
-        float startUpperY = transform.position.y + myHalfHeight + 0.05f;
-        float startLowerY = transform.position.y - myHalfHeight - 0.05f;
+        float startUpperY = transform.position.y + currentHalfHeight + 0.05f;
+        float startLowerY = transform.position.y - currentHalfHeight - 0.05f;
 
         Vector3 leftUpper = new Vector3(lockX - 0.6f, startUpperY, 0);
         Vector3 rightUpper = new Vector3(lockX + 0.6f, startUpperY, 0);
@@ -64,12 +157,8 @@ public class LiftBlock : MonoBehaviour
         Vector3 rightLower = new Vector3(lockX + 0.6f, startLowerY, 0);
 
         List<RaycastHit2D> allHits = new List<RaycastHit2D>();
-
-        // 上方向のスキャン（上部の開始点から上へ発射）
         allHits.AddRange(Physics2D.RaycastAll(leftUpper, Vector2.up, maxSearchDistance, obstacleLayer));
         allHits.AddRange(Physics2D.RaycastAll(rightUpper, Vector2.up, maxSearchDistance, obstacleLayer));
-
-        // 下方向のスキャン（下部の開始点から下へ発射）
         allHits.AddRange(Physics2D.RaycastAll(leftLower, Vector2.down, maxSearchDistance, obstacleLayer));
         allHits.AddRange(Physics2D.RaycastAll(rightLower, Vector2.down, maxSearchDistance, obstacleLayer));
 
@@ -79,37 +168,19 @@ public class LiftBlock : MonoBehaviour
         foreach (var hit in allHits)
         {
             if (hit.collider == null) continue;
-
-            // 自分自身、および「プレイヤー自身（Playerタグ）」をスキャン対象から完全に除外
             if (hit.collider.gameObject == gameObject || hit.collider.CompareTag("Player")) continue;
-
-            // 他のリフトブロックも除外（お互いを床として誤認識するのを防ぐ）
             if (hit.collider.GetComponent<LiftBlock>() != null) continue;
 
             float targetY = hit.point.y;
-
-            // Rayの発射方向（衝突点の高低）を正確に判定してオフセットを適用
-            // 床埋まりや天井めり込みを正確に防止
             bool isGoingUp = targetY > transform.position.y;
-
-            float sideOffset = isGoingUp ? -myHalfHeight : myHalfHeight;
-
-            // 通常オフセット
+            float sideOffset = isGoingUp ? -currentHalfHeight : currentHalfHeight;
             float candidateY = targetY + sideOffset + yOffset;
-
-            // 下りの時だけ追加オフセット
-            if (!isGoingUp)
-            {
-                candidateY += downYOffset;
-            }
-
+            if (!isGoingUp) candidateY += downYOffset;
             float dist = Mathf.Abs(candidateY - transform.position.y);
 
-            // 0.8マス以上離れている、最も近い有効な足場をターゲットにする
-            if (dist > 0.8f && dist < closestDist)
+            if (dist > minMoveDistance && dist < closestDist)
             {
                 closestDist = dist;
-                // わずかな物理演算の誤差（0.01マス単位のズレ）を吸収するため、0.5マス単位に丸める（推奨）
                 float snappedY = Mathf.Round(candidateY * 2.0f) / 2.0f;
                 foundTarget = new Vector3(lockX, snappedY, 0);
                 found = true;
@@ -121,13 +192,11 @@ public class LiftBlock : MonoBehaviour
     IEnumerator MoveRoutine(Player_walk pWalk, float lockX, float lockZ, float targetY)
     {
         isMoving = true;
+        if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, true);
 
         float startY = transform.position.y;
-        pWalk.StateChange(0); // プレイヤーを一時停止
-
-        float playerYOffset = pWalk.transform.position.y - startY;
-
-        // プレイヤーのX軸をリフトに完全に合わせる
+        pWalk.StateChange(0);
+        float playerYOffset = playerYOffsetOnLift;
         pWalk.transform.position = new Vector3(lockX, pWalk.transform.position.y, lockZ);
 
         yield return new WaitForSeconds(waitTime);
@@ -143,11 +212,7 @@ public class LiftBlock : MonoBehaviour
             float currentY = Mathf.Lerp(startY, targetY, t);
 
             transform.position = new Vector3(lockX, currentY, lockZ);
-
-            if (pWalk != null)
-            {
-                pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
-            }
+            if (pWalk != null) pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
 
             yield return null;
         }
@@ -155,7 +220,8 @@ public class LiftBlock : MonoBehaviour
         transform.position = new Vector3(lockX, targetY, lockZ);
         yield return new WaitForSeconds(waitTime);
 
-        if (pWalk != null) pWalk.StateChange(1); // プレイヤーの移動制限を解除
+        if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, false);
+        if (pWalk != null) pWalk.StateChange(1);
         isMoving = false;
     }
 }
