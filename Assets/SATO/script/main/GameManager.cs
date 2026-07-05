@@ -71,6 +71,12 @@ public class GameManager : MonoBehaviour
         player.ResetPosition();
         blockManager.ResetAllBlocks();
 
+        StageCameraController cam = Camera.main.GetComponent<StageCameraController>();
+        if (cam != null)
+        {
+            cam.ResetCamera();
+        }
+
         totalItemCount = 0;
         UpdateItemUI();
 
