@@ -462,23 +462,28 @@ public class main_Player_walk : MonoBehaviour
 
     public void ResetPlayerStatus()
     {
+        // 1. 実行中のすべてのコルーチン（ジャンプ、ワープ、着地演出など）を停止
         StopAllCoroutines();
 
+        // 2. 内部状態のフラグを初期化
         state = moveState.idol;
-        anim.SetBool("isWalk", false);
+        isJumping = false;
+        jumpRequest = true;
+        jumpCanceled = false;
+        keepAirXVelocity = false;
         direction = 1;
 
-        Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x);
-        transform.localScale = scale;
-
+        // 3. 物理演算の状態をリセット
         if (rb != null)
         {
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Dynamic; // ワープ中にKinematicになっていた場合への対策
+            rb.linearVelocity = Vector2.zero;      // 速度をゼロに
+            rb.angularVelocity = 0f;               // 回転速度をゼロに
         }
-        jumpRequest = true;
-        isJumping = false;
+
+        // 4. 外見のリセット（ワープ中に非表示だった場合への対策）
+        SpriteRenderer pSr = GetComponent<SpriteRenderer>();
+        if (pSr != null) pSr.enabled = true;
     }
 
     public void ResetDirection()

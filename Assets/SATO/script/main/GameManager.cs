@@ -60,8 +60,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        blockManager.ClearGhostBlocks();
-
         currentState = GameState.Play;
         player.StartMove();
         SetUI();

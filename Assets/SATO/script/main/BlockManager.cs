@@ -11,28 +11,24 @@ public class BlockManager : MonoBehaviour
     [System.Serializable]
     public class BlockData
     {
-        public string name;       // 種類名(管理用)
-        public GameObject prefab; // プレハブ
-        public int maxCount;      // 置ける最大数
-        public int currentCount;  // 現在置いている数
-        public TextMeshProUGUI individualCountText; // テキストUI
+        public string name;
+        public GameObject prefab;
+        public int maxCount;
+        public int currentCount;
+        public TextMeshProUGUI individualCountText;
 
         [Header("拡張サイズ設定")]
-        [Tooltip("この動物・ギミックブロックをドラッグした際、枠（DropFrame）をどれくらい広げるか（縦横の拡張倍率）")]
-        public Vector3 targetFrameScale = new Vector3(1.5f, 1.5f, 1.0f); // 例えば1.5倍に拡大
+        public Vector3 targetFrameScale = new Vector3(1.5f, 1.5f, 1.0f);
     }
 
-    public GameManager gameManager; // モード判定
-    public List<BlockData> blockTypes; // インスペクターで種類を増やす
+    public GameManager gameManager;
+    public List<BlockData> blockTypes;
 
-    private GameObject draggingBlock; // ドラッグしているブロック
-    private SpriteRenderer previewSR; // 色
-    private GameObject previewBlock; // グリッドの影
-    private int activeTypeIndex; // 今ドラッグしているブロックの番号
+    private GameObject draggingBlock;
+    private SpriteRenderer previewSR;
+    private GameObject previewBlock;
+    private int activeTypeIndex;
 
-    private List<GameObject> ghostBlocks = new List<GameObject>(); // ゴーストたちをおぼえるリスト
-
-    // 現在ドラッグによってのDropFrameを一時保存する
     private DynamicDropFrame activeFrame;
 
     void Update()
@@ -44,13 +40,11 @@ public class BlockManager : MonoBehaviour
             DeleteBlock();
         }
 
-        // マウスの位置にブロックを追従
         if (draggingBlock != null)
         {
             UpdateDraggingPosition();
         }
 
-        // 配置
         if (Mouse.current.leftButton.wasReleasedThisFrame && draggingBlock != null)
         {
             DropBlock();
@@ -59,23 +53,17 @@ public class BlockManager : MonoBehaviour
 
     public void StartDragging(int typeIndex)
     {
-        // モードチェック
         if (gameManager.currentState != GameManager.GameState.Edit) return;
-
-        // 個数制限チェック
         if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount) return;
 
-        activeTypeIndex = typeIndex; // 今の番号を保存
+        activeTypeIndex = typeIndex;
 
-        // マウスの位置に新しくブロックを生成
         Vector3 mouseWorldPos = GetMouseWorldPosition();
 
-        // マウスに追従する本体
         draggingBlock = Instantiate(blockTypes[typeIndex].prefab, mouseWorldPos, Quaternion.identity);
         draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
         draggingBlock.GetComponent<Collider2D>().enabled = false;
 
-        // グリッド予告
         previewBlock = Instantiate(blockTypes[typeIndex].prefab, mouseWorldPos, Quaternion.identity);
 
         previewSR = previewBlock.GetComponent<SpriteRenderer>();
@@ -97,21 +85,17 @@ public class BlockManager : MonoBehaviour
             Vector3 snapPos = frameHit.transform.position;
             previewBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0.1f);
 
-            // 枠を拡大させる制御 
             DynamicDropFrame hitFrame = frameHit.GetComponent<DynamicDropFrame>();
             if (hitFrame != null)
             {
-                // 新しく枠に入った、または別の枠に乗り換えた場合
                 if (activeFrame != hitFrame)
                 {
-                    // もし直前に他の枠に重なっていたら、それを一旦元に戻す
                     if (activeFrame != null)
                     {
                         activeFrame.ResetScale();
                     }
 
                     activeFrame = hitFrame;
-                    // インスペクターで設定したその動物の拡張倍率（targetFrameScale）を渡す
                     activeFrame.Expand(blockTypes[activeTypeIndex].targetFrameScale);
                 }
             }
@@ -130,7 +114,6 @@ public class BlockManager : MonoBehaviour
         {
             previewBlock.SetActive(false);
 
-            // ドラッグ中のマウスが枠から完全に外れたら、ぬるっと元の大きさに縮小
             if (activeFrame != null)
             {
                 activeFrame.ResetScale();
@@ -139,7 +122,6 @@ public class BlockManager : MonoBehaviour
         }
     }
 
-    // 最大値まで設置されているかを確認する
     public bool IsAllBlocksPlaced()
     {
         foreach (var type in blockTypes)
@@ -152,8 +134,6 @@ public class BlockManager : MonoBehaviour
     void DropBlock()
     {
         Vector3 mousePos = GetMouseWorldPosition();
-
-        // その場所にブロックがないかチェック
         Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
 
         if (frameHit != null)
@@ -163,9 +143,8 @@ public class BlockManager : MonoBehaviour
 
             if (blockHit == null)
             {
-                // 配置成功
                 draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
-                draggingBlock.GetComponent<Collider2D>().enabled = true; // 当たり判定を戻す
+                draggingBlock.GetComponent<Collider2D>().enabled = true;
                 draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
 
                 draggingBlock.tag = "PlacedBlock";
@@ -175,9 +154,6 @@ public class BlockManager : MonoBehaviour
 
                 blockTypes[activeTypeIndex].currentCount++;
                 draggingBlock = null;
-
-                // 配置に成功した場合は、枠を拡大させたまま（Expand維持）に
-                // したがって、ここではResetScaleは呼ばず、ドラッグ用の記憶(activeFrame)だけをクリア
                 activeFrame = null;
             }
             else
@@ -185,7 +161,6 @@ public class BlockManager : MonoBehaviour
                 Destroy(draggingBlock);
                 draggingBlock = null;
 
-                // ドロップ先が重複していて失敗した場合は、ぬるっと元の大きさに縮小
                 if (activeFrame != null)
                 {
                     activeFrame.ResetScale();
@@ -195,10 +170,9 @@ public class BlockManager : MonoBehaviour
         }
         else
         {
-            Destroy(draggingBlock); // 枠以外で放したら消去
+            Destroy(draggingBlock);
             draggingBlock = null;
 
-            //  枠以外の場所でドラッグを離して消去された場合も、ぬるっと元の大きさに戻
             if (activeFrame != null)
             {
                 activeFrame.ResetScale();
@@ -256,16 +230,10 @@ public class BlockManager : MonoBehaviour
 
     public void ResetAllBlocks()
     {
-        ClearGhostBlocks();
-
+        // ゴースト関連の処理（ClearGhostBlocks, CreateGhostBlock）を削除
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
         foreach (GameObject b in placedBlocks)
         {
-            BlockInfo info = b.GetComponent<BlockInfo>();
-            if (info != null)
-            {
-                CreateGhostBlock(b.transform.position, info.typeIndex);
-            }
             Destroy(b);
         }
 
@@ -274,7 +242,6 @@ public class BlockManager : MonoBehaviour
             type.currentCount = 0;
         }
 
-        // 盤面を一括クリアした際は、シーン内全ての枠（DynamicDropFrame）を初期サイズにリセット
         DynamicDropFrame[] allFrames = FindObjectsOfType<DynamicDropFrame>();
         foreach (DynamicDropFrame frame in allFrames)
         {
@@ -283,51 +250,6 @@ public class BlockManager : MonoBehaviour
         activeFrame = null;
 
         UpdateUI();
-    }
-
-    void CreateGhostBlock(Vector3 pos, int typeIndex)
-    {
-        GameObject ghost = Instantiate(blockTypes[typeIndex].prefab, pos, Quaternion.identity);
-
-        Collider2D col = ghost.GetComponent<Collider2D>();
-        if (col != null) col.enabled = false;
-
-        ghost.tag = "Untagged";
-        ghostBlocks.Add(ghost);
-
-        StartCoroutine(FadeInGhost(ghost));
-    }
-
-    IEnumerator FadeInGhost(GameObject ghost)
-    {
-        SpriteRenderer sr = ghost.GetComponent<SpriteRenderer>();
-        if (sr == null) yield break;
-
-        sr.sortingOrder = -1;
-
-        float duration = 0.5f;
-        float elapsed = 0f;
-
-        Color targetColor = new Color(0.6f, 0.6f, 0.6f, 1f);
-        Color starColor = new Color(0.6f, 0.6f, 0.6f, 0f);
-
-        while (elapsed < duration)
-        {
-            if (ghost == null) yield break;
-
-            elapsed += Time.deltaTime;
-            sr.color = Color.Lerp(starColor, targetColor, elapsed / duration);
-            yield return null;
-        }
-    }
-
-    public void ClearGhostBlocks()
-    {
-        foreach (GameObject g in ghostBlocks)
-        {
-            if (g != null) Destroy(g);
-        }
-        ghostBlocks.Clear();
     }
 
     void UpdateUI()
@@ -349,7 +271,7 @@ public class BlockManager : MonoBehaviour
 
         if (hit != null)
         {
-            Vector3 blockPos = hit.transform.position; //  削除されたブロックの位置を記憶
+            Vector3 blockPos = hit.transform.position;
 
             BlockInfo info = hit.GetComponent<BlockInfo>();
             if (info != null)
@@ -358,7 +280,6 @@ public class BlockManager : MonoBehaviour
             }
             Destroy(hit.gameObject);
 
-        
             Collider2D frameHit = GetColliderAtPos(blockPos, "DropFrame");
             if (frameHit != null)
             {

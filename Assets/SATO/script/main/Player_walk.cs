@@ -485,23 +485,28 @@ public class Player_walk : MonoBehaviour
 
     public void ResetPlayerStatus()
     {
+        // すべての演出（コルーチン）を停止
         StopAllCoroutines();
 
+        // 状態を初期値へ
         state = moveState.idol;
-        anim.SetBool("isWalk", false);
+        isJumping = false;
+        jumpRequest = true;
+        jumpCanceled = false;
+        keepAirXVelocity = false;
         direction = 1;
 
-        Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x);
-        transform.localScale = scale;
-
+        // 物理挙動の完全停止
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
-        jumpRequest = true;
-        isJumping = false;
+
+        // 非表示になっていた場合の復帰
+        SpriteRenderer pSr = GetComponent<SpriteRenderer>();
+        if (pSr != null) pSr.enabled = true;
     }
 
     public void ResetDirection()

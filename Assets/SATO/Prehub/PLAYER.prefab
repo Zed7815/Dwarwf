@@ -215,7 +215,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71ac2eb0654207a449a5311189cdddc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player_walk
-  PlayerSpeed: 5
+  PlayerSpeed: 4
   playerJumpPower: 9
   playerJumpForwardPower: 3.5
   wallBounceMultiplier: 1.7
