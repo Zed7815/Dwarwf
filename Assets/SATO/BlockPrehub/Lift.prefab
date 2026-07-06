@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 2035814489859346877}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 4.1833506, z: 0}
+  m_LocalPosition: {x: 0, y: 50.78335, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -140,8 +140,8 @@ Transform:
   m_GameObject: {fileID: 5742980769178120235}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.3529124, z: 0}
-  m_LocalScale: {x: 1, y: 1.4643507, z: 1}
+  m_LocalPosition: {x: 0, y: 25.652912, z: 0}
+  m_LocalScale: {x: 1, y: 30.461138, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6257873130775983647}
@@ -193,7 +193,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -3
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: -7368798251547512676, guid: 6455b2455b0889146859ef83d83c9a87, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -288,7 +288,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -3
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: -7295561642482087088, guid: 87b570c36d8aa6348a939b072fdb9df3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -326,9 +326,9 @@ MonoBehaviour:
   spiderObject: {fileID: 2035814489859346877}
   threadTransform: {fileID: 7494416453858950351}
   spiderAnimator: {fileID: 4409975061221268331}
-  spiderYPosition: 3.4
+  spiderYPosition: 50
   animBoolName: isSpider
-  threadSpriteUnitSize: 2.5
+  threadSpriteUnitSize: 1.65
 --- !u!61 &8967410393433179041
 BoxCollider2D:
   m_ObjectHideFlags: 0

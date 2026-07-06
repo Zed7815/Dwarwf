@@ -113,7 +113,6 @@ public class WarpEntrance : MonoBehaviour
         // --- 入口演出の開始 ---
         if (entranceAnimator != null)
         {
-            // 1. BoolをONにする
             if (HasParameter(entranceAnimator, entranceBoolName))
                 entranceAnimator.SetBool(entranceBoolName, true);
 
@@ -124,20 +123,17 @@ public class WarpEntrance : MonoBehaviour
             else if (HasParameter(entranceAnimator, "EnterLeft")) entranceAnimator.SetTrigger("EnterLeft");
         }
 
-        
-
         // プレイヤーを非表示に
         if (playerSR != null) playerSR.enabled = false;
 
         yield return new WaitForSeconds(0.7f);
 
-        // ★追加：入口のBoolをOFFにする（これでIdolへ戻る条件を満たす）
+        // 入口の演出リセット
         if (entranceAnimator != null)
         {
             if (HasParameter(entranceAnimator, entranceBoolName))
                 entranceAnimator.SetBool(entranceBoolName, false);
 
-            // Triggerが残ってループするのを防ぐために念押しでReset
             entranceAnimator.ResetTrigger("EnterRight");
             entranceAnimator.ResetTrigger("EnterLeft");
         }
@@ -173,6 +169,8 @@ public class WarpEntrance : MonoBehaviour
         if (exitAnimator != null)
         {
             if (HasParameter(exitAnimator, exitBoolName)) exitAnimator.SetBool(exitBoolName, false);
+            exitAnimator.ResetTrigger("ExitRight");
+            exitAnimator.ResetTrigger("ExitLeft");
         }
 
         if (rb != null)
@@ -181,10 +179,17 @@ public class WarpEntrance : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
         }
 
+        // ★修正：リセットボタンと同じ「完全リセット」を適用
+        if (pAnim != null)
+        {
+            // これでワープ用アニメの残骸をすべて消し、Entry(Idol)へ戻す
+            pAnim.Rebind();
+            pAnim.Update(0f);
+        }
+
+        // 移動制限の解除
         pWalk.StateChange(1);
         cooldownTimer = Time.time + 0.1f;
         isWarping = false;
-
-        if (pAnim != null) pAnim.Play("Idol", 0, 0f);
     }
 }
