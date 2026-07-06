@@ -312,15 +312,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 464dcc3c60e5b1b489f3f804fdbf3b32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiftBlock
-  speed: 2
+  speed: 2.5
   waitTime: 0.5
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 8
   yOffset: 1
   tilemap: {fileID: 0}
-  maxSearchDistance: 20
-  minMoveDistance: 1.1
+  maxSearchDistance: 50
+  minMoveDistance: 2.2
   downYOffset: -2
   playerYOffsetOnLift: 0.4
   spiderObject: {fileID: 2035814489859346877}

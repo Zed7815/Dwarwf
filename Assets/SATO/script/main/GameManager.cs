@@ -5,8 +5,10 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
+    public EditUIController editUIController;
+
     public static GameManager instance;
-    public enum GameState { Edit,Play}
+    public enum GameState { Edit, Play }
     public GameState currentState = GameState.Edit;
 
     public PlayerController player;
@@ -15,6 +17,11 @@ public class GameManager : MonoBehaviour
     public GameObject resetButton;
 
     public BlockManager blockManager;
+
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターでAudioSourceを割り当て
+    public AudioClip startGameSE;  // 実行ボタンを押した時の音
+    public AudioClip resetGameSE;  // リセットボタンを押した時の音
 
     // アイテム管理
     public int totalItemCount = 0; // 拾った数
@@ -25,16 +32,18 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // instanceとして登録
-        if (instance == null)instance = this;
+        if (instance == null) instance = this;
     }
 
     void Start()
     {
+        // AudioSourceが未設定なら取得を試みる
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
         GameObject[] items = GameObject.FindGameObjectsWithTag("Item");
         allItems.AddRange(items);
 
-        UpdateItemUI(); // 起動時に表示をリセット
+        UpdateItemUI();
         SetUI();
     }
 
@@ -60,50 +69,65 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // ★SE再生: ゲーム開始
+        PlaySE(startGameSE);
+
         currentState = GameState.Play;
         player.StartMove();
+
+        if (editUIController != null)
+        {
+            editUIController.HideEditUI();
+        }
+
         SetUI();
     }
 
     public void ResetGame()
     {
+        // ★SE再生: リセット
+        PlaySE(resetGameSE);
+
         currentState = GameState.Edit;
         player.ResetPosition();
         blockManager.ResetAllBlocks();
 
-        StageCameraController cam = Camera.main.GetComponent<StageCameraController>();
-        if (cam != null)
+        if (editUIController != null)
         {
-            cam.ResetCamera();
+            editUIController.ShowEditUI();
         }
 
         totalItemCount = 0;
         UpdateItemUI();
 
-        // itemタグのアイテムをすべて表示する
         foreach (GameObject item in allItems)
         {
-            if (item != null)
-            {
-                item.SetActive(true);
-            }
+            if (item != null) item.SetActive(true);
         }
 
         SetUI();
+    }
+
+    // 音再生用ヘルパー
+    void PlaySE(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
     }
 
     void SetUI()
     {
         if (currentState == GameState.Edit)
         {
-            startButton.SetActive(true); // スタートボタン表示
-            resetButton.SetActive(false); // リセットボタンを非表示
+            startButton.SetActive(true);
+            resetButton.SetActive(false);
         }
-
         else
         {
-            startButton.SetActive(false); // スタートボタンの非表示
-            resetButton.SetActive(true); // リセットボタンを表示
+            startButton.SetActive(false);
+            resetButton.SetActive(true);
         }
     }
 }

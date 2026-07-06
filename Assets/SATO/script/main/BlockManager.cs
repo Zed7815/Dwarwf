@@ -24,12 +24,24 @@ public class BlockManager : MonoBehaviour
     public GameManager gameManager;
     public List<BlockData> blockTypes;
 
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターでAudioSourceを割り当て
+    public AudioClip dragSE;   // ドラッグ開始時の音
+    public AudioClip dropSE;   // 配置（ドロップ）成功時の音
+    public AudioClip deleteSE; // 削除時の音
+
     private GameObject draggingBlock;
     private SpriteRenderer previewSR;
     private GameObject previewBlock;
     private int activeTypeIndex;
 
     private DynamicDropFrame activeFrame;
+
+    void Start()
+    {
+        // もしAudioSourceが未設定なら自分自身から取得を試みる
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+    }
 
     void Update()
     {
@@ -57,6 +69,9 @@ public class BlockManager : MonoBehaviour
         if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount) return;
 
         activeTypeIndex = typeIndex;
+
+        // ★SE再生: ドラッグ開始
+        PlaySE(dragSE);
 
         Vector3 mouseWorldPos = GetMouseWorldPosition();
 
@@ -143,6 +158,9 @@ public class BlockManager : MonoBehaviour
 
             if (blockHit == null)
             {
+                // ★SE再生: 配置成功
+                PlaySE(dropSE);
+
                 draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
                 draggingBlock.GetComponent<Collider2D>().enabled = true;
                 draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
@@ -189,6 +207,15 @@ public class BlockManager : MonoBehaviour
         UpdateUI();
     }
 
+    // 共通の音再生メソッド
+    void PlaySE(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
+
     Collider2D GetColliderAtPos(Vector3 pos, string tag)
     {
         Collider2D[] hits = Physics2D.OverlapPointAll(pos);
@@ -230,7 +257,6 @@ public class BlockManager : MonoBehaviour
 
     public void ResetAllBlocks()
     {
-        // ゴースト関連の処理（ClearGhostBlocks, CreateGhostBlock）を削除
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
         foreach (GameObject b in placedBlocks)
         {
@@ -271,6 +297,9 @@ public class BlockManager : MonoBehaviour
 
         if (hit != null)
         {
+            // ★SE再生: 削除
+            PlaySE(deleteSE);
+
             Vector3 blockPos = hit.transform.position;
 
             BlockInfo info = hit.GetComponent<BlockInfo>();
