@@ -226,11 +226,5 @@ public class LiftBlock : MonoBehaviour
         isMoving = false;
     }
 
-    void OnGimmickReset()
-    {
-        StopAllCoroutines();
-
-        isMoving = false;
-    }
-
+    void OnGimmickReset() { isMoving = false; }
 }

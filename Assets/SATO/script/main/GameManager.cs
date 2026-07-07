@@ -86,21 +86,22 @@ public class GameManager : MonoBehaviour
     public void ResetGame()
     {
         currentState = GameState.Edit;
-        player.ResetPosition();
-        blockManager.ResetAllBlocks();
 
-        // ★ここを修正：staticなリストを直接ループする
-        // これで SetActive(false) になっているオブジェクトも確実にリセットできます
+        // 1. ★名簿を使ってすべてのギミックを強制リセット
+        // これにより、画面から消えている足場も、遠くへ行ったリフトも戻ります
         foreach (var res in GimmickResetter.allResetters)
         {
-            if (res != null)
-            {
-                res.ResetGimmick();
-            }
+            if (res != null) res.ResetGimmick();
         }
 
-        if (editUIController != null) editUIController.ShowEditUI();
+        // 2. プレイヤーを戻す（親子関係解除を含む）
+        player.ResetPosition();
 
+        // 3. プレイヤーが配置したブロックを消去
+        blockManager.ResetAllBlocks();
+
+        // UIやアイテムのリセット
+        if (editUIController != null) editUIController.ShowEditUI();
         totalItemCount = 0;
         UpdateItemUI();
         foreach (GameObject item in allItems)

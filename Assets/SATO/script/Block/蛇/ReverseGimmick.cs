@@ -119,10 +119,5 @@ public class ReverseGimmick : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         isProcessing = false;
     }
-    void OnGimmickReset()
-    {
-        StopAllCoroutines();
-
-        isProcessing = false; // ReverseGimmickの場合
-    }
+    void OnGimmickReset() { isProcessing = false; }
 }

@@ -3725,7 +3725,7 @@ PrefabInstance:
     - target: {fileID: 8623674320817455016, guid: 18b0277284aa9954888e7ececf20801c, type: 3}
       propertyPath: resetGameSE
       value: 
-      objectReference: {fileID: 8300000, guid: 328509ac0b18d784696598bfd9a7fcf0, type: 3}
+      objectReference: {fileID: 8300000, guid: 84be9fadc78261d4eaee706ae58e692d, type: 3}
     - target: {fileID: 8623674320817455016, guid: 18b0277284aa9954888e7ececf20801c, type: 3}
       propertyPath: startButton
       value: 

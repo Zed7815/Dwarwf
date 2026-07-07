@@ -111,12 +111,7 @@ public class VanishingBlock : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // スクリプト内のどこでも良いので追記
-    void OnGimmickReset()
-    {
-        StopAllCoroutines();
 
-        isTouched = false;
-    }
+    void OnGimmickReset() { isTouched = false; }
 
 }
