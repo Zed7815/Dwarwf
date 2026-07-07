@@ -38,7 +38,7 @@ public class main_chu3 : MonoBehaviour
 
             yield return null;
         }
-        b.transform.position = new Vector3(-5, -4.5f, 0);
+        //b.transform.position = new Vector3(-5, -4.5f, 0);
         transform.rotation = endRot;
         
     }
