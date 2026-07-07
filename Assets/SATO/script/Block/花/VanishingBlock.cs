@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class VanishingBlock : MonoBehaviour
@@ -21,6 +20,11 @@ public class VanishingBlock : MonoBehaviour
     [Tooltip("Animatorが無い場合に、消滅の直前に点滅（警告フリッカー）演出を行うか")]
     public bool useFlickerEffect = false;
 
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
+    public AudioClip touchSE;       // 触れた瞬間の音
+    public AudioClip vanishSE;      // 消滅する瞬間の音
+
     private bool isTouched = false;
     private SpriteRenderer spriteRenderer;
     private Collider2D blockCollider;
@@ -30,6 +34,8 @@ public class VanishingBlock : MonoBehaviour
         // コンポーネントの自動取得
         spriteRenderer = GetComponent<SpriteRenderer>();
         blockCollider = GetComponent<Collider2D>();
+
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -39,25 +45,30 @@ public class VanishingBlock : MonoBehaviour
             if (!isTouched)
             {
                 isTouched = true;
+
+                // ★SE再生：触れた瞬間
+                if (audioSource != null && touchSE != null)
+                {
+                    audioSource.PlayOneShot(touchSE);
+                }
+
                 StartCoroutine(VanishSequence());
             }
         }
-
     }
 
     private IEnumerator VanishSequence()
     {
         // 1. アニメーションフェーズ
-        // 待機(Idol)状態から、消滅(Vanish)アニメーションをトリガー/再生
         if (animator != null)
         {
             if (useDirectPlay && !string.IsNullOrEmpty(vanishStateName))
             {
-                animator.Play(vanishStateName); // 矢印なしで直接再生
+                animator.Play(vanishStateName);
             }
             else if (!string.IsNullOrEmpty(vanishTriggerParam))
             {
-                animator.SetTrigger(vanishTriggerParam); // トリガー送信
+                animator.SetTrigger(vanishTriggerParam);
             }
         }
 
@@ -76,17 +87,36 @@ public class VanishingBlock : MonoBehaviour
         }
         else
         {
-            // アニメーションが再生されている間（指定秒数）は、そのまま待機
             yield return new WaitForSeconds(vanishDelay);
         }
 
-        if (blockCollider != null)
+        // --- 消滅処理 ---
+
+        // ★SE再生：消滅する瞬間
+        if (audioSource != null && vanishSE != null)
         {
-            blockCollider.enabled = false;
+            audioSource.PlayOneShot(vanishSE);
         }
 
-        // ヒエラルキーから完全に消去
-        Destroy(gameObject);
-    }
-}
+        // 当たり判定と見た目を先に消す（オブジェクトはまだ壊さない）
+        if (blockCollider != null) blockCollider.enabled = false;
+        if (spriteRenderer != null) spriteRenderer.enabled = false;
 
+        // 音が鳴り終わるまで少し待つ（vanishSEの長さ分待機）
+        float waitTime = (vanishSE != null) ? vanishSE.length : 0.1f;
+        yield return new WaitForSeconds(waitTime);
+
+        // ヒエラルキーから完全に消去
+        //Destroy(gameObject);
+        gameObject.SetActive(false);
+    }
+
+    // スクリプト内のどこでも良いので追記
+    void OnGimmickReset()
+    {
+        StopAllCoroutines();
+
+        isTouched = false;
+    }
+
+}

@@ -90,6 +90,7 @@ public class LiftBlock : MonoBehaviour
         }
     }
 
+
     void UpdateDimensions()
     {
         Collider2D myCol = GetComponent<Collider2D>();
@@ -224,4 +225,12 @@ public class LiftBlock : MonoBehaviour
         if (pWalk != null) pWalk.StateChange(1);
         isMoving = false;
     }
+
+    void OnGimmickReset()
+    {
+        StopAllCoroutines();
+
+        isMoving = false;
+    }
+
 }

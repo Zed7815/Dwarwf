@@ -228,29 +228,28 @@ public class BlockManager : MonoBehaviour
 
     Vector3 GetMouseWorldPosition()
     {
-        if (Camera.main == null)
-        {
-            Debug.LogWarning("Camera.main is null");
-            return Vector3.zero;
-        }
+        if (Camera.main == null) return Vector3.zero;
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
 
+        // 画面のサイズ外にマウスがある場合は計算しない（エラー防止）
         if (mousePos.x < 0 || mousePos.x > Screen.width ||
             mousePos.y < 0 || mousePos.y > Screen.height)
         {
-            return draggingBlock != null ? draggingBlock.transform.position : Vector3.zero;
+            return Vector3.zero;
         }
 
         try
         {
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 0));
+            // Z座標をカメラのニアクリップ面より少し前に設定して計算する
+            // これで "out of view frustum" を回避しやすくなります
+            Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, Camera.main.nearClipPlane + 0.1f);
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
             worldPos.z = 0;
             return worldPos;
         }
-        catch (System.Exception e)
+        catch (System.Exception)
         {
-            Debug.LogWarning($"ScreenToWorldPoint error: {e.Message}");
             return Vector3.zero;
         }
     }

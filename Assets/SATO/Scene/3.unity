@@ -352,9 +352,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4676938550588296292, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: spiderYPosition
+      value: 23.5
+      objectReference: {fileID: 0}
     - target: {fileID: 4721794426707764967, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 44.44
+      value: 17.94
       objectReference: {fileID: 0}
     - target: {fileID: 6257873130775983647, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -398,11 +402,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalScale.y
-      value: 26.616682
+      value: 10.556077
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 22.481237
+      value: 9.231237
       objectReference: {fileID: 0}
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
@@ -415,8 +419,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 370703890}
   m_SourcePrefab: {fileID: 100100000, guid: 75e465938db89bd489a604a115becd38, type: 3}
+--- !u!1 &370703889 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+  m_PrefabInstance: {fileID: 370703888}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &370703890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 370703889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d873aff6f0dda584db2e6a70585c22b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GimmickResetter
 --- !u!1 &419757148
 GameObject:
   m_ObjectHideFlags: 0
@@ -660,9 +684,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4676938550588296292, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: spiderYPosition
+      value: 23.5
+      objectReference: {fileID: 0}
     - target: {fileID: 4721794426707764967, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 40.44
+      value: 13.94
       objectReference: {fileID: 0}
     - target: {fileID: 6257873130775983647, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -706,11 +734,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalScale.y
-      value: 24.19244
+      value: 8.131834
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 20.481236
+      value: 7.2312365
       objectReference: {fileID: 0}
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
@@ -723,8 +751,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 517948864}
   m_SourcePrefab: {fileID: 100100000, guid: 75e465938db89bd489a604a115becd38, type: 3}
+--- !u!1 &517948863 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+  m_PrefabInstance: {fileID: 517948862}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &517948864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517948863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d873aff6f0dda584db2e6a70585c22b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GimmickResetter
 --- !u!1 &639692183
 GameObject:
   m_ObjectHideFlags: 0
@@ -1902,9 +1950,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4676938550588296292, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: spiderYPosition
+      value: 23.5
+      objectReference: {fileID: 0}
     - target: {fileID: 4721794426707764967, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 55.48
+      value: 28.98
       objectReference: {fileID: 0}
     - target: {fileID: 6257873130775983647, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1948,11 +2000,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalScale.y
-      value: 33.307594
+      value: 17.246986
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 28.001236
+      value: 14.751236
       objectReference: {fileID: 0}
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
@@ -1965,8 +2017,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1482303086}
   m_SourcePrefab: {fileID: 100100000, guid: 75e465938db89bd489a604a115becd38, type: 3}
+--- !u!1 &1482303085 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+  m_PrefabInstance: {fileID: 1482303084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1482303086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1482303085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d873aff6f0dda584db2e6a70585c22b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GimmickResetter
 --- !u!1001 &1517635659
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1975,9 +2047,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4676938550588296292, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: spiderYPosition
+      value: 23.5
+      objectReference: {fileID: 0}
     - target: {fileID: 4721794426707764967, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 45.48
+      value: 18.98
       objectReference: {fileID: 0}
     - target: {fileID: 6257873130775983647, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2021,11 +2097,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalScale.y
-      value: 27.246986
+      value: 11.18638
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 23.001236
+      value: 9.751236
       objectReference: {fileID: 0}
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
@@ -2038,8 +2114,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1517635661}
   m_SourcePrefab: {fileID: 100100000, guid: 75e465938db89bd489a604a115becd38, type: 3}
+--- !u!1 &1517635660 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+  m_PrefabInstance: {fileID: 1517635659}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1517635661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517635660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d873aff6f0dda584db2e6a70585c22b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GimmickResetter
 --- !u!1001 &1527318084
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2048,9 +2144,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4676938550588296292, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: spiderYPosition
+      value: 23.5
+      objectReference: {fileID: 0}
     - target: {fileID: 4721794426707764967, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 55.48
+      value: 28.98
       objectReference: {fileID: 0}
     - target: {fileID: 6257873130775983647, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2094,11 +2194,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalScale.y
-      value: 33.307594
+      value: 17.246986
       objectReference: {fileID: 0}
     - target: {fileID: 7494416453858950351, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 28.001236
+      value: 14.751236
       objectReference: {fileID: 0}
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
@@ -2111,8 +2211,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1527318086}
   m_SourcePrefab: {fileID: 100100000, guid: 75e465938db89bd489a604a115becd38, type: 3}
+--- !u!1 &1527318085 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+  m_PrefabInstance: {fileID: 1527318084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1527318086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1527318085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d873aff6f0dda584db2e6a70585c22b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GimmickResetter
 --- !u!1 &1545671844
 GameObject:
   m_ObjectHideFlags: 0

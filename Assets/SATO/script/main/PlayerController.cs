@@ -29,6 +29,9 @@ public class PlayerController : MonoBehaviour
     // 初期位置に戻るための関数
     public void ResetPosition()
     {
+        // ★重要：親子関係を解除（リフトや鳥から離れる）
+        transform.SetParent(null);
+
         // 1. 物理・コルーチンのリセット
         playerWalk.ResetPlayerStatus();
 
@@ -40,12 +43,7 @@ public class PlayerController : MonoBehaviour
         Animator anim = GetComponent<Animator>();
         if (anim != null)
         {
-            // これが最も強力なリセット命令です。
-            // 全パラメーターをデフォルト値に戻し、ステートをEntryからやり直させます。
             anim.Rebind();
-
-            // Rebind直後はアニメーターが停止した状態になることがあるため、
-            // 0フレーム分更新して現在の状態（位置やIdleアニメ）を反映させます。
             anim.Update(0f);
         }
     }

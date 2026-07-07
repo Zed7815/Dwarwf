@@ -221,4 +221,13 @@ public class BirdCarrier : MonoBehaviour
             birdSprite.transform.localScale = scale;
         }
     }
+
+    // スクリプト内のどこでも良いので追記
+    void OnGimmickReset()
+    {
+        StopAllCoroutines();
+
+        isMoving = false;
+    }
+
 }

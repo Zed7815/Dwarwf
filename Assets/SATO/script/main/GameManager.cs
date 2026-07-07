@@ -85,21 +85,24 @@ public class GameManager : MonoBehaviour
 
     public void ResetGame()
     {
-        // ★SE再生: リセット
-        PlaySE(resetGameSE);
-
         currentState = GameState.Edit;
         player.ResetPosition();
         blockManager.ResetAllBlocks();
 
-        if (editUIController != null)
+        // ★ここを修正：staticなリストを直接ループする
+        // これで SetActive(false) になっているオブジェクトも確実にリセットできます
+        foreach (var res in GimmickResetter.allResetters)
         {
-            editUIController.ShowEditUI();
+            if (res != null)
+            {
+                res.ResetGimmick();
+            }
         }
+
+        if (editUIController != null) editUIController.ShowEditUI();
 
         totalItemCount = 0;
         UpdateItemUI();
-
         foreach (GameObject item in allItems)
         {
             if (item != null) item.SetActive(true);
