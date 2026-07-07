@@ -14,6 +14,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/SATO/Scene/2.unity
     guid: fffd7b13561c28a49bc084eb6266fed6
+  - enabled: 1
+    path: Assets/Main/scene/tutorialScene.unity
+    guid: 9ce09e4603c21674d8857b68c94db5f2
+  - enabled: 1
+    path: Assets/Main/scene/tutorialScene 1.unity
+    guid: ea9090a82d181fe42a79c92afb087fc7
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
