@@ -10,6 +10,7 @@ public class TutorialMove : MonoBehaviour
     public float moveTime = 3f; // A→Bにかかる秒数
     bool waiting = false;
     SpriteRenderer sr;
+    public main_chu2 chu2;
     void Start()
     {
         transform.position = pointA.position;

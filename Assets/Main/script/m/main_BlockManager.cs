@@ -37,7 +37,7 @@ public class main_BlockManager : MonoBehaviour
 
     void Update()
     {
-        if (gameManager.currentState != main_GameManager.GameState.Edit) return;
+        if (gameManager.currentState != main_GameManager.main_GameState.Edit) return;
 
         if (Mouse.current.rightButton.wasPressedThisFrame)
         {
@@ -60,7 +60,7 @@ public class main_BlockManager : MonoBehaviour
     public void StartDragging(int typeIndex)
     {
         // モードチェック
-        if (gameManager.currentState != main_GameManager.GameState.Edit) return;
+        if (gameManager.currentState != main_GameManager.main_GameState.Edit) return;
 
         // 個数制限チェック
         if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount) return;

@@ -7,8 +7,8 @@ using UnityEngine.UI;
 public class main_GameManager : MonoBehaviour
 {
     public static main_GameManager instance;
-    public enum GameState { Edit, Play }
-    public GameState currentState = GameState.Edit;
+    public enum main_GameState { Edit, Play }
+    public main_GameState currentState = main_GameState.Edit;
 
     public PlayerController player;
 
@@ -62,14 +62,14 @@ public class main_GameManager : MonoBehaviour
 
         blockManager.ClearGhostBlocks();
 
-        currentState = GameState.Play;
+        currentState = main_GameState.Play;
         player.StartMove();
         SetUI();
     }
 
     public void ResetGame()
     {
-        currentState = GameState.Edit;
+        currentState = main_GameState.Edit;
         player.ResetPosition();
         blockManager.ResetAllBlocks();
 
@@ -90,7 +90,7 @@ public class main_GameManager : MonoBehaviour
 
     void SetUI()
     {
-        if (currentState == GameState.Edit)
+        if (currentState == main_GameState.Edit)
         {
             startButton.SetActive(true); // スタートボタン表示
             resetButton.SetActive(false); // リセットボタンを非表示

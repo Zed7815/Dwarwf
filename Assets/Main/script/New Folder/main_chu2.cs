@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using UnityEngine;
+using static main_GameManager;
 
 public class main_chu2 : MonoBehaviour
 {
@@ -10,60 +11,56 @@ public class main_chu2 : MonoBehaviour
     public Transform pointA;
     public Transform pointB;
     public float moveTime = 3f; // A→Bにかかる秒数
-    public bool a;
-
+    public bool col;
+    public bool start;
+    public bool end;
    void Start()
     {
         sr = GetComponent<SpriteRenderer>();
         Color color = sr.color;
     }
-    void Update()
-    {
-        if(a)
+        void Update()
         {
-            Color resetColor = sr.color;
-            resetColor.a = 1f;
-            sr.color = resetColor;
-            float t = Mathf.PingPong(Time.time / moveTime, 1f);
-
-            transform.position = Vector3.Lerp(
-                pointA.position,
-                pointB.position,
-                t
-            );
+            if(!end)
+            {
+            action();
+            blockManager();
+            collar();
+            }
         }
-        else
+        void collar()
         {
-            Color resetColor = sr.color;
-            resetColor.a = 0f;
-            sr.color = resetColor;
-        }
-        StartCoroutine(U());
-    }
-        IEnumerator U()
-        {
-            if (gameManager.blockManager != null && !gameManager.blockManager.IsAllBlocksPlaced())
+            if (col)
             {
                 Color resetColor = sr.color;
                 resetColor.a = 0f;
                 sr.color = resetColor;
-            yield return new WaitForSeconds(3f);
-            a = true;
-        }
-            else
+            }
+            else if (!col)
             {
-            a = false;
                 Color resetColor = sr.color;
                 resetColor.a = 1f;
-                sr.color = resetColor;
-                float t = Mathf.PingPong(Time.time / moveTime, 1f);
-
-                transform.position = Vector3.Lerp(
-                    pointA.position,
-                    pointB.position,
-                    t
-                );
+               sr.color = resetColor;
             }
-            
         }
-    }
+        void blockManager()
+        {
+            if (!start)
+            {
+                if (gameManager.blockManager != null && !gameManager.blockManager.IsAllBlocksPlaced())
+                {
+                    col = true;
+                }
+                else
+                {
+                    col = false;
+                }
+            }
+        }
+        void action()
+        {
+            float t = Mathf.PingPong(Time.time / moveTime, 1f);
+            transform.position = Vector3.Lerp(pointA.position, pointB.position, t);
+        }
+        
+}
