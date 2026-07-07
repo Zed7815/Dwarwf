@@ -774,6 +774,8 @@ MonoBehaviour:
   - {fileID: 353481276}
   - {fileID: 1478663167}
   - {fileID: 1482588151}
+  - {fileID: 266235698}
+  - {fileID: 583431920}
   stageSceneNames:
   - 1
   - 2

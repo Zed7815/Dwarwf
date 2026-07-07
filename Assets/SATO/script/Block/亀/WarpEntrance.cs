@@ -12,13 +12,18 @@ public class WarpEntrance : MonoBehaviour
     public float exitYOffset = 0f;
 
     [Header("アニメーション制御（Bool名）")]
-    public string entranceBoolName = "isWarpingEntrance"; // 入口用
-    public string exitBoolName = "isExiting";             // 出口用
+    public string entranceBoolName = "isWarpingEntrance";
+    public string exitBoolName = "isExiting";
 
     [Header("自動取得されるコンポーネント")]
     public Transform exitPoint;
     public Animator entranceAnimator;
     public Animator exitAnimator;
+
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
+    public AudioClip enterSE;       // 吸い込まれる時の音
+    public AudioClip exitSE;        // 出てくる時の音
 
     private bool isWarping = false;
     private float cooldownTimer = 0f;
@@ -26,6 +31,7 @@ public class WarpEntrance : MonoBehaviour
     private void Start()
     {
         SetupReferences();
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     void SetupReferences()
@@ -100,10 +106,8 @@ public class WarpEntrance : MonoBehaviour
 
         if (playerSR != null) playerSR.enabled = true;
 
-        RigidbodyType2D originalBodyType = RigidbodyType2D.Dynamic;
         if (rb != null)
         {
-            originalBodyType = rb.bodyType;
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.linearVelocity = Vector2.zero;
         }
@@ -113,22 +117,20 @@ public class WarpEntrance : MonoBehaviour
         // --- 入口演出の開始 ---
         if (entranceAnimator != null)
         {
+            // ★SE再生：吸い込み
+            if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
+
             if (HasParameter(entranceAnimator, entranceBoolName))
                 entranceAnimator.SetBool(entranceBoolName, true);
-
-            if (HasParameter(entranceAnimator, "EnterRight")) entranceAnimator.ResetTrigger("EnterRight");
-            if (HasParameter(entranceAnimator, "EnterLeft")) entranceAnimator.ResetTrigger("EnterLeft");
 
             if (pWalk.direction == 1 && HasParameter(entranceAnimator, "EnterRight")) entranceAnimator.SetTrigger("EnterRight");
             else if (HasParameter(entranceAnimator, "EnterLeft")) entranceAnimator.SetTrigger("EnterLeft");
         }
 
-        // プレイヤーを非表示に
+        yield return new WaitForSeconds(0.4f);
+
         if (playerSR != null) playerSR.enabled = false;
 
-        yield return new WaitForSeconds(0.7f);
-
-        // 入口の演出リセット
         if (entranceAnimator != null)
         {
             if (HasParameter(entranceAnimator, entranceBoolName))
@@ -140,17 +142,18 @@ public class WarpEntrance : MonoBehaviour
 
         yield return new WaitForSeconds(hideDuration);
 
-        // 出口へ移動
+        // --- 出口へ移動 ---
         if (exitPoint != null)
         {
             pWalk.transform.position = new Vector3(exitPoint.position.x, exitPoint.position.y + exitYOffset, pWalk.transform.position.z);
             Physics2D.SyncTransforms();
-            if (rb != null) rb.linearVelocity = Vector2.zero;
         }
 
-        // 出口演出開始
         if (exitAnimator != null)
         {
+            // ★SE再生：出現
+            if (audioSource != null && exitSE != null) audioSource.PlayOneShot(exitSE);
+
             if (HasParameter(exitAnimator, exitBoolName)) exitAnimator.SetBool(exitBoolName, true);
             if (pWalk.direction == 1 && HasParameter(exitAnimator, "ExitRight")) exitAnimator.SetTrigger("ExitRight");
             else if (HasParameter(exitAnimator, "ExitLeft")) exitAnimator.SetTrigger("ExitLeft");
@@ -169,25 +172,17 @@ public class WarpEntrance : MonoBehaviour
         if (exitAnimator != null)
         {
             if (HasParameter(exitAnimator, exitBoolName)) exitAnimator.SetBool(exitBoolName, false);
-            exitAnimator.ResetTrigger("ExitRight");
-            exitAnimator.ResetTrigger("ExitLeft");
         }
 
-        if (rb != null)
-        {
-            rb.bodyType = originalBodyType;
-            rb.linearVelocity = Vector2.zero;
-        }
+        if (rb != null) rb.bodyType = RigidbodyType2D.Dynamic;
 
-        // ★修正：リセットボタンと同じ「完全リセット」を適用
+        // ★完全リセット（アニメーター初期化）
         if (pAnim != null)
         {
-            // これでワープ用アニメの残骸をすべて消し、Entry(Idol)へ戻す
             pAnim.Rebind();
             pAnim.Update(0f);
         }
 
-        // 移動制限の解除
         pWalk.StateChange(1);
         cooldownTimer = Time.time + 0.1f;
         isWarping = false;

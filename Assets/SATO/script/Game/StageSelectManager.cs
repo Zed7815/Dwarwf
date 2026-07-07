@@ -20,8 +20,8 @@ public class StageSelectManager : MonoBehaviour
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
         // テスト用：データをリセットしたい場合は有効にする 
-        // PlayerPrefs.DeleteAll(); 
-        // PlayerPrefs.Save();
+        //PlayerPrefs.DeleteAll(); 
+        //PlayerPrefs.Save();
 
         // 保存された「クリア済みステージ番号」を読み込む（デフォルトは0）
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);

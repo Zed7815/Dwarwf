@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/SATO/Scene/Title.unity
+    guid: 5923954c6628a9940885c44056be1a64
+  - enabled: 1
     path: Assets/SATO/Scene/StageSelect.unity
     guid: 1bd4ea474ef001141baa0e45376944f9
   - enabled: 1
@@ -14,6 +17,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/SATO/Scene/2.unity
     guid: fffd7b13561c28a49bc084eb6266fed6
+  - enabled: 1
+    path: Assets/SATO/Scene/3.unity
+    guid: c0a077e17d0e90f4aa444ce59032c730
+  - enabled: 1
+    path: Assets/SATO/Scene/4.unity
+    guid: 85493dc8af8da3c49bd41e1edfe057e4
+  - enabled: 1
+    path: Assets/SATO/Scene/5.unity
+    guid: f50c126cadd1e6142b89f3fd4070cfa1
+  - enabled: 1
+    path: Assets/SATO/Scene/6.unity
+    guid: d7d5b05585bbcba498e2d04a81b0167d
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

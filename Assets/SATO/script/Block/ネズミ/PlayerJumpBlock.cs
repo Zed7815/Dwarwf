@@ -12,22 +12,28 @@ public class PlayerJumpBlock : MonoBehaviour
 
     [Header("自動復元設定 (100%確実に待機➔ジャンプ➔待機する安全設計)")]
     [Tooltip("TrueにするとAnimatorControllerの遷移(矢印)を使わず、C#から強制的に待機・ジャンプ状態を直接切り替えます（推奨）")]
-    public bool useDirectPlayMethod = true; //  Trueにしておくのがおすすめです！
+    public bool useDirectPlayMethod = true;
     public string jumpStateName = "Jump";
     public string idleStateName = "Idle";
 
     [Tooltip("ジャンプアニメーションが再生されてから、自動で待機（Idle）に戻るまでの時間")]
-    public float jumpAnimationDuration = 0.5f; //  ジャンプ台のアニメ時間に合わせて調整可能
+    public float jumpAnimationDuration = 0.5f;
+
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
+    public AudioClip jumpSE;       // 跳ねる時の音
 
     private Animator anim;
     private Coroutine activeAnimRoutine;
 
     private void Start()
     {
-        
         anim = GetComponent<Animator>();
         if (anim == null) anim = GetComponentInChildren<Animator>();
         if (anim == null) anim = GetComponentInParent<Animator>();
+
+        // AudioSourceが未設定なら自分から取得
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -46,7 +52,6 @@ public class PlayerJumpBlock : MonoBehaviour
     bool IsPlayerOnTop(Collider2D playerCollider)
     {
         Collider2D blockCollider = GetComponent<Collider2D>();
-
         if (playerCollider == null || blockCollider == null) return false;
 
         float playerBottom = playerCollider.bounds.min.y;
@@ -56,13 +61,18 @@ public class PlayerJumpBlock : MonoBehaviour
     }
 
     /// <summary>
-    /// プレイヤーを弾き飛ばす瞬間に、ジャンプ台自身のアニメーションを再生
+    /// プレイヤーを弾き飛ばす瞬間に、ジャンプ台自身のアニメーションと音を再生
     /// </summary>
     public void TriggerJumpAnimation()
     {
+        // ★SE再生
+        if (audioSource != null && jumpSE != null)
+        {
+            audioSource.PlayOneShot(jumpSE);
+        }
+
         if (anim == null) return;
 
-        //  すでに再生中の場合は一度コルーチンを止めて安全に2重再生を防止
         if (activeAnimRoutine != null)
         {
             StopCoroutine(activeAnimRoutine);
@@ -74,23 +84,18 @@ public class PlayerJumpBlock : MonoBehaviour
     {
         if (useDirectPlayMethod)
         {
-            //  矢印(Transition)が繋がっていなくても、C#から直接「Jump」ステートを頭から強制再生！
             anim.Play(jumpStateName, 0, 0f);
         }
         else
         {
-            // トリガー方式で「待機 ➔ ジャンプ」へ遷移させる
             if (!string.IsNullOrEmpty(jumpTriggerName))
             {
                 anim.SetTrigger(jumpTriggerName);
             }
         }
-        Debug.Log("[PlayerJumpBlock] ジャンプ台のジャンプアニメーションを開始しました。");
 
-        //  跳ねるアニメーションの再生時間(秒)だけ一時停止
         yield return new WaitForSeconds(jumpAnimationDuration);
 
-        //  再生が終わったら、自動的に「Idle」ステートに強制復元！
         if (useDirectPlayMethod)
         {
             anim.Play(idleStateName, 0, 0f);
@@ -99,7 +104,6 @@ public class PlayerJumpBlock : MonoBehaviour
         {
             anim.Play(idleStateName, 0, 0f);
         }
-        Debug.Log("[PlayerJumpBlock] ジャンプ台が自動的に待機状態(Idle)へ復帰しました。");
         activeAnimRoutine = null;
     }
 }
