@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem; // ★Keyboardクラス使用のため追加
 using System.Collections;
 
 public class StageSelectManager : MonoBehaviour
@@ -15,41 +16,73 @@ public class StageSelectManager : MonoBehaviour
     public AudioClip clickSE;
     public AudioClip enterSE;
 
+    // ★セッション中一度だけリセットするためのフラグ
+    private static bool sessionResetDone = false;
+
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        // テスト用：データをリセットしたい場合は有効にする 
-        //PlayerPrefs.DeleteAll(); 
-        //PlayerPrefs.Save();
+        // ★修正点1：起動（プレイボタンを押した後）して最初にこのシーンに来た時だけ全消去
+        if (!sessionResetDone)
+        {
+            PlayerPrefs.DeleteAll();
+            PlayerPrefs.Save();
+            sessionResetDone = true; // これで、ステージをクリアして戻ってきた時は消されなくなる
+            Debug.Log("セーブデータをプレイ開始につき初期化しました");
+        }
 
-        // 保存された「クリア済みステージ番号」を読み込む（デフォルトは0）
+        RefreshStageButtons();
+    }
+
+    // ★ショートカット監視
+    void Update()
+    {
+        // ★修正点2：デバッグ用ショートカット
+        // キーボードの「L」キーを押すと全開放
+        if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame)
+        {
+            UnlockAllStages();
+        }
+    }
+
+    // ボタンの開放状態を更新する処理を関数にまとめました
+    void RefreshStageButtons()
+    {
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-
-        // デバッグログ：今いくつと判定されているかコンソールで確認できます
-        Debug.Log("セーブデータ読み込み：現在ステージ " + clearedStage + " までクリア済み");
+        Debug.Log("現在のクリア済み状況: ステージ " + clearedStage);
 
         for (int i = 0; i < stageButtons.Length; i++)
         {
             if (stageButtons[i] == null) continue;
 
-            // i=0(Stage1) は 0 <= clearedStage なので最初から開いている
-            // Stage1クリアで clearedStage=1 になれば、i=1(Stage2) が 1 <= 1 で開く
             bool isUnlocked = (i <= clearedStage);
-
             stageButtons[i].interactable = isUnlocked;
+
+            // リスナーを一度クリア
             stageButtons[i].onClick.RemoveAllListeners();
 
             if (isUnlocked)
             {
                 AddHoverEvent(stageButtons[i]);
-
                 string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
                 stageButtons[i].onClick.AddListener(() => {
                     if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
                 });
             }
         }
+    }
+
+    // デバッグ全開放処理
+    void UnlockAllStages()
+    {
+        Debug.Log("デバッグ：全ステージを開放します");
+        // ボタンの数だけクリアしたことにする
+        PlayerPrefs.SetInt("StageCleared", stageButtons.Length);
+        PlayerPrefs.Save();
+
+        // UIを即時更新
+        RefreshStageButtons();
     }
 
     void AddHoverEvent(Button btn)

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8568501683660065016}
   - component: {fileID: 1895428051660382687}
   - component: {fileID: 7595524917342524224}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: "\u53CD\u8EE2"
   m_TagString: PlacedBlock
   m_Icon: {fileID: 0}
@@ -145,7 +145,7 @@ BoxCollider2D:
   m_Offset: {x: 0.007947922, y: 0.78688526}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.015337187}
+    pivot: {x: 0.49702302, y: 0.3206341}
     oldSize: {x: 1.3714286, y: 1.6571429}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5

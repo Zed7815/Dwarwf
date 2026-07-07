@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1045 &1
 EditorBuildSettings:
@@ -12,10 +12,10 @@ EditorBuildSettings:
     path: Assets/SATO/Scene/StageSelect.unity
     guid: 1bd4ea474ef001141baa0e45376944f9
   - enabled: 1
-    path: Assets/SATO/Scene/1.unity
+    path: Assets/SATO/Scene/2.unity
     guid: 78103d06f37bebc4cae974dca5885150
   - enabled: 1
-    path: Assets/SATO/Scene/2.unity
+    path: Assets/SATO/Scene/1.unity
     guid: fffd7b13561c28a49bc084eb6266fed6
   - enabled: 1
     path: Assets/SATO/Scene/3.unity

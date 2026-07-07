@@ -288,12 +288,24 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.2616
+      objectReference: {fileID: 0}
+    - target: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.2616
+      objectReference: {fileID: 0}
+    - target: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.2616
+      objectReference: {fileID: 0}
+    - target: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.5
+      value: 2.09
       objectReference: {fileID: 0}
     - target: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 19.06
+      value: 19.32
       objectReference: {fileID: 0}
     - target: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
       propertyPath: m_LocalPosition.z
@@ -395,6 +407,10 @@ PrefabInstance:
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
       value: Lift (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -699,6 +715,10 @@ PrefabInstance:
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
       value: Lift (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1938,6 +1958,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Lift (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2007,6 +2031,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Lift (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2075,6 +2103,10 @@ PrefabInstance:
     - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
       propertyPath: m_Name
       value: Lift
+      objectReference: {fileID: 0}
+    - target: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2183,7 +2215,7 @@ Animator:
   m_GameObject: {fileID: 1545671844}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 8ef70b24aae736049aa962202ad5b2e4, type: 2}
+  m_Controller: {fileID: 9100000, guid: 29f90bead7330f840aa59a828531a1ad, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5059,9 +5091,9 @@ SceneRoots:
   - {fileID: 1482303084}
   - {fileID: 38339266}
   - {fileID: 1243038757}
-  - {fileID: 1913535448}
   - {fileID: 370703888}
   - {fileID: 1517635659}
+  - {fileID: 1913535448}
   - {fileID: 517948862}
   - {fileID: 1113575928}
   - {fileID: 1333512796}

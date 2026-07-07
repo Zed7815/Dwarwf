@@ -160,7 +160,7 @@ MonoBehaviour:
   idleStateName: SpringIdol
   jumpAnimationDuration: 0.5
   audioSource: {fileID: -5014672673543010393}
-  jumpSE: {fileID: 8300000, guid: 396681106eded6746849934c2958a5fa, type: 3}
+  jumpSE: {fileID: 8300000, guid: 0094a1d462623c341ad741629de5016c, type: 3}
 --- !u!95 &4080171392840963065
 Animator:
   serializedVersion: 7
