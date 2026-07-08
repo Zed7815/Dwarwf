@@ -1819,6 +1819,8 @@ MonoBehaviour:
   startButton: {fileID: 1584002756}
   resetButton: {fileID: 1999354151}
   blockManager: {fileID: 1901478529}
+  stageNumber: 4
+  hasCollectedStarInThisRun: 0
   audioSource: {fileID: 1416668722}
   startGameSE: {fileID: 8300000, guid: 80d849991ba03394ab9baa606caa81c8, type: 3}
   resetGameSE: {fileID: 8300000, guid: 84be9fadc78261d4eaee706ae58e692d, type: 3}
@@ -3906,6 +3908,7 @@ MonoBehaviour:
   dragSE: {fileID: 8300000, guid: db445125bcb9bd143a2650260c53d7da, type: 3}
   dropSE: {fileID: 8300000, guid: 1e0b91d95eca3624cb5bc0db50eb42ce, type: 3}
   deleteSE: {fileID: 8300000, guid: bd91827ff1c852747b41a2f15c29d9ef, type: 3}
+  poofEffectPrefab: {fileID: 0}
 --- !u!4 &1901478530
 Transform:
   m_ObjectHideFlags: 0

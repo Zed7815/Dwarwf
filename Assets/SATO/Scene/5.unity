@@ -1699,6 +1699,8 @@ MonoBehaviour:
   startButton: {fileID: 490506093}
   resetButton: {fileID: 490506091}
   blockManager: {fileID: 1901478529}
+  stageNumber: 5
+  hasCollectedStarInThisRun: 0
   audioSource: {fileID: 1416668722}
   startGameSE: {fileID: 8300000, guid: 80d849991ba03394ab9baa606caa81c8, type: 3}
   resetGameSE: {fileID: 8300000, guid: 328509ac0b18d784696598bfd9a7fcf0, type: 3}

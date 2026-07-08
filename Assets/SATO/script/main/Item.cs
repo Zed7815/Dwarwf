@@ -3,79 +3,89 @@ using System.Collections;
 
 public class Item : MonoBehaviour
 {
-    private bool isCollected = false; // 二重取得防止
-    private Vector3 originPos; // 初期地点を記憶
+    private bool isCollected = false;
+    private Vector3 originPos;
+    private SpriteRenderer sr;
+    private Collider2D col;
 
     void Awake()
     {
         originPos = transform.position;
+        sr = GetComponent<SpriteRenderer>();
+        col = GetComponent<Collider2D>();
+    }
+
+    void Start()
+    {
+        // すでにクリア済み（セーブデータがある）かチェック
+        if (GameManager.instance != null)
+        {
+            int alreadyGot = PlayerPrefs.GetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 0);
+            if (alreadyGot == 1)
+            {
+                // ★修正：半透明ではなく、オブジェクト自体を非表示にする
+                gameObject.SetActive(false);
+            }
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // プレイヤーが触れたかの判定
         if (collision.CompareTag("Player") && !isCollected)
         {
-            isCollected = true; // 取った際にフラグを立てる
-
-            // GameManagerにアイテム取得を伝える
+            isCollected = true;
             GameManager.instance.AddItem();
-
-
             StartCoroutine(CollectRoutine());
         }
     }
 
     IEnumerator CollectRoutine()
     {
-        // 当たり判定を消す
-        GetComponent<Collider2D>().enabled = false;
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-
+        if (col != null) col.enabled = false;
         Vector3 startPos = transform.position;
-        float duratin = 0.5f; // 演出にかける時間
-
+        float duratin = 0.5f;
         float timer = 0f;
 
         while (timer < duratin)
         {
             timer += Time.deltaTime;
-            float progress = timer / duratin; // 0.0から1.0まで進
-
-            // 上に移動させる演出
-            // 0.5秒かけて、足元の位置から上に1.0進む
+            float progress = timer / duratin;
             transform.position = startPos + new Vector3(0, progress * 1.0f, 0);
-
-            // 星を透明化
             if (sr != null)
             {
                 Color c = sr.color;
-                c.a = 1f - progress; // 半透明から透明へ
-
+                c.a = 1f - progress;
                 sr.color = c;
             }
-            
-            yield return null; // 位置フレーム待機
+            yield return null;
         }
-
-        // 最後非表示に
+        // 拾った演出の後に非表示にする
         gameObject.SetActive(false);
- 
     }
 
-    // アイテムが表示されたときに、色や当たり判定をリセット
+    // リセットボタンなどでオブジェクトが再表示された時の処理
     private void OnEnable()
     {
+        // ★重要：以前のプレイですでに取得済みなら、表示されようとしても即座に消す
+        if (GameManager.instance != null)
+        {
+            int alreadyGot = PlayerPrefs.GetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 0);
+            if (alreadyGot == 1)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+        }
+
+        // 今回のプレイで初めて拾う場合のリセット処理
         isCollected = false;
         transform.position = originPos;
-        GetComponent<Collider2D>().enabled = true;
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-
+        if (col != null) col.enabled = true;
         if (sr != null)
         {
             Color c = sr.color;
-            c.a = 1f; // 不透明に戻す
-            sr.color= c;
+            c.a = 1f;
+            sr.color = c;
         }
     }
 }

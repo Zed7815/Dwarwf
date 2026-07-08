@@ -826,6 +826,7 @@ MonoBehaviour:
   playIntro: 1
   introWaitTime: 1.3
   introSpeed: 10
+  resetSpeed: 25
   deadZone: 1
   smoothTime: 0.15
   dragSensitivity: 1
@@ -2277,6 +2278,8 @@ MonoBehaviour:
   startButton: {fileID: 1885802244}
   resetButton: {fileID: 60841603}
   blockManager: {fileID: 1901478529}
+  stageNumber: 1
+  hasCollectedStarInThisRun: 0
   audioSource: {fileID: 1416668722}
   startGameSE: {fileID: 8300000, guid: 80d849991ba03394ab9baa606caa81c8, type: 3}
   resetGameSE: {fileID: 8300000, guid: 84be9fadc78261d4eaee706ae58e692d, type: 3}
@@ -4165,6 +4168,7 @@ MonoBehaviour:
   dragSE: {fileID: 8300000, guid: db445125bcb9bd143a2650260c53d7da, type: 3}
   dropSE: {fileID: 8300000, guid: 1e0b91d95eca3624cb5bc0db50eb42ce, type: 3}
   deleteSE: {fileID: 8300000, guid: 311cae896e350234ba0fa09426bcb4ac, type: 3}
+  poofEffectPrefab: {fileID: 0}
 --- !u!4 &1901478530
 Transform:
   m_ObjectHideFlags: 0
