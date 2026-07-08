@@ -18,6 +18,11 @@ public class BirdCarrier : MonoBehaviour
     public Animator animator;
     public string flyBoolParam = "isFlying";
 
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
+    public AudioClip grabSE;       // 掴んで飛び立つ時の音
+    public AudioClip flyLoopSE;    // 向こう岸まで移動している間の音
+
     private Vector3 targetPos;
     private bool isMoving = false;
 
@@ -25,9 +30,9 @@ public class BirdCarrier : MonoBehaviour
     {
         if (birdSprite == null) birdSprite = GetComponent<SpriteRenderer>();
         if (animator == null) animator = GetComponent<Animator>();
+        // AudioSourceが未設定なら自分から取得を試みる
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
-
-  
 
     bool FindNextDestination(Player_walk pWalk)
     {
@@ -73,6 +78,9 @@ public class BirdCarrier : MonoBehaviour
 
         yield return new WaitForSeconds(waitTime);
 
+        // ★SE再生：掴んで飛び立つ瞬間
+        if (audioSource != null && grabSE != null) audioSource.PlayOneShot(grabSE);
+
         Vector3 takeoffStartBird = transform.position;
         Vector3 takeoffEndBird = transform.position + new Vector3(0, heightOffset, 0);
         float takeoffDuration = 0.5f;
@@ -92,6 +100,16 @@ public class BirdCarrier : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
+        // --- 向こう岸への移動開始 ---
+
+        // ★SE再生：移動中の音（ループ開始）
+        if (audioSource != null && flyLoopSE != null)
+        {
+            audioSource.clip = flyLoopSE;
+            audioSource.loop = true;
+            audioSource.Play();
+        }
+
         Vector3 birdStartPos = transform.position;
         Vector3 birdEndPos = targetPos + new Vector3(0, heightOffset - grabOffsetY, 0);
         float distance = Vector3.Distance(birdStartPos, birdEndPos);
@@ -106,6 +124,9 @@ public class BirdCarrier : MonoBehaviour
             pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
             yield return null;
         }
+
+        // ★SE停止：移動終了
+        if (audioSource != null) audioSource.Stop();
 
         pWalk.StateChange(1);
 
@@ -138,6 +159,10 @@ public class BirdCarrier : MonoBehaviour
         }
     }
 
-    void OnGimmickReset() { isMoving = false; }
-
+    void OnGimmickReset()
+    {
+        isMoving = false;
+        // ★リセット時に音を確実に止める
+        if (audioSource != null) audioSource.Stop();
+    }
 }

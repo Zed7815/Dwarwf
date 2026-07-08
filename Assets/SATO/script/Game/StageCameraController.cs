@@ -19,11 +19,13 @@ public class StageCameraController : MonoBehaviour
     public float minLimit;
     public float maxLimit;
 
-    [Header("イントロ演出（ゴール→スタート）")]
-    public bool playIntro = true;      // 演出をやるかどうか
-    public float introWaitTime = 1.0f; // ゴール地点で待つ時間
-    public float introSpeed = 10.0f;   // 戻ってくるスピード
-    private bool isIntroPlaying = false;
+    [Header("演出設定")]
+    public bool playIntro = true;      // 初回イントロをやるか
+    public float introWaitTime = 1.0f; // ゴールで待つ時間
+    public float introSpeed = 10.0f;   // イントロの速度
+    public float resetSpeed = 25.0f;   // ★リセット時に戻る速度
+
+    private bool isEffectPlaying = false;
 
     [Header("酔い対策：追従設定")]
     public float deadZone = 1.0f;
@@ -51,48 +53,82 @@ public class StageCameraController : MonoBehaviour
         }
         else
         {
-            ResetCamera();
+            ResetToStartSideInstant();
         }
     }
 
-    // ★追加：イントロ演出コルーチン
+    // 初回イントロ演出（ゴール→スタートサイドへ）
     IEnumerator IntroSequence()
     {
-        isIntroPlaying = true;
+        isEffectPlaying = true;
 
-        // 1. ゴール地点（スタートの反対側）へ瞬時に移動
+        // 一旦ゴール端へワープ
         float goalPoint = (startSide == StartSide.MinSide) ? maxLimit : minLimit;
-        Vector3 startPos = transform.position;
-        if (stageType == StageType.Horizontal) startPos.x = goalPoint;
-        else startPos.y = goalPoint;
-        transform.position = startPos;
+        SetCameraPos(goalPoint);
 
-        // 2. ゴールで少し待機（プレイヤーにゴールを見せる）
         yield return new WaitForSeconds(introWaitTime);
 
-        // 3. スタート地点までスーッと移動
-        float startPoint = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
+        // スタート端へ移動
+        yield return StartCoroutine(MoveToStartSideRoutine(introSpeed));
+
+        isEffectPlaying = false;
+    }
+
+    // ★リセットボタンから呼ばれる処理
+    public void ResetCamera()
+    {
+        StopAllCoroutines();
+        isDragging = false;
+        currentVelocity = Vector3.zero;
+
+        // スタートサイド（開始位置）へスーッと戻る演出を開始
+        StartCoroutine(ResetSequence());
+    }
+
+    IEnumerator ResetSequence()
+    {
+        isEffectPlaying = true;
+        yield return StartCoroutine(MoveToStartSideRoutine(resetSpeed));
+        isEffectPlaying = false;
+    }
+
+    // 指定した速度で Start Side の座標まで移動する共通処理
+    IEnumerator MoveToStartSideRoutine(float speed)
+    {
+        // 目標地点の計算
+        float targetVal = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
+
         while (true)
         {
             float current = (stageType == StageType.Horizontal) ? transform.position.x : transform.position.y;
-            float next = Mathf.MoveTowards(current, startPoint, introSpeed * Time.deltaTime);
+            float next = Mathf.MoveTowards(current, targetVal, speed * Time.deltaTime);
 
-            if (stageType == StageType.Horizontal)
-                transform.position = new Vector3(next, transform.position.y, transform.position.z);
-            else
-                transform.position = new Vector3(transform.position.x, next, transform.position.z);
+            SetCameraPos(next);
 
-            // 目的地に到達したら終了
-            if (Mathf.Abs(next - startPoint) < 0.01f) break;
+            if (Mathf.Abs(next - targetVal) < 0.01f) break;
             yield return null;
         }
+    }
 
-        isIntroPlaying = false;
+    // 特定の軸だけカメラ位置を書き換えるヘルパー
+    void SetCameraPos(float value)
+    {
+        if (stageType == StageType.Horizontal)
+            transform.position = new Vector3(value, initialPosition.y, transform.position.z);
+        else
+            transform.position = new Vector3(initialPosition.x, value, transform.position.z);
+    }
+
+    // 瞬時に開始位置へ
+    void ResetToStartSideInstant()
+    {
+        float targetVal = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
+        SetCameraPos(targetVal);
     }
 
     void LateUpdate()
     {
-        if (gameManager == null || isIntroPlaying) return; // イントロ中は通常の操作を無効化
+        if (gameManager == null || isEffectPlaying) return;
 
         if (gameManager.currentState == GameManager.GameState.Edit)
         {
@@ -104,17 +140,7 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
-    // --- 以下、以前と同じメソッド ---
-    bool IsDragButtonPressed()
-    {
-        switch (dragButton)
-        {
-            case DragButton.Left: return Mouse.current.leftButton.isPressed;
-            case DragButton.Right: return Mouse.current.rightButton.isPressed;
-            case DragButton.Middle: return Mouse.current.middleButton.isPressed;
-            default: return false;
-        }
-    }
+    // --- 以下、ドラッグ・追従・クランプ（変更なし） ---
 
     void HandleEditMode()
     {
@@ -160,15 +186,14 @@ public class StageCameraController : MonoBehaviour
         return new Vector3(outX, outY, transform.position.z);
     }
 
-    public void ResetCamera()
+    bool IsDragButtonPressed()
     {
-        isIntroPlaying = false;
-        isDragging = false;
-        currentVelocity = Vector3.zero;
-        Vector3 resetPos = initialPosition;
-        float startPoint = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
-        if (stageType == StageType.Horizontal) resetPos.x = startPoint;
-        else resetPos.y = startPoint;
-        transform.position = new Vector3(resetPos.x, resetPos.y, transform.position.z);
+        switch (dragButton)
+        {
+            case DragButton.Left: return Mouse.current.leftButton.isPressed;
+            case DragButton.Right: return Mouse.current.rightButton.isPressed;
+            case DragButton.Middle: return Mouse.current.middleButton.isPressed;
+            default: return false;
+        }
     }
 }

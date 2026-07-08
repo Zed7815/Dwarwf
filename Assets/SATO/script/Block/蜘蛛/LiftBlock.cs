@@ -40,12 +40,19 @@ public class LiftBlock : MonoBehaviour
     public string animBoolName = "isMoving";
     public float threadSpriteUnitSize = 1.0f;
 
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
+    public AudioClip startSE;      // 動き出す時の音
+    public AudioClip stopSE;       // 到着した時の音
+
     private float myHalfHeight;
 
     private void Start()
     {
         SetupReferences();
         UpdateDimensions();
+        // AudioSourceが未設定なら自分から取得を試みる
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     private void Update()
@@ -193,6 +200,10 @@ public class LiftBlock : MonoBehaviour
     IEnumerator MoveRoutine(Player_walk pWalk, float lockX, float lockZ, float targetY)
     {
         isMoving = true;
+
+        // ★SE再生：動き出し
+        if (audioSource != null && startSE != null) audioSource.PlayOneShot(startSE);
+
         if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, true);
 
         float startY = transform.position.y;
@@ -219,6 +230,10 @@ public class LiftBlock : MonoBehaviour
         }
 
         transform.position = new Vector3(lockX, targetY, lockZ);
+
+        // ★SE再生：到着
+        if (audioSource != null && stopSE != null) audioSource.PlayOneShot(stopSE);
+
         yield return new WaitForSeconds(waitTime);
 
         if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, false);
@@ -226,5 +241,10 @@ public class LiftBlock : MonoBehaviour
         isMoving = false;
     }
 
-    void OnGimmickReset() { isMoving = false; }
+    void OnGimmickReset()
+    {
+        isMoving = false;
+        // ★リセット時は再生中の音を止める
+        if (audioSource != null) audioSource.Stop();
+    }
 }
