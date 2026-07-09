@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class WarpEntrance : MonoBehaviour
 {
+    [Header("テレポート紐付け設定")]
+    [Tooltip("この入口の番号。同じ番号のWarpExitへ飛びます")]
+    public int warpID = 0;
+
     [Header("演出タイミング設定")]
-    [Tooltip("亀が口を開けてから、プレイヤーを消すまでの時間（秒）")]
     public float delayBeforeHide = 0.2f;
-    [Tooltip("プレイヤーが消えてから、亀が口を閉じて待機に戻るまでの時間（秒）")]
     public float delayAfterHide = 0.3f;
-    [Tooltip("プレイヤーが消えて出口に移動するまでの「移動中」の時間")]
     public float hideDuration = 1.0f;
 
     [Header("出口の高さ調整")]
@@ -42,26 +43,27 @@ public class WarpEntrance : MonoBehaviour
     void SetupReferences()
     {
         if (entranceAnimator == null) entranceAnimator = GetComponent<Animator>();
-        if (transform.parent != null)
+
+        // シーン内のすべての WarpExit を探して、IDが一致するものを紐付ける
+        WarpExit[] allExits = FindObjectsOfType<WarpExit>(true); // 非表示も含めて検索
+        foreach (var exit in allExits)
         {
-            WarpExit exit = transform.parent.GetComponentInChildren<WarpExit>();
-            if (exit != null)
-            {
-                exitPoint = exit.transform;
-                exitAnimator = exit.exitAnimator;
-                if (exitAnimator == null) exitAnimator = exit.GetComponent<Animator>();
-            }
-        }
-        if (exitPoint == null)
-        {
-            WarpExit exit = FindObjectOfType<WarpExit>();
-            if (exit != null)
+            if (exit.warpID == this.warpID)
             {
                 exitPoint = exit.transform;
                 exitAnimator = exit.GetComponent<Animator>();
+                // 見つかったのでループを抜ける
+                return;
             }
         }
+
+        if (exitPoint == null)
+        {
+            Debug.LogWarning($"WarpID: {warpID} に対応する WarpExit が見つかりません！");
+        }
     }
+
+    
 
     private bool HasParameter(Animator anim, string paramName)
     {
@@ -104,7 +106,6 @@ public class WarpEntrance : MonoBehaviour
         Animator pAnim = pWalk.GetComponent<Animator>();
         SpriteRenderer playerSR = pWalk.GetComponent<SpriteRenderer>();
 
-        // 開始時は確実に表示
         if (playerSR != null) playerSR.enabled = true;
 
         if (rb != null)
@@ -113,43 +114,29 @@ public class WarpEntrance : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
         }
 
-        // プレイヤーを入口の中心にスナップ
         pWalk.transform.position = new Vector3(transform.position.x, pWalk.transform.position.y, pWalk.transform.position.z);
 
-        // --- 入口演出の開始 ---
         if (entranceAnimator != null)
         {
             if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
-
-            if (HasParameter(entranceAnimator, entranceBoolName))
-                entranceAnimator.SetBool(entranceBoolName, true);
-
+            if (HasParameter(entranceAnimator, entranceBoolName)) entranceAnimator.SetBool(entranceBoolName, true);
             if (pWalk.direction == 1 && HasParameter(entranceAnimator, "EnterRight")) entranceAnimator.SetTrigger("EnterRight");
             else if (HasParameter(entranceAnimator, "EnterLeft")) entranceAnimator.SetTrigger("EnterLeft");
         }
 
-        // ★修正ポイント1：亀が口を開けるまでの時間を待つ
         yield return new WaitForSeconds(delayBeforeHide);
-
-        // ★修正ポイント2：吸い込まれた瞬間にプレイヤーを消す
         if (playerSR != null) playerSR.enabled = false;
-
-        // ★修正ポイント3：プレイヤーが消えた後、亀が動作を終える（口を閉じる等）のを待つ
         yield return new WaitForSeconds(delayAfterHide);
 
         if (entranceAnimator != null)
         {
-            if (HasParameter(entranceAnimator, entranceBoolName))
-                entranceAnimator.SetBool(entranceBoolName, false);
-
+            if (HasParameter(entranceAnimator, entranceBoolName)) entranceAnimator.SetBool(entranceBoolName, false);
             entranceAnimator.ResetTrigger("EnterRight");
             entranceAnimator.ResetTrigger("EnterLeft");
         }
 
-        // テレポート中の待ち時間
         yield return new WaitForSeconds(hideDuration);
 
-        // --- 出口へ移動 ---
         if (exitPoint != null)
         {
             pWalk.transform.position = new Vector3(exitPoint.position.x, exitPoint.position.y + exitYOffset, pWalk.transform.position.z);

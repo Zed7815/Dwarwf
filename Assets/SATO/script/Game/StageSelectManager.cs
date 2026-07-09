@@ -11,8 +11,11 @@ public class StageSelectManager : MonoBehaviour
     public Button[] stageButtons;
     public string[] stageSceneNames;
 
-    [Header("星のUI設定")]
-    public TextMeshProUGUI totalStarText;
+    [Header("演出設定")]
+    [Tooltip("シーン開始時に黒い板が退く演出スクリプト")]
+    public nextscene fadeInScript;
+    [Tooltip("ボタン押下時に黒い板が降りてくる演出スクリプト")]
+    public nextscene fadeOutScript;
 
     [Header("SE設定")]
     public AudioSource audioSource;
@@ -20,44 +23,41 @@ public class StageSelectManager : MonoBehaviour
     public AudioClip clickSE;
     public AudioClip enterSE;
 
-    // 同一セッション（起動中）かどうかを判定するフラグ
+    public TextMeshProUGUI totalStarText;
     private static bool sessionResetDone = false;
 
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        // ★修正点：ゲーム起動後、最初の1回目だけデータを全消去する
-        if (!sessionResetDone)
+        // ★追加：シーン開始時のフェードイン（黒い板がどく）演出
+        if (fadeInScript != null)
         {
-            PlayerPrefs.DeleteAll(); // ステージ進捗も星のデータもすべて削除
-            PlayerPrefs.Save();
-            sessionResetDone = true; // 次にこの画面に来た時はこの処理を飛ばす
-            Debug.Log("ゲーム起動：セーブデータを初期状態にリセットしました");
+            StartCoroutine(fadeInScript.startKuro());
         }
 
+        if (!sessionResetDone)
+        {
+            PlayerPrefs.DeleteAll();
+            PlayerPrefs.Save();
+            sessionResetDone = true;
+        }
         UpdateStarCountUI();
         RefreshStageButtons();
     }
 
     void Update()
     {
-        // デバッグ用ショートカット：Lキーで全開放（星も含む）
-        if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame)
-        {
-            UnlockAllStages();
-        }
+        if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) UnlockAllStages();
     }
 
     public void UpdateStarCountUI()
     {
         int totalStars = 0;
-        // 取得済みの星を合算
         for (int i = 1; i <= 30; i++)
         {
             if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) totalStars++;
         }
-
         if (totalStarText != null) totalStarText.text = totalStars.ToString();
     }
 
@@ -75,8 +75,12 @@ public class StageSelectManager : MonoBehaviour
             {
                 AddHoverEvent(stageButtons[i]);
                 string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
+
                 stageButtons[i].onClick.AddListener(() => {
-                    if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
+                    if (!string.IsNullOrEmpty(sceneName))
+                    {
+                        LoadStage(sceneName);
+                    }
                 });
             }
         }
@@ -84,19 +88,15 @@ public class StageSelectManager : MonoBehaviour
 
     void UnlockAllStages()
     {
-        Debug.Log("デバッグ：全ステージ・全星を開放します");
         PlayerPrefs.SetInt("StageCleared", stageButtons.Length + 1);
         for (int i = 1; i <= 20; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
         PlayerPrefs.Save();
-
         UpdateStarCountUI();
         RefreshStageButtons();
-
         FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
         if (fsl != null) fsl.RefreshLockStatus();
     }
 
-    // --- 以下、イベント・ロード処理（変更なし） ---
     void AddHoverEvent(Button btn)
     {
         EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
@@ -113,7 +113,9 @@ public class StageSelectManager : MonoBehaviour
     {
         if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
         if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
-        yield return new WaitForSecondsRealtime(0.2f);
+
+        yield return StartCoroutine(fadeOutScript.endKuro());
+        yield return new WaitForSecondsRealtime(0.5f);
         SceneManager.LoadScene(sceneName);
     }
 }

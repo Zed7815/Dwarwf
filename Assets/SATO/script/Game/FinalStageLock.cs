@@ -1,15 +1,15 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
 public class FinalStageLock : MonoBehaviour
 {
-    [Header("İ’è")]
+    [Header("è¨­å®š")]
     public int requiredStars = 5;
     public string finalStageSceneName;
     public TextMeshProUGUI needStarText;
 
-    [Header("‰‰o—p")]
+    [Header("æ¼”å‡ºç”¨")]
     public GameObject lockGraphic;
 
     private Button btn;
@@ -45,7 +45,7 @@ public class FinalStageLock : MonoBehaviour
             if (isUnlocked)
             {
                 btn.onClick.AddListener(() => {
-                    // StageSelectManager‚Ì‰¹•t‚«ˆÚ“®‚ğŒÄ‚Ô
+                    // StageSelectManagerã®éŸ³ä»˜ãç§»å‹•ã‚’å‘¼ã¶
                     StageSelectManager ssm = FindObjectOfType<StageSelectManager>();
                     if (ssm != null) ssm.LoadStage(finalStageSceneName);
                     else UnityEngine.SceneManagement.SceneManager.LoadScene(finalStageSceneName);

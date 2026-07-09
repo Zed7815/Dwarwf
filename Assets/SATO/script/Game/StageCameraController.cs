@@ -20,10 +20,11 @@ public class StageCameraController : MonoBehaviour
     public float maxLimit;
 
     [Header("演出設定")]
-    public bool playIntro = true;      // 初回イントロをやるか
-    public float introWaitTime = 1.0f; // ゴールで待つ時間
-    public float introSpeed = 10.0f;   // イントロの速度
-    public float resetSpeed = 25.0f;   // ★リセット時に戻る速度
+    public nextscene nextSceneScript;  // ★追加：nextsceneスクリプトの参照
+    public bool playIntro = true;
+    public float introWaitTime = 1.0f;
+    public float introSpeed = 10.0f;
+    public float resetSpeed = 25.0f;
 
     private bool isEffectPlaying = false;
 
@@ -57,14 +58,26 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
-    // 初回イントロ演出（ゴール→スタートサイドへ）
+    // 初回イントロ演出
     IEnumerator IntroSequence()
     {
         isEffectPlaying = true;
 
-        // 一旦ゴール端へワープ
+       
+        // --- ここまで ---
+
+        // カメラを一旦ゴール端へワープ
         float goalPoint = (startSide == StartSide.MinSide) ? maxLimit : minLimit;
         SetCameraPos(goalPoint);
+
+        // --- ★ここから追加：シーン開始時の演出 ---
+        if (nextSceneScript != null)
+        {
+            // 黒い板をどかすアニメーションを実行
+            yield return StartCoroutine(nextSceneScript.startKuro());
+            // どかし終わった後、指示通り0.5秒待機
+           // yield return new WaitForSecondsRealtime(0.2f);
+        }
 
         yield return new WaitForSeconds(introWaitTime);
 
@@ -80,8 +93,6 @@ public class StageCameraController : MonoBehaviour
         StopAllCoroutines();
         isDragging = false;
         currentVelocity = Vector3.zero;
-
-        // スタートサイド（開始位置）へスーッと戻る演出を開始
         StartCoroutine(ResetSequence());
     }
 
@@ -92,10 +103,8 @@ public class StageCameraController : MonoBehaviour
         isEffectPlaying = false;
     }
 
-    // 指定した速度で Start Side の座標まで移動する共通処理
     IEnumerator MoveToStartSideRoutine(float speed)
     {
-        // 目標地点の計算
         float targetVal = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
 
         while (true)
@@ -110,7 +119,6 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
-    // 特定の軸だけカメラ位置を書き換えるヘルパー
     void SetCameraPos(float value)
     {
         if (stageType == StageType.Horizontal)
@@ -119,7 +127,6 @@ public class StageCameraController : MonoBehaviour
             transform.position = new Vector3(initialPosition.x, value, transform.position.z);
     }
 
-    // 瞬時に開始位置へ
     void ResetToStartSideInstant()
     {
         float targetVal = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
@@ -139,8 +146,6 @@ public class StageCameraController : MonoBehaviour
             HandlePlayMode();
         }
     }
-
-    // --- 以下、ドラッグ・追従・クランプ（変更なし） ---
 
     void HandleEditMode()
     {
