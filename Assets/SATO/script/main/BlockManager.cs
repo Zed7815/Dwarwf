@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class BlockManager : MonoBehaviour
@@ -25,31 +24,37 @@ public class BlockManager : MonoBehaviour
     public List<BlockData> blockTypes;
 
     [Header("SE設定")]
-    public AudioSource audioSource; // インスペクターでAudioSourceを割り当て
-    public AudioClip dragSE;   // ドラッグ開始時の音
-    public AudioClip dropSE;   // 配置（ドロップ）成功時の音
-    public AudioClip deleteSE; // 削除時の音
+    public AudioSource audioSource;
+    public AudioClip dragSE;
+    public AudioClip dropSE;
+    public AudioClip deleteSE;
+
+    [Header("エフェクト設定")]
+    public GameObject poofEffectPrefab; // 配置・入れ替え時の煙エフェクト（任意）
 
     private GameObject draggingBlock;
     private SpriteRenderer previewSR;
     private GameObject previewBlock;
     private int activeTypeIndex;
-
     private DynamicDropFrame activeFrame;
 
-    void Start()
-    {
-        // もしAudioSourceが未設定なら自分自身から取得を試みる
-        if (audioSource == null) audioSource = GetComponent<AudioSource>();
-    }
+    // 現在プレビューで重なっている「消える予定のブロック」
+    private GameObject highlightedOldBlock;
 
     void Update()
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
+        // 右クリックで削除
         if (Mouse.current.rightButton.wasPressedThisFrame)
         {
-            DeleteBlock();
+            DeleteBlockAtMouse();
+        }
+
+        // ★追加：左クリック押し込みで「設置済みブロック」を掴む
+        if (Mouse.current.leftButton.wasPressedThisFrame && draggingBlock == null)
+        {
+            TryGrabPlacedBlock();
         }
 
         if (draggingBlock != null)
@@ -57,34 +62,81 @@ public class BlockManager : MonoBehaviour
             UpdateDraggingPosition();
         }
 
+        // 左クリックを離して配置
         if (Mouse.current.leftButton.wasReleasedThisFrame && draggingBlock != null)
         {
             DropBlock();
         }
     }
 
+    // ★強化：設置済みブロックを掴む機能
+    void TryGrabPlacedBlock()
+    {
+        Vector3 mousePos = GetMouseWorldPosition();
+        Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
+
+        if (hit != null)
+        {
+            BlockInfo info = hit.GetComponent<BlockInfo>();
+            if (info != null)
+            {
+                // 枠のスケールを戻す
+                Collider2D frameHit = GetColliderAtPos(hit.transform.position, "DropFrame");
+                if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
+
+                // 掴んだので、実体を消してドラッグを開始する
+                int index = info.typeIndex;
+                blockTypes[index].currentCount--;
+                Destroy(hit.gameObject);
+                StartDragging(index);
+            }
+        }
+    }
+
     public void StartDragging(int typeIndex)
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
-        if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount) return;
+
+        // ★案A：個数制限に達していたら、一番古い同じブロックを消してワープさせる
+        if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount)
+        {
+            RemoveOldestBlockOfType(typeIndex);
+        }
 
         activeTypeIndex = typeIndex;
-
-        // ★SE再生: ドラッグ開始
         PlaySE(dragSE);
 
         Vector3 mouseWorldPos = GetMouseWorldPosition();
-
         draggingBlock = Instantiate(blockTypes[typeIndex].prefab, mouseWorldPos, Quaternion.identity);
-        draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
         draggingBlock.GetComponent<Collider2D>().enabled = false;
 
         previewBlock = Instantiate(blockTypes[typeIndex].prefab, mouseWorldPos, Quaternion.identity);
-
         previewSR = previewBlock.GetComponent<SpriteRenderer>();
         previewBlock.GetComponent<Collider2D>().enabled = false;
-
         previewBlock.transform.position += new Vector3(0, 0, 0.1f);
+    }
+
+    void RemoveOldestBlockOfType(int typeIndex)
+    {
+        GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
+        foreach (GameObject b in placedBlocks)
+        {
+            BlockInfo info = b.GetComponent<BlockInfo>();
+            if (info != null && info.typeIndex == typeIndex)
+            {
+                // 最初に見つかった（＝シーンにある）ものを消す
+                InstantiatePoof(b.transform.position);
+                PlaySE(deleteSE);
+
+                // 枠をリセット
+                Collider2D frameHit = GetColliderAtPos(b.transform.position, "DropFrame");
+                if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
+
+                Destroy(b);
+                blockTypes[typeIndex].currentCount--;
+                break;
+            }
+        }
     }
 
     void UpdateDraggingPosition()
@@ -101,34 +153,39 @@ public class BlockManager : MonoBehaviour
             previewBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0.1f);
 
             DynamicDropFrame hitFrame = frameHit.GetComponent<DynamicDropFrame>();
-            if (hitFrame != null)
+            if (hitFrame != null && activeFrame != hitFrame)
             {
-                if (activeFrame != hitFrame)
-                {
-                    if (activeFrame != null)
-                    {
-                        activeFrame.ResetScale();
-                    }
-
-                    activeFrame = hitFrame;
-                    activeFrame.Expand(blockTypes[activeTypeIndex].targetFrameScale);
-                }
+                if (activeFrame != null) activeFrame.ResetScale();
+                activeFrame = hitFrame;
+                activeFrame.Expand(blockTypes[activeTypeIndex].targetFrameScale);
             }
 
+            // ★入れ替え予告の演出
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
             if (blockHit != null)
             {
-                previewSR.color = new Color(1f, 0f, 0f, 0.5f);
+                // 違うブロック、または同じ場所のブロックがある時
+                previewSR.color = new Color(1f, 1f, 1f, 0.7f);
+
+                // 重なっているブロックを半透明にする演出
+                if (highlightedOldBlock != blockHit.gameObject)
+                {
+                    ResetOldBlockHighlight();
+                    highlightedOldBlock = blockHit.gameObject;
+                    var sr = highlightedOldBlock.GetComponent<SpriteRenderer>();
+                    if (sr) sr.color = new Color(1f, 0.5f, 0.5f, 0.5f); // 赤っぽく半透明に
+                }
             }
             else
             {
                 previewSR.color = new Color(0.5f, 1f, 0.5f, 0.5f);
+                ResetOldBlockHighlight();
             }
         }
         else
         {
             previewBlock.SetActive(false);
-
+            ResetOldBlockHighlight();
             if (activeFrame != null)
             {
                 activeFrame.ResetScale();
@@ -137,13 +194,14 @@ public class BlockManager : MonoBehaviour
         }
     }
 
-    public bool IsAllBlocksPlaced()
+    void ResetOldBlockHighlight()
     {
-        foreach (var type in blockTypes)
+        if (highlightedOldBlock != null)
         {
-            if (type.currentCount < type.maxCount) return false;
+            var sr = highlightedOldBlock.GetComponent<SpriteRenderer>();
+            if (sr) sr.color = Color.white;
+            highlightedOldBlock = null;
         }
-        return true;
     }
 
     void DropBlock()
@@ -156,125 +214,103 @@ public class BlockManager : MonoBehaviour
             Vector3 snapPos = frameHit.transform.position;
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
 
-            if (blockHit == null)
+            // ★自動入れ替え：すでに何かあったら消去する
+            if (blockHit != null)
             {
-                // ★SE再生: 配置成功
-                PlaySE(dropSE);
-
-                draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
-                draggingBlock.GetComponent<Collider2D>().enabled = true;
-                draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
-
-                draggingBlock.tag = "PlacedBlock";
-
-                BlockInfo info = draggingBlock.AddComponent<BlockInfo>();
-                info.typeIndex = activeTypeIndex;
-
-                blockTypes[activeTypeIndex].currentCount++;
-                draggingBlock = null;
-                activeFrame = null;
+                DeleteBlockAt(blockHit.gameObject);
+                InstantiatePoof(snapPos);
             }
-            else
-            {
-                Destroy(draggingBlock);
-                draggingBlock = null;
 
-                if (activeFrame != null)
-                {
-                    activeFrame.ResetScale();
-                    activeFrame = null;
-                }
-            }
+            // 配置成功
+            PlaySE(dropSE);
+            draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
+            draggingBlock.GetComponent<Collider2D>().enabled = true;
+            draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
+            draggingBlock.tag = "PlacedBlock";
+
+            BlockInfo info = draggingBlock.AddComponent<BlockInfo>();
+            info.typeIndex = activeTypeIndex;
+
+            blockTypes[activeTypeIndex].currentCount++;
+            draggingBlock = null;
+            activeFrame = null;
         }
         else
         {
             Destroy(draggingBlock);
             draggingBlock = null;
-
-            if (activeFrame != null)
-            {
-                activeFrame.ResetScale();
-                activeFrame = null;
-            }
+            if (activeFrame != null) { activeFrame.ResetScale(); activeFrame = null; }
         }
 
-        if (previewBlock != null)
-        {
-            Destroy(previewBlock);
-            previewBlock = null;
-        }
-
+        if (previewBlock != null) Destroy(previewBlock);
+        ResetOldBlockHighlight();
         UpdateUI();
     }
 
-    // 共通の音再生メソッド
-    void PlaySE(AudioClip clip)
+    // 特定のオブジェクトを指定して消去
+    void DeleteBlockAt(GameObject target)
     {
-        if (audioSource != null && clip != null)
+        BlockInfo info = target.GetComponent<BlockInfo>();
+        if (info != null)
         {
-            audioSource.PlayOneShot(clip);
+            blockTypes[info.typeIndex].currentCount--;
+        }
+        Destroy(target);
+    }
+
+    // マウス位置のブロックを右クリック削除
+    void DeleteBlockAtMouse()
+    {
+        Vector3 mousePos = GetMouseWorldPosition();
+        Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
+
+        if (hit != null)
+        {
+            InstantiatePoof(hit.transform.position);
+            PlaySE(deleteSE);
+
+            // 枠のリセット
+            Collider2D frameHit = GetColliderAtPos(hit.transform.position, "DropFrame");
+            if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
+
+            DeleteBlockAt(hit.gameObject);
+            UpdateUI();
         }
     }
 
+    void InstantiatePoof(Vector3 pos)
+    {
+        if (poofEffectPrefab != null) Instantiate(poofEffectPrefab, pos, Quaternion.identity);
+    }
+
+    // 以下、共通メソッド（変更なし）
+    void PlaySE(AudioClip clip) { if (audioSource != null && clip != null) audioSource.PlayOneShot(clip); }
     Collider2D GetColliderAtPos(Vector3 pos, string tag)
     {
         Collider2D[] hits = Physics2D.OverlapPointAll(pos);
-        foreach (var hit in hits)
-        {
-            if (hit.CompareTag(tag)) return hit;
-        }
+        foreach (var hit in hits) { if (hit.CompareTag(tag)) return hit; }
         return null;
     }
 
     Vector3 GetMouseWorldPosition()
     {
-        if (Camera.main == null)
-        {
-            Debug.LogWarning("Camera.main is null");
-            return Vector3.zero;
-        }
-
+        if (Camera.main == null) return Vector3.zero;
         Vector2 mousePos = Mouse.current.position.ReadValue();
-
-        if (mousePos.x < 0 || mousePos.x > Screen.width ||
-            mousePos.y < 0 || mousePos.y > Screen.height)
-        {
-            return draggingBlock != null ? draggingBlock.transform.position : Vector3.zero;
-        }
-
-        try
-        {
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, 0));
-            worldPos.z = 0;
-            return worldPos;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"ScreenToWorldPoint error: {e.Message}");
-            return Vector3.zero;
-        }
+        if (mousePos.x < 0 || mousePos.x > Screen.width || mousePos.y < 0 || mousePos.y > Screen.height) return Vector3.zero;
+        Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, Camera.main.nearClipPlane + 0.1f);
+        Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
+        worldPos.z = 0;
+        return worldPos;
     }
 
     public void ResetAllBlocks()
     {
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
-        foreach (GameObject b in placedBlocks)
-        {
-            Destroy(b);
-        }
-
-        foreach (var type in blockTypes)
-        {
-            type.currentCount = 0;
-        }
-
+        foreach (GameObject b in placedBlocks) Destroy(b);
+        foreach (var type in blockTypes) type.currentCount = 0;
         DynamicDropFrame[] allFrames = FindObjectsOfType<DynamicDropFrame>();
-        foreach (DynamicDropFrame frame in allFrames)
-        {
-            if (frame != null) frame.ResetScale();
-        }
+        foreach (DynamicDropFrame frame in allFrames) if (frame != null) frame.ResetScale();
         activeFrame = null;
-
         UpdateUI();
     }
 
@@ -290,36 +326,9 @@ public class BlockManager : MonoBehaviour
         }
     }
 
-    void DeleteBlock()
+    public bool IsAllBlocksPlaced()
     {
-        Vector3 mousePos = GetMouseWorldPosition();
-        Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
-
-        if (hit != null)
-        {
-            // ★SE再生: 削除
-            PlaySE(deleteSE);
-
-            Vector3 blockPos = hit.transform.position;
-
-            BlockInfo info = hit.GetComponent<BlockInfo>();
-            if (info != null)
-            {
-                blockTypes[info.typeIndex].currentCount--;
-            }
-            Destroy(hit.gameObject);
-
-            Collider2D frameHit = GetColliderAtPos(blockPos, "DropFrame");
-            if (frameHit != null)
-            {
-                DynamicDropFrame frame = frameHit.GetComponent<DynamicDropFrame>();
-                if (frame != null)
-                {
-                    frame.ResetScale();
-                }
-            }
-
-            UpdateUI();
-        }
+        foreach (var type in blockTypes) { if (type.currentCount < type.maxCount) return false; }
+        return true;
     }
 }

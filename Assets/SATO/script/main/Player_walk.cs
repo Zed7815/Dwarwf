@@ -142,8 +142,7 @@ public class Player_walk : MonoBehaviour
         }
     }
 
-    // 壁への衝突判定
-    // 地面、または高台のコライダーとの接触処理
+    // --- OnCollisionEnter2D の中身 ---
     void OnCollisionEnter2D(Collision2D collision)
     {
         bool isWall = false;
@@ -162,27 +161,38 @@ public class Player_walk : MonoBehaviour
 
         if (isWall)
         {
-            // 大ジャンプ中（isJumping == true）に壁に触れたら、マリオのように跳ね返る
             if (isJumping && rb != null)
             {
                 if (Time.time - lastFlipTime > 0.15f)
                 {
                     lastFlipTime = Time.time;
 
-                    // 1. 進行方向を反転し、スケール（画像の向き）も反転
+                    // 壁の面がどちらを向いているか（法線）を取得
+                    float wallNormalX = collision.contacts[0].normal.x;
+
+                    // 1. まず先に方向とスケールを反転させる
                     direction *= -1;
                     Vector3 scale = transform.localScale;
                     scale.x = Mathf.Abs(scale.x) * direction;
                     transform.localScale = scale;
 
-                    // 2. マリオ壁ジャンプ：縦の勢い(Y速度)は保持したまま、横(X速度)だけを反転させて跳ね返す
+                    // 2. その後、正しいアニメーションをトリガーする
+                    // normal.x < 0 なら壁は右側にある
+                    if (wallNormalX < -0.5f)
+                    {
+                        StartCoroutine(TriggerWallKick("isWallKickRight"));
+                    }
+                    else if (wallNormalX > 0.5f)
+                    {
+                        StartCoroutine(TriggerWallKick("isWallKickLeft"));
+                    }
+
+                    // 3. 物理的な跳ね返り
                     float keepYVelocity = rb.linearVelocity.y;
                     float bounceXVelocity = direction * playerJumpForwardPower * wallBounceMultiplier;
-
                     rb.linearVelocity = new Vector2(bounceXVelocity, keepYVelocity);
                 }
             }
-            // 地面歩行中の壁衝突時の通常の折り返し
             else if (isGrounded)
             {
                 if (Time.time - lastFlipTime > 0.3f)
@@ -195,6 +205,35 @@ public class Player_walk : MonoBehaviour
                     transform.localScale = scale;
                 }
             }
+        }
+    }
+
+    // --- 右壁キックの反転問題を解決するコルーチン ---
+    private IEnumerator TriggerWallKick(string boolName)
+    {
+        if (anim != null && sr != null)
+        {
+            anim.SetBool("isWallKickLeft", false);
+            anim.SetBool("isWallKickRight", false);
+            anim.SetBool(boolName, true);
+
+            // ★ここが修正ポイント
+            // localScale.x が反転している状態（左を向いている）で、
+            // 右壁キックの絵を出したいので flipX で微調整します。
+            if (boolName == "isWallKickRight")
+            {
+                sr.flipX = true; // もし右キックが逆ならここを true/false で切り替えて調整
+            }
+            else
+            {
+                sr.flipX = false; // 左キックは正常なのでそのまま
+            }
+
+            // キックのポーズを維持する時間
+            yield return new WaitForSeconds(0.2f);
+
+            anim.SetBool(boolName, false);
+            sr.flipX = false; // 終わったら必ず戻す
         }
     }
 
@@ -485,10 +524,8 @@ public class Player_walk : MonoBehaviour
 
     public void ResetPlayerStatus()
     {
-        // すべての演出（コルーチン）を停止
         StopAllCoroutines();
 
-        // 状態を初期値へ
         state = moveState.idol;
         isJumping = false;
         jumpRequest = true;
@@ -496,17 +533,18 @@ public class Player_walk : MonoBehaviour
         keepAirXVelocity = false;
         direction = 1;
 
-        // 物理挙動の完全停止
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
+
+            // ★追加：物理シミュレーションを強制リセット（瞬間移動時のバグ防止）
+            rb.simulated = false;
+            rb.simulated = true;
         }
 
-        // 非表示になっていた場合の復帰
-        SpriteRenderer pSr = GetComponent<SpriteRenderer>();
-        if (pSr != null) pSr.enabled = true;
+        if (sr != null) sr.enabled = true;
     }
 
     public void ResetDirection()

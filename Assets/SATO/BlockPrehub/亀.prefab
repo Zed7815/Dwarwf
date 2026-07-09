@@ -107,11 +107,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a94ff5dc0b44a5409ca0d9ff68fe035, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WarpEntrance
+  delayBeforeHide: 0
+  delayAfterHide: 0.3
   hideDuration: 2.2
-  playerExitTrigger: isWarpExit
   exitYOffset: 1.5
   entranceBoolName: isWarpingEntrance
   exitBoolName: isExiting
+  playerExitTrigger: isWarpExit
   exitPoint: {fileID: 0}
   entranceAnimator: {fileID: 7095082029016769196}
   exitAnimator: {fileID: 0}

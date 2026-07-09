@@ -2,12 +2,17 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using System.Collections;
+using TMPro;
 
 public class StageSelectManager : MonoBehaviour
 {
     public Button[] stageButtons;
     public string[] stageSceneNames;
+
+    [Header("星のUI設定")]
+    public TextMeshProUGUI totalStarText;
 
     [Header("SE設定")]
     public AudioSource audioSource;
@@ -15,35 +20,60 @@ public class StageSelectManager : MonoBehaviour
     public AudioClip clickSE;
     public AudioClip enterSE;
 
+    // 同一セッション（起動中）かどうかを判定するフラグ
+    private static bool sessionResetDone = false;
+
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        // テスト用：データをリセットしたい場合は有効にする 
-        //PlayerPrefs.DeleteAll(); 
-        //PlayerPrefs.Save();
+        // ★修正点：ゲーム起動後、最初の1回目だけデータを全消去する
+        if (!sessionResetDone)
+        {
+            PlayerPrefs.DeleteAll(); // ステージ進捗も星のデータもすべて削除
+            PlayerPrefs.Save();
+            sessionResetDone = true; // 次にこの画面に来た時はこの処理を飛ばす
+            Debug.Log("ゲーム起動：セーブデータを初期状態にリセットしました");
+        }
 
-        // 保存された「クリア済みステージ番号」を読み込む（デフォルトは0）
+        UpdateStarCountUI();
+        RefreshStageButtons();
+    }
+
+    void Update()
+    {
+        // デバッグ用ショートカット：Lキーで全開放（星も含む）
+        if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame)
+        {
+            UnlockAllStages();
+        }
+    }
+
+    public void UpdateStarCountUI()
+    {
+        int totalStars = 0;
+        // 取得済みの星を合算
+        for (int i = 1; i <= 30; i++)
+        {
+            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) totalStars++;
+        }
+
+        if (totalStarText != null) totalStarText.text = totalStars.ToString();
+    }
+
+    public void RefreshStageButtons()
+    {
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-
-        // デバッグログ：今いくつと判定されているかコンソールで確認できます
-        Debug.Log("セーブデータ読み込み：現在ステージ " + clearedStage + " までクリア済み");
-
         for (int i = 0; i < stageButtons.Length; i++)
         {
             if (stageButtons[i] == null) continue;
-
-            // i=0(Stage1) は 0 <= clearedStage なので最初から開いている
-            // Stage1クリアで clearedStage=1 になれば、i=1(Stage2) が 1 <= 1 で開く
             bool isUnlocked = (i <= clearedStage);
-
             stageButtons[i].interactable = isUnlocked;
             stageButtons[i].onClick.RemoveAllListeners();
 
             if (isUnlocked)
             {
                 AddHoverEvent(stageButtons[i]);
-
                 string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
                 stageButtons[i].onClick.AddListener(() => {
                     if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
@@ -52,23 +82,32 @@ public class StageSelectManager : MonoBehaviour
         }
     }
 
+    void UnlockAllStages()
+    {
+        Debug.Log("デバッグ：全ステージ・全星を開放します");
+        PlayerPrefs.SetInt("StageCleared", stageButtons.Length + 1);
+        for (int i = 1; i <= 20; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
+        PlayerPrefs.Save();
+
+        UpdateStarCountUI();
+        RefreshStageButtons();
+
+        FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
+        if (fsl != null) fsl.RefreshLockStatus();
+    }
+
+    // --- 以下、イベント・ロード処理（変更なし） ---
     void AddHoverEvent(Button btn)
     {
         EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
         if (trigger == null) trigger = btn.gameObject.AddComponent<EventTrigger>();
-
-        EventTrigger.Entry entryEnter = new EventTrigger.Entry();
-        entryEnter.eventID = EventTriggerType.PointerEnter;
-        entryEnter.callback.AddListener((data) => {
-            if (audioSource != null && hoverSE != null) audioSource.PlayOneShot(hoverSE);
-        });
-        trigger.triggers.Add(entryEnter);
+        EventTrigger.Entry entry = new EventTrigger.Entry();
+        entry.eventID = EventTriggerType.PointerEnter;
+        entry.callback.AddListener((data) => { if (audioSource != null && hoverSE != null) audioSource.PlayOneShot(hoverSE); });
+        trigger.triggers.Add(entry);
     }
 
-    public void LoadStage(string sceneName)
-    {
-        StartCoroutine(LoadSequence(sceneName));
-    }
+    public void LoadStage(string sceneName) { StartCoroutine(LoadSequence(sceneName)); }
 
     IEnumerator LoadSequence(string sceneName)
     {

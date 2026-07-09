@@ -4,9 +4,13 @@ using UnityEngine;
 
 public class WarpEntrance : MonoBehaviour
 {
-    [Header("演出設定")]
+    [Header("演出タイミング設定")]
+    [Tooltip("亀が口を開けてから、プレイヤーを消すまでの時間（秒）")]
+    public float delayBeforeHide = 0.2f;
+    [Tooltip("プレイヤーが消えてから、亀が口を閉じて待機に戻るまでの時間（秒）")]
+    public float delayAfterHide = 0.3f;
+    [Tooltip("プレイヤーが消えて出口に移動するまでの「移動中」の時間")]
     public float hideDuration = 1.0f;
-    public string playerExitTrigger = "isWarpExit";
 
     [Header("出口の高さ調整")]
     public float exitYOffset = 0f;
@@ -14,6 +18,7 @@ public class WarpEntrance : MonoBehaviour
     [Header("アニメーション制御（Bool名）")]
     public string entranceBoolName = "isWarpingEntrance";
     public string exitBoolName = "isExiting";
+    public string playerExitTrigger = "isWarpExit";
 
     [Header("自動取得されるコンポーネント")]
     public Transform exitPoint;
@@ -21,9 +26,9 @@ public class WarpEntrance : MonoBehaviour
     public Animator exitAnimator;
 
     [Header("SE設定")]
-    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
-    public AudioClip enterSE;       // 吸い込まれる時の音
-    public AudioClip exitSE;        // 出てくる時の音
+    public AudioSource audioSource;
+    public AudioClip enterSE;
+    public AudioClip exitSE;
 
     private bool isWarping = false;
     private float cooldownTimer = 0f;
@@ -37,7 +42,6 @@ public class WarpEntrance : MonoBehaviour
     void SetupReferences()
     {
         if (entranceAnimator == null) entranceAnimator = GetComponent<Animator>();
-
         if (transform.parent != null)
         {
             WarpExit exit = transform.parent.GetComponentInChildren<WarpExit>();
@@ -48,7 +52,6 @@ public class WarpEntrance : MonoBehaviour
                 if (exitAnimator == null) exitAnimator = exit.GetComponent<Animator>();
             }
         }
-
         if (exitPoint == null)
         {
             WarpExit exit = FindObjectOfType<WarpExit>();
@@ -86,10 +89,7 @@ public class WarpEntrance : MonoBehaviour
         if (collision.CompareTag("Player") && !isWarping && Time.time > cooldownTimer)
         {
             Player_walk pWalk = collision.GetComponent<Player_walk>();
-            if (pWalk != null)
-            {
-                StartCoroutine(WarpRoutine(pWalk));
-            }
+            if (pWalk != null) StartCoroutine(WarpRoutine(pWalk));
         }
     }
 
@@ -104,6 +104,7 @@ public class WarpEntrance : MonoBehaviour
         Animator pAnim = pWalk.GetComponent<Animator>();
         SpriteRenderer playerSR = pWalk.GetComponent<SpriteRenderer>();
 
+        // 開始時は確実に表示
         if (playerSR != null) playerSR.enabled = true;
 
         if (rb != null)
@@ -112,12 +113,12 @@ public class WarpEntrance : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
         }
 
+        // プレイヤーを入口の中心にスナップ
         pWalk.transform.position = new Vector3(transform.position.x, pWalk.transform.position.y, pWalk.transform.position.z);
 
         // --- 入口演出の開始 ---
         if (entranceAnimator != null)
         {
-            // ★SE再生：吸い込み
             if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
 
             if (HasParameter(entranceAnimator, entranceBoolName))
@@ -127,9 +128,14 @@ public class WarpEntrance : MonoBehaviour
             else if (HasParameter(entranceAnimator, "EnterLeft")) entranceAnimator.SetTrigger("EnterLeft");
         }
 
-        yield return new WaitForSeconds(0.4f);
+        // ★修正ポイント1：亀が口を開けるまでの時間を待つ
+        yield return new WaitForSeconds(delayBeforeHide);
 
+        // ★修正ポイント2：吸い込まれた瞬間にプレイヤーを消す
         if (playerSR != null) playerSR.enabled = false;
+
+        // ★修正ポイント3：プレイヤーが消えた後、亀が動作を終える（口を閉じる等）のを待つ
+        yield return new WaitForSeconds(delayAfterHide);
 
         if (entranceAnimator != null)
         {
@@ -140,6 +146,7 @@ public class WarpEntrance : MonoBehaviour
             entranceAnimator.ResetTrigger("EnterLeft");
         }
 
+        // テレポート中の待ち時間
         yield return new WaitForSeconds(hideDuration);
 
         // --- 出口へ移動 ---
@@ -151,9 +158,7 @@ public class WarpEntrance : MonoBehaviour
 
         if (exitAnimator != null)
         {
-            // ★SE再生：出現
             if (audioSource != null && exitSE != null) audioSource.PlayOneShot(exitSE);
-
             if (HasParameter(exitAnimator, exitBoolName)) exitAnimator.SetBool(exitBoolName, true);
             if (pWalk.direction == 1 && HasParameter(exitAnimator, "ExitRight")) exitAnimator.SetTrigger("ExitRight");
             else if (HasParameter(exitAnimator, "ExitLeft")) exitAnimator.SetTrigger("ExitLeft");
@@ -176,7 +181,6 @@ public class WarpEntrance : MonoBehaviour
 
         if (rb != null) rb.bodyType = RigidbodyType2D.Dynamic;
 
-        // ★完全リセット（アニメーター初期化）
         if (pAnim != null)
         {
             pAnim.Rebind();
