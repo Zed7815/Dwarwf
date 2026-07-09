@@ -3444,6 +3444,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 477976646}
     m_Modifications:
+    - target: {fileID: 338173885829833356, guid: 8cf230aae17ad02409eedfd6a1869eb1, type: 3}
+      propertyPath: Y
+      value: -330
+      objectReference: {fileID: 0}
     - target: {fileID: 5148211007138673947, guid: 8cf230aae17ad02409eedfd6a1869eb1, type: 3}
       propertyPath: m_Name
       value: Image
