@@ -1165,6 +1165,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -880
       objectReference: {fileID: 0}
+    - target: {fileID: 1784785786062301996, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1898569117585916414, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_text
       value: 3 / 3
@@ -1279,11 +1283,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6206221804504168617, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 821
+      value: 777
       objectReference: {fileID: 0}
     - target: {fileID: 6206221804504168617, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 400
+      value: 425
       objectReference: {fileID: 0}
     - target: {fileID: 7238301486078814378, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_Name
@@ -1648,6 +1652,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Image (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 5163160782876841498, guid: cee6626b8fd08794696adc02e468608c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1837,6 +1845,10 @@ PrefabInstance:
     - target: {fileID: 5148211007138673947, guid: 8cf230aae17ad02409eedfd6a1869eb1, type: 3}
       propertyPath: m_Name
       value: Image
+      objectReference: {fileID: 0}
+    - target: {fileID: 5148211007138673947, guid: 8cf230aae17ad02409eedfd6a1869eb1, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7152694962605544811, guid: 8cf230aae17ad02409eedfd6a1869eb1, type: 3}
       propertyPath: m_Pivot.x

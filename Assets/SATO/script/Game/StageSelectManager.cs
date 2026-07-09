@@ -23,14 +23,23 @@ public class StageSelectManager : MonoBehaviour
     public AudioClip clickSE;
     public AudioClip enterSE;
 
+    [Header("星のUI設定")]
     public TextMeshProUGUI totalStarText;
+
     private static bool sessionResetDone = false;
+
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Init()
+    {
+        sessionResetDone = false;
+    }
 
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        // ★追加：シーン開始時のフェードイン（黒い板がどく）演出
+        // シーン開始時のフェードイン（黒い板がどく）演出
         if (fadeInScript != null)
         {
             StartCoroutine(fadeInScript.startKuro());
@@ -41,7 +50,9 @@ public class StageSelectManager : MonoBehaviour
             PlayerPrefs.DeleteAll();
             PlayerPrefs.Save();
             sessionResetDone = true;
+            Debug.Log("セーブデータを完全に初期化しました");
         }
+
         UpdateStarCountUI();
         RefreshStageButtons();
     }
@@ -67,20 +78,26 @@ public class StageSelectManager : MonoBehaviour
         for (int i = 0; i < stageButtons.Length; i++)
         {
             if (stageButtons[i] == null) continue;
+
             bool isUnlocked = (i <= clearedStage);
+            bool isActuallyCleared = (i < clearedStage);
+
             stageButtons[i].interactable = isUnlocked;
             stageButtons[i].onClick.RemoveAllListeners();
+
+            // ★ここだけ修正：ボタンの中にある "ClearedVisual" を探して表示・非表示を切り替える
+            Transform clearedVisual = stageButtons[i].transform.Find("ClearedVisual");
+            if (clearedVisual != null)
+            {
+                clearedVisual.gameObject.SetActive(isActuallyCleared);
+            }
 
             if (isUnlocked)
             {
                 AddHoverEvent(stageButtons[i]);
                 string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
-
                 stageButtons[i].onClick.AddListener(() => {
-                    if (!string.IsNullOrEmpty(sceneName))
-                    {
-                        LoadStage(sceneName);
-                    }
+                    if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
                 });
             }
         }

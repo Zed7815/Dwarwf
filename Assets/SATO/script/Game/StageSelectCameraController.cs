@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class StageSelectCameraController : MonoBehaviour
 {
+    public static bool isComingFromTitle = true;
+
     [Header("移動制限")]
     public float minX;
     public float maxX;
@@ -18,9 +21,16 @@ public class StageSelectCameraController : MonoBehaviour
     public SpriteRenderer playerSR;
     public string animBoolName = "isWalking";
 
-    [Tooltip("マウスを止めてからアニメーションを終了するまでの猶予時間")]
     public float walkStopDelay = 0.15f;
     private float stopTimer;
+
+    [Header("イントロ歩き演出設定")]
+    public bool playIntroWalk = true;
+    public float introStartDelay = 0.8f;
+    public float introWalkSpeed = 3.0f;
+    public Vector3 introLocalStartPos = new Vector3(-10f, -2.5f, 10f);
+    public Vector3 introLocalEndPos = new Vector3(-5f, -2.5f, 10f);
+    private bool isIntroPlaying = false;
 
     [Header("岩の明るさ設定")]
     public Image[] rockImages;
@@ -28,11 +38,90 @@ public class StageSelectCameraController : MonoBehaviour
     public Color darkColor = new Color(0.2f, 0.2f, 0.2f, 1f);
     public AnimationCurve darknessCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
+    [Header("ステージから戻った時の設定")]
+    public Button[] stageButtons;
+    [Tooltip("ボタンの何ユニット上に立たせるか")]
+    public float playerYOffset = 1.2f;
+
+    void Start()
+    {
+        if (isComingFromTitle)
+        {
+            if (playIntroWalk) StartCoroutine(IntroWalkRoutine());
+        }
+        else
+        {
+            // ★ズレを防止するため、1フレーム待たずに即時実行
+            SetPlayerAtClearedStage();
+        }
+
+        isComingFromTitle = false;
+    }
+
+    void SetPlayerAtClearedStage()
+    {
+        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
+        // ステージ1クリアならインデックス0、未クリアなら0
+        int targetIndex = Mathf.Max(0, clearedStage - 1);
+
+        if (stageButtons != null && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
+        {
+            Vector3 buttonWorldPos = stageButtons[targetIndex].transform.position;
+
+            // 1. 先にカメラをボタンのX座標にワープさせる（制限範囲内で）
+            float camX = Mathf.Clamp(buttonWorldPos.x, minX, maxX);
+            transform.position = new Vector3(camX, transform.position.y, transform.position.z);
+
+            // 2. 岩の明るさを新しいカメラ位置に合わせて即座に更新（カクつき防止）
+            UpdateRockBrightness();
+
+            // 3. プレイヤーをボタンの真上（ワールド座標）に再配置
+            // 子オブジェクトなので、カメラ移動の後に配置しないと座標が引きずられます
+            playerAnimator.transform.position = new Vector3(buttonWorldPos.x, buttonWorldPos.y + (-1.25f) + playerYOffset, playerAnimator.transform.position.z);
+
+            // 4. 歩きアニメをオフにし、タイマーをリセット
+            playerAnimator.SetBool(animBoolName, false);
+            stopTimer = 0;
+        }
+    }
+
+    IEnumerator IntroWalkRoutine()
+    {
+        isIntroPlaying = true;
+
+        // プレイヤーの向きと初期位置をセット
+        playerAnimator.transform.localPosition = introLocalStartPos;
+        playerAnimator.SetBool(animBoolName, false);
+        if (playerSR != null) playerSR.flipX = false;
+
+        yield return new WaitForSeconds(introStartDelay);
+
+        playerAnimator.SetBool(animBoolName, true);
+
+        float t = 0;
+        Vector3 startPos = playerAnimator.transform.localPosition;
+        float distance = Vector3.Distance(startPos, introLocalEndPos);
+        float duration = distance / introWalkSpeed;
+
+        while (t < 1.0f)
+        {
+            t += Time.deltaTime / duration;
+            playerAnimator.transform.localPosition = Vector3.Lerp(startPos, introLocalEndPos, t);
+            yield return null;
+        }
+
+        playerAnimator.transform.localPosition = introLocalEndPos;
+        playerAnimator.SetBool(animBoolName, false);
+        isIntroPlaying = false;
+    }
+
+    // --- 以下、Updateなどのドラッグ処理は以前のまま ---
     void Update()
     {
+        if (isIntroPlaying) return;
         HandleCameraDrag();
         UpdateRockBrightness();
-        UpdateAnimationState(); // アニメーションの状態更新を分離
+        UpdateAnimationState();
     }
 
     void HandleCameraDrag()
@@ -42,11 +131,7 @@ public class StageSelectCameraController : MonoBehaviour
             isDragging = true;
             dragOrigin = Mouse.current.position.ReadValue();
         }
-
-        if (Mouse.current.middleButton.wasReleasedThisFrame)
-        {
-            isDragging = false;
-        }
+        if (Mouse.current.middleButton.wasReleasedThisFrame) isDragging = false;
 
         if (isDragging)
         {
@@ -54,11 +139,9 @@ public class StageSelectCameraController : MonoBehaviour
             Vector3 difference = dragOrigin - currentMousePos;
             dragOrigin = currentMousePos;
 
-            // ★修正点：ごくわずかな移動でも検知し、タイマーをリセット
             if (Mathf.Abs(difference.x) > 0.01f)
             {
-                stopTimer = walkStopDelay; // タイマーを最大値にリセット
-
+                stopTimer = walkStopDelay;
                 if (playerSR != null)
                 {
                     if (difference.x > 0) playerSR.flipX = false;
@@ -68,29 +151,17 @@ public class StageSelectCameraController : MonoBehaviour
 
             float factor = Camera.main.orthographicSize * 2.0f / Screen.height;
             float moveX = difference.x * factor * dragSensitivity;
-
             Vector3 nextPos = transform.position + new Vector3(moveX, 0, 0);
             nextPos.x = Mathf.Clamp(nextPos.x, minX, maxX);
             transform.position = nextPos;
         }
     }
 
-    // ★追加：アニメーションのON/OFFをタイマーで制御
     void UpdateAnimationState()
     {
         if (playerAnimator == null) return;
-
-        if (isDragging && stopTimer > 0)
-        {
-            // タイマーが残っている間は歩き続ける
-            playerAnimator.SetBool(animBoolName, true);
-            stopTimer -= Time.deltaTime;
-        }
-        else
-        {
-            // ドラッグしていない、またはマウスが止まって一定時間経ったら停止
-            playerAnimator.SetBool(animBoolName, false);
-        }
+        playerAnimator.SetBool(animBoolName, isDragging && stopTimer > 0);
+        if (stopTimer > 0) stopTimer -= Time.deltaTime;
     }
 
     void UpdateRockBrightness()
@@ -99,10 +170,6 @@ public class StageSelectCameraController : MonoBehaviour
         float t = Mathf.InverseLerp(minX, maxX, transform.position.x);
         float curveValue = darknessCurve.Evaluate(t);
         Color targetColor = Color.Lerp(darkColor, brightColor, curveValue);
-
-        foreach (Image rock in rockImages)
-        {
-            if (rock != null) rock.color = targetColor;
-        }
+        foreach (Image rock in rockImages) if (rock != null) rock.color = targetColor;
     }
 }
