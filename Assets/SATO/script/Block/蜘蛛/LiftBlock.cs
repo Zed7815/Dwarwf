@@ -20,7 +20,7 @@ public class LiftBlock : MonoBehaviour
     public int maxSearchDistance = 20;
 
     [Header("検知設定")]
-    public float minMoveDistance = 0.8f;
+    public float minMoveDistance = 0.1f;
 
     private bool isMoving = false;
 
@@ -51,25 +51,20 @@ public class LiftBlock : MonoBehaviour
     {
         SetupReferences();
         UpdateDimensions();
-        // AudioSourceが未設定なら自分から取得を試みる
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     private void Update()
     {
-        // 参照が消えていたら自動で再取得を試みる（プレハブ対策）
         if (spiderObject == null || threadTransform == null)
         {
             SetupReferences();
         }
-
         UpdateThreadPosition();
     }
 
-    // ★追加：子オブジェクトから自動でクモと糸を探す機能
     void SetupReferences()
     {
-        // 親オブジェクト（LiftSetなど）がいる場合、その中から名前で探す
         if (transform.parent != null)
         {
             if (spiderObject == null)
@@ -81,7 +76,6 @@ public class LiftBlock : MonoBehaviour
         }
         else
         {
-            // 親がいない場合は自分の子要素から探す
             if (spiderObject == null)
             {
                 Transform s = transform.Find("Spider");
@@ -90,13 +84,11 @@ public class LiftBlock : MonoBehaviour
             if (threadTransform == null) threadTransform = transform.Find("Thread");
         }
 
-        // アニメーターも自動取得
         if (spiderObject != null && spiderAnimator == null)
         {
             spiderAnimator = spiderObject.GetComponent<Animator>();
         }
     }
-
 
     void UpdateDimensions()
     {
@@ -108,26 +100,21 @@ public class LiftBlock : MonoBehaviour
     void UpdateThreadPosition()
     {
         if (myHalfHeight == 0) UpdateDimensions();
-
         if (spiderObject != null)
         {
             spiderObject.transform.position = new Vector3(transform.position.x, spiderYPosition, transform.position.z);
         }
-
         if (threadTransform != null && spiderObject != null)
         {
             float liftTopY = transform.position.y + myHalfHeight;
             float distance = Mathf.Abs(spiderYPosition - liftTopY);
-
             Vector3 newScale = threadTransform.localScale;
             newScale.y = distance / threadSpriteUnitSize;
             threadTransform.localScale = newScale;
-
             threadTransform.position = new Vector3(transform.position.x, (spiderYPosition + liftTopY) / 2.0f, transform.position.z);
         }
     }
 
-    // --- 以下、元の挙動ロジック（変更なし） ---
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (Application.isPlaying && GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
@@ -146,6 +133,11 @@ public class LiftBlock : MonoBehaviour
                 {
                     StartCoroutine(MoveRoutine(pWalk, myX, myZ, target.y));
                 }
+            }
+            // ★追加：何も検知できなかった場合、当たり判定を無効化する
+            else
+            {
+                GetComponent<Collider2D>().enabled = false;
             }
         }
     }
@@ -179,6 +171,9 @@ public class LiftBlock : MonoBehaviour
             if (hit.collider.gameObject == gameObject || hit.collider.CompareTag("Player")) continue;
             if (hit.collider.GetComponent<LiftBlock>() != null) continue;
 
+            // ★追加：LiftIgnoreが付いているブロックを無視
+            if (hit.collider.GetComponentInParent<LiftIgnore>() != null) continue;
+
             float targetY = hit.point.y;
             bool isGoingUp = targetY > transform.position.y;
             float sideOffset = isGoingUp ? -currentHalfHeight : currentHalfHeight;
@@ -200,10 +195,7 @@ public class LiftBlock : MonoBehaviour
     IEnumerator MoveRoutine(Player_walk pWalk, float lockX, float lockZ, float targetY)
     {
         isMoving = true;
-
-        // ★SE再生：動き出し
         if (audioSource != null && startSE != null) audioSource.PlayOneShot(startSE);
-
         if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, true);
 
         float startY = transform.position.y;
@@ -222,20 +214,15 @@ public class LiftBlock : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0, 1, elapsed / duration);
             float currentY = Mathf.Lerp(startY, targetY, t);
-
             transform.position = new Vector3(lockX, currentY, lockZ);
             if (pWalk != null) pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
-
             yield return null;
         }
 
         transform.position = new Vector3(lockX, targetY, lockZ);
-
-        // ★SE再生：到着
         if (audioSource != null && stopSE != null) audioSource.PlayOneShot(stopSE);
 
         yield return new WaitForSeconds(waitTime);
-
         if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, false);
         if (pWalk != null) pWalk.StateChange(1);
         isMoving = false;
@@ -243,8 +230,10 @@ public class LiftBlock : MonoBehaviour
 
     void OnGimmickReset()
     {
+        StopAllCoroutines();
         isMoving = false;
-        // ★リセット時は再生中の音を止める
+        // ★追加：リセット時に当たり判定を復活させる
+        GetComponent<Collider2D>().enabled = true;
         if (audioSource != null) audioSource.Stop();
     }
 }

@@ -3699,6 +3699,7 @@ GameObject:
   - component: {fileID: 2074439335}
   - component: {fileID: 2074439334}
   - component: {fileID: 2074439336}
+  - component: {fileID: 2074439337}
   m_Layer: 0
   m_Name: "95(2) \u306E\u30B3\u30D4\u30FC_0"
   m_TagString: Untagged
@@ -3877,6 +3878,50 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2074439337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074439332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f995d6ebcbbc2f74db62d82958c99426, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Sign
+  gameManager: {fileID: 0}
+  rotateTime: 0.6
+  rotationAmount: {x: -90, y: 0, z: 0}
+  fallCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  useBounce: 1
+  bounceAmount: 10
+  bounceTime: 0.2
+  audioSource: {fileID: 0}
+  rotateSE: {fileID: 0}
 --- !u!1 &2142365493
 GameObject:
   m_ObjectHideFlags: 0
