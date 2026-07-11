@@ -294,13 +294,38 @@ public class BlockManager : MonoBehaviour
 
     Vector3 GetMouseWorldPosition()
     {
-        if (Camera.main == null) return Vector3.zero;
+        // 1. カメラが存在しない、または無効な時は計算しない
+        if (Camera.main == null || !Camera.main.enabled) return Vector3.zero;
+
         Vector2 mousePos = Mouse.current.position.ReadValue();
-        if (mousePos.x < 0 || mousePos.x > Screen.width || mousePos.y < 0 || mousePos.y > Screen.height) return Vector3.zero;
-        Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, Camera.main.nearClipPlane + 0.1f);
-        Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
-        worldPos.z = 0;
-        return worldPos;
+
+        // 2. 画面の範囲外にマウスがある時は計算しない
+        if (mousePos.x < 0 || mousePos.x > Screen.width || mousePos.y < 0 || mousePos.y > Screen.height)
+        {
+            return Vector3.zero;
+        }
+
+        try
+        {
+            // 3. 奥行き(Z)を0ではなく、ニアクリップ面より少し先に設定する（これが重要）
+            float safeZ = Camera.main.nearClipPlane + 0.001f;
+            Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, safeZ);
+
+            // 4. ビューポート変換（0〜1の範囲内か）を確認してエラーを未然に防ぐ
+            Vector3 viewportPos = Camera.main.ScreenToViewportPoint(screenPos);
+            if (viewportPos.x < -0.05f || viewportPos.x > 1.05f || viewportPos.y < -0.05f || viewportPos.y > 1.05f)
+            {
+                return Vector3.zero;
+            }
+
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
+            worldPos.z = 0;
+            return worldPos;
+        }
+        catch (System.Exception)
+        {
+            return Vector3.zero;
+        }
     }
 
     public void ResetAllBlocks()

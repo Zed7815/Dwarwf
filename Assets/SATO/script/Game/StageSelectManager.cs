@@ -100,6 +100,9 @@ public class StageSelectManager : MonoBehaviour
                     if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
                 });
             }
+
+            FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
+            if (fsl != null) fsl.RefreshLockStatus();
         }
     }
 

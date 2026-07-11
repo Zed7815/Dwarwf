@@ -2,26 +2,26 @@
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems; // ホバー検知に必要
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class FinalStageLock : MonoBehaviour
 {
     [Header("設定")]
     public int requiredStars = 5;
-    public int thisStageNumber = 6;
+    public int thisStageNumber = 6;    // 最終ステージの番号
     public string finalStageSceneName;
     public TextMeshProUGUI needStarText;
 
     [Header("演出設定")]
-    public nextscene fadeOutScript;    // ★追加：フェードアウト用スクリプト
-    public GameObject lockGraphic;
+    public nextscene fadeOutScript;
+    public GameObject lockGraphic;     // 鍵の画像など
 
     [Header("SE設定")]
     public AudioSource audioSource;
-    public AudioClip hoverSE;          // ★追加：ホバー音
-    public AudioClip clickSE;          // ★追加：クリック音
-    public AudioClip enterSE;          // ★追加：決定音
+    public AudioClip hoverSE;
+    public AudioClip clickSE;
+    public AudioClip enterSE;
 
     private Button btn;
 
@@ -34,31 +34,51 @@ public class FinalStageLock : MonoBehaviour
 
     public void RefreshLockStatus()
     {
+        // 1. 星の数を計算
         int currentStars = 0;
         for (int i = 1; i <= 30; i++)
         {
             if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) currentStars++;
         }
 
-        bool isUnlocked = (currentStars >= requiredStars);
         int clearedStageNum = PlayerPrefs.GetInt("StageCleared", 0);
+        // ★自分が Stage 6 なら、clearedStageNum が 6以上ならクリア済み
         bool isActuallyCleared = (clearedStageNum >= thisStageNumber);
 
-        // クリア済みビジュアルの切り替え
-        Transform clearedVisual = transform.Find("ClearedVisual");
-        if (clearedVisual != null)
+        // クリア済みビジュアルの表示
+        Transform cv = transform.Find("ClearedVisual");
+        if (cv != null) cv.gameObject.SetActive(isActuallyCleared);
+
+
+        // 2. 状態判定
+        bool isUnlocked = (currentStars >= requiredStars) || isActuallyCleared; // クリア済みなら当然解放
+
+        // 3. クリア済みビジュアルの処理
+        // transform.Find は直下の子しか探せないので、確実に見つけるための処理
+        GameObject clearedVisualObj = null;
+        Transform cvTransform = transform.Find("ClearedVisual");
+        if (cvTransform != null) clearedVisualObj = cvTransform.gameObject;
+
+        if (clearedVisualObj != null)
         {
-            clearedVisual.gameObject.SetActive(isActuallyCleared);
+            clearedVisualObj.SetActive(isActuallyCleared);
         }
 
+        // 4. 他の表示物の制御
         if (needStarText != null)
         {
-            if (isUnlocked) needStarText.text = requiredStars + " / " + requiredStars;
+            // すでにクリアしているならテキストは邪魔なので消す、そうでなければ数値を出す
+            if (isActuallyCleared) needStarText.gameObject.SetActive(false);
             else needStarText.text = currentStars + " / " + requiredStars;
         }
 
-        if (lockGraphic != null) lockGraphic.SetActive(!isUnlocked);
+        if (lockGraphic != null)
+        {
+            // 解放されている、またはクリア済みなら鍵を隠す
+            lockGraphic.SetActive(!isUnlocked && !isActuallyCleared);
+        }
 
+        // 5. ボタンとイベントの設定
         if (btn != null)
         {
             btn.interactable = isUnlocked;
@@ -66,10 +86,7 @@ public class FinalStageLock : MonoBehaviour
 
             if (isUnlocked)
             {
-                // ★追加：ホバーイベントの登録
                 AddHoverEvent(btn);
-
-                // ★修正：クリック時にコルーチンを開始する
                 btn.onClick.AddListener(() => {
                     StartCoroutine(LoadSequence());
                 });
@@ -77,13 +94,12 @@ public class FinalStageLock : MonoBehaviour
         }
     }
 
-    // ホバー音を鳴らすためのイベント登録
     void AddHoverEvent(Button button)
     {
         EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
         if (trigger == null) trigger = button.gameObject.AddComponent<EventTrigger>();
 
-        trigger.triggers.Clear(); // 重複防止
+        trigger.triggers.Clear();
 
         EventTrigger.Entry entry = new EventTrigger.Entry();
         entry.eventID = EventTriggerType.PointerEnter;
@@ -93,20 +109,17 @@ public class FinalStageLock : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
-    // ★追加：演出を待ってからシーン移動する処理
     IEnumerator LoadSequence()
     {
-        // 1. SE再生
         if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
         if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
 
+        if (fadeOutScript != null)
+        {
             yield return StartCoroutine(fadeOutScript.endKuro());
-      
+        }
 
-        // 3. 指示通りの待機時間
         yield return new WaitForSecondsRealtime(0.5f);
-
-        // 4. シーン移動
         SceneManager.LoadScene(finalStageSceneName);
     }
 }

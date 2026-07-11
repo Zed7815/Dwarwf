@@ -41,7 +41,7 @@ public class StageSelectCameraController : MonoBehaviour
     [Header("ステージから戻った時の設定")]
     public Button[] stageButtons;
     [Tooltip("ボタンの何ユニット上に立たせるか")]
-    public float playerYOffset = 1.2f;
+    public float playerYOffset = 0f;
 
     void Start()
     {
@@ -61,27 +61,41 @@ public class StageSelectCameraController : MonoBehaviour
     void SetPlayerAtClearedStage()
     {
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-        // ステージ1クリアならインデックス0、未クリアなら0
-        int targetIndex = Mathf.Max(0, clearedStage - 1);
 
-        if (stageButtons != null && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
+        // 通常のステージボタンのインデックス
+        int targetIndex = clearedStage - 1;
+
+        // 1. まずカメラを目的の場所に移動させる
+        Vector3 targetWorldPos = Vector3.zero;
+        bool found = false;
+
+        // もしクリアしたのが最終ステージなら、FinalStageLockの場所を探す
+        if (targetIndex >= stageButtons.Length)
         {
-            Vector3 buttonWorldPos = stageButtons[targetIndex].transform.position;
+            FinalStageLock finalLock = FindObjectOfType<FinalStageLock>();
+            if (finalLock != null)
+            {
+                targetWorldPos = finalLock.transform.position;
+                found = true;
+            }
+        }
+        // 通常ステージの場合
+        else if (targetIndex >= 0 && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
+        {
+            targetWorldPos = stageButtons[targetIndex].transform.position;
+            found = true;
+        }
 
-            // 1. 先にカメラをボタンのX座標にワープさせる（制限範囲内で）
-            float camX = Mathf.Clamp(buttonWorldPos.x, minX, maxX);
+        if (found)
+        {
+            // カメラを移動（制限範囲内）
+            float camX = Mathf.Clamp(targetWorldPos.x, minX, maxX);
             transform.position = new Vector3(camX, transform.position.y, transform.position.z);
-
-            // 2. 岩の明るさを新しいカメラ位置に合わせて即座に更新（カクつき防止）
             UpdateRockBrightness();
 
-            // 3. プレイヤーをボタンの真上（ワールド座標）に再配置
-            // 子オブジェクトなので、カメラ移動の後に配置しないと座標が引きずられます
-            playerAnimator.transform.position = new Vector3(buttonWorldPos.x, buttonWorldPos.y + (-1.25f) + playerYOffset, playerAnimator.transform.position.z);
-
-            // 4. 歩きアニメをオフにし、タイマーをリセット
+            // プレイヤーを配置
+            playerAnimator.transform.position = new Vector3(targetWorldPos.x, targetWorldPos.y + playerYOffset, playerAnimator.transform.position.z);
             playerAnimator.SetBool(animBoolName, false);
-            stopTimer = 0;
         }
     }
 

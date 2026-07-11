@@ -20,7 +20,11 @@ public class LiftBlock : MonoBehaviour
     public int maxSearchDistance = 20;
 
     [Header("検知設定")]
-    public float minMoveDistance = 0.1f;
+    [Tooltip("上方向のブロックを検知する最小距離")]
+    public float minMoveDistance = 0f;
+    // ★追加：下方向専用の制限距離
+    [Tooltip("下方向のブロックを検知する最小距離")]
+    public float minDownMoveDistance = 2f;
 
     private bool isMoving = false;
 
@@ -41,9 +45,9 @@ public class LiftBlock : MonoBehaviour
     public float threadSpriteUnitSize = 1.0f;
 
     [Header("SE設定")]
-    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
-    public AudioClip startSE;      // 動き出す時の音
-    public AudioClip stopSE;       // 到着した時の音
+    public AudioSource audioSource;
+    public AudioClip startSE;
+    public AudioClip stopSE;
 
     private float myHalfHeight;
 
@@ -134,7 +138,6 @@ public class LiftBlock : MonoBehaviour
                     StartCoroutine(MoveRoutine(pWalk, myX, myZ, target.y));
                 }
             }
-            // ★追加：何も検知できなかった場合、当たり判定を無効化する
             else
             {
                 GetComponent<Collider2D>().enabled = false;
@@ -170,8 +173,6 @@ public class LiftBlock : MonoBehaviour
             if (hit.collider == null) continue;
             if (hit.collider.gameObject == gameObject || hit.collider.CompareTag("Player")) continue;
             if (hit.collider.GetComponent<LiftBlock>() != null) continue;
-
-            // ★追加：LiftIgnoreが付いているブロックを無視
             if (hit.collider.GetComponentInParent<LiftIgnore>() != null) continue;
 
             float targetY = hit.point.y;
@@ -181,7 +182,10 @@ public class LiftBlock : MonoBehaviour
             if (!isGoingUp) candidateY += downYOffset;
             float dist = Mathf.Abs(candidateY - transform.position.y);
 
-            if (dist > minMoveDistance && dist < closestDist)
+            // ★修正ポイント：上方向か下方向かで、比較する距離(threshold)を切り替える
+            float threshold = isGoingUp ? minMoveDistance : minDownMoveDistance;
+
+            if (dist > threshold && dist < closestDist)
             {
                 closestDist = dist;
                 float snappedY = Mathf.Round(candidateY * 2.0f) / 2.0f;
@@ -232,7 +236,6 @@ public class LiftBlock : MonoBehaviour
     {
         StopAllCoroutines();
         isMoving = false;
-        // ★追加：リセット時に当たり判定を復活させる
         GetComponent<Collider2D>().enabled = true;
         if (audioSource != null) audioSource.Stop();
     }
