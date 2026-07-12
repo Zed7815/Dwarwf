@@ -1703,7 +1703,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StageBGMManager
   editModeBGM: {fileID: 8300000, guid: 01dd7ff629e605c40972f2a12b2946f3, type: 3}
   playModeBGM: {fileID: 8300000, guid: 2e37eb36ffe753f4288ff1ca5c90c275, type: 3}
-  volume: 0.15
+  volume: 0.25
 --- !u!4 &1503054148
 Transform:
   m_ObjectHideFlags: 0
@@ -5627,6 +5627,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1809467156}
     - target: {fileID: 8623674320817455016, guid: 18b0277284aa9954888e7ececf20801c, type: 3}
+      propertyPath: startDeniedSE
+      value: 
+      objectReference: {fileID: 8300000, guid: 0e2c2f08d10128c4089b057e4013b6b7, type: 3}
+    - target: {fileID: 8623674320817455016, guid: 18b0277284aa9954888e7ececf20801c, type: 3}
       propertyPath: editUIController
       value: 
       objectReference: {fileID: 1904973441}
@@ -5775,6 +5779,6 @@ SceneRoots:
   - {fileID: 8429330106612428188}
   - {fileID: 1288726181}
   - {fileID: 2018090617}
+  - {fileID: 1503054148}
   - {fileID: 1408958658}
   - {fileID: 856617936}
-  - {fileID: 1503054148}

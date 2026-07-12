@@ -2502,6 +2502,7 @@ MonoBehaviour:
   audioSource: {fileID: 1416668722}
   startGameSE: {fileID: 8300000, guid: 80d849991ba03394ab9baa606caa81c8, type: 3}
   resetGameSE: {fileID: 8300000, guid: de50bedd5485b434a83237700f447395, type: 3}
+  startDeniedSE: {fileID: 8300000, guid: 0e2c2f08d10128c4089b057e4013b6b7, type: 3}
   totalItemCount: 0
   itemCountText: {fileID: 0}
 --- !u!4 &1416668720
@@ -4791,7 +4792,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StageBGMManager
   editModeBGM: {fileID: 8300000, guid: 01dd7ff629e605c40972f2a12b2946f3, type: 3}
   playModeBGM: {fileID: 8300000, guid: 2221540b25ffaa34eb40b65654590352, type: 3}
-  volume: 0.15
+  volume: 0.25
 --- !u!4 &2108912360
 Transform:
   m_ObjectHideFlags: 0

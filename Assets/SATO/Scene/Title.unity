@@ -252,7 +252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimpleBGMManager
   bgmClip: {fileID: 8300000, guid: 52d9ea34dc0cd5141bf0980d65108d0b, type: 3}
-  volume: 0.3
+  volume: 0.5
 --- !u!4 &280983255
 Transform:
   m_ObjectHideFlags: 0
