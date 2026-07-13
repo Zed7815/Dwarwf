@@ -874,7 +874,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 7967f322d4b7a74428f4be31e9ff9754, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -4277,7 +4277,15 @@ PrefabInstance:
     - target: {fileID: 3616602320027201803, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1416668719}
+      objectReference: {fileID: 0}
+    - target: {fileID: 3616602320027201803, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3616602320027201803, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 4209481819904007127, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 

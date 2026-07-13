@@ -39,10 +39,21 @@ public class BirdCarrier : MonoBehaviour
         Vector2 rayDir = dir > 0 ? Vector2.right : Vector2.left;
         float rayOffset = 1.5f;
         Vector3 rayStart = new Vector3(transform.position.x + (rayDir.x * rayOffset), pWalk.transform.position.y, transform.position.z);
+
+        // レイキャストを実行
         RaycastHit2D hit = Physics2D.Raycast(rayStart, rayDir, maxSearchDistance, obstacleLayer);
 
         if (hit.collider != null)
         {
+            // ★修正ポイント1：当たったものが「Wall」タグだった場合
+            // レイキャストは最初に見つけたものを返すため、Wallが手前にあればこれより奥は見ません
+            if (hit.collider.CompareTag("wall"))
+            {
+                Debug.Log("[BirdCarrier] 壁に遮られたため検知を中止しました");
+                return false;
+            }
+
+            // 壁でなければ目的地を計算（地面とみなす）
             float targetX = hit.point.x + (dir * 0.8f);
             float targetY = pWalk.transform.position.y + landYOffset;
             targetPos = new Vector3(targetX, targetY, transform.position.z);
@@ -60,10 +71,22 @@ public class BirdCarrier : MonoBehaviour
             if (p != null)
             {
                 bool found = FindNextDestination(p);
-                if (found) StartCoroutine(CarrySequence(p));
+                if (found)
+                {
+                    StartCoroutine(CarrySequence(p));
+                }
+                else
+                {
+                    // ★修正ポイント2：何も検知できなかった場合
+                    // 鳥の当たり判定（トリガー）を無効化して、プレイヤーを素通りさせます
+                    Debug.Log("[BirdCarrier] 運び先がないため当たり判定を無効化します");
+                    GetComponent<Collider2D>().enabled = false;
+                }
             }
         }
     }
+
+    // --- CarrySequence, SetBirdFacing は変更なし ---
 
     IEnumerator CarrySequence(Player_walk pWalk)
     {
@@ -153,19 +176,15 @@ public class BirdCarrier : MonoBehaviour
         }
     }
 
-    // ★リセットボタンが押されたときに呼ばれる
     void OnGimmickReset()
     {
-        // 1. 実行中の運搬コルーチンを強制停止（これが重要！）
         StopAllCoroutines();
-
-        // 2. フラグを初期化
         isMoving = false;
 
-        // 3. 音を止める
-        if (audioSource != null) audioSource.Stop();
+        // ★修正ポイント3：リセット時に当たり判定を復活させる
+        GetComponent<Collider2D>().enabled = true;
 
-        // 4. アニメーションを待機状態に戻す
+        if (audioSource != null) audioSource.Stop();
         if (animator != null) animator.SetBool(flyBoolParam, false);
     }
 }

@@ -68,25 +68,19 @@ public class Player_walk : MonoBehaviour
             JpRequest = true;
             jumpRequest = true;
 
-            // --- 修正ポイント1：着地アニメの実行条件 ---
-            // 「落下モード(fall)」の状態で地面についた時だけ、しゃがみ演出を開始。
-            // 鳥やワープなどのギミック中（idol状態）はこの条件を通らないので暴発しません。
+            // 「落下モード(fall)」の状態で地面についた時だけ、しゃがみ演出を開始
             if (!isJumping && state == moveState.fall)
             {
                 StartCoroutine(LandSequence());
             }
 
-            // 着地している間、状態が不自然（ジャンプのまま等）であれば通常歩行へ復帰
             if (!isJumping && (state == moveState.jump || state == moveState.fall))
             {
-                StateChange(1); // straightに戻す
+                StateChange(1);
             }
         }
         else
         {
-            // --- 修正ポイント2：落下モード(fall)への移行条件 ---
-            // 「通常歩行(straight)」の状態から足を踏み外した時だけ、落下モードに切り替える。
-            // ギミック中（idol）はここを無視するため、運搬中に足元が地面をかすめても着地判定されません。
             if (!isJumping && state == moveState.straight)
             {
                 if (rb != null && rb.linearVelocity.y < -0.1f)
@@ -96,8 +90,7 @@ public class Player_walk : MonoBehaviour
             }
         }
 
-        // --- 以下の処理（実際の移動やアニメのON/OFF）は、元の挙動を完全に維持しています ---
-
+        // --- 実際の移動やアニメのON/OFF（挙動は維持） ---
         if (state == moveState.straight)
         {
             anim.SetBool("isWalk", isGrounded);
@@ -106,32 +99,53 @@ public class Player_walk : MonoBehaviour
         else if (state == moveState.fall)
         {
             anim.SetBool("isWalk", false);
-
             if (rb != null)
             {
                 float currentX = rb.linearVelocity.x;
-                float targetX = 0f;
-                // 滑らかに減速（イージング）
-                float easedX = Mathf.MoveTowards(currentX, targetX, PlayerSpeed * Time.deltaTime * 4.0f);
+                float easedX = Mathf.MoveTowards(currentX, 0f, PlayerSpeed * Time.deltaTime * 4.0f);
                 rb.linearVelocity = new Vector2(easedX, rb.linearVelocity.y);
             }
         }
         else
         {
-            // ジャンプ中、またはギミック待機中の制御
-            if (!isJumping)
-            {
-                anim.SetBool("isWalk", false);
-            }
-            else
-            {
-                anim.SetBool("isWalk", isGrounded);
-            }
+            if (!isJumping) anim.SetBool("isWalk", false);
+            else anim.SetBool("isWalk", isGrounded);
 
-            // 待機中(idol)の時は物理的にピタッと止める
             if (state == moveState.idol && rb != null)
                 rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
+    }
+
+    // switch文に case 4 を追加
+    public void StateChange(int n)
+    {
+        switch (n)
+        {
+            case 0:
+                state = moveState.idol;
+                anim.SetBool("isWalk", false);
+                break;
+            case 1:
+                state = moveState.straight;
+                anim.SetBool("isWalk", isGrounded);
+                break;
+            case 2:
+                state = moveState.jump;
+                anim.SetBool("isWalk", false);
+                break;
+            case 3:
+                state = moveState.fall;
+                anim.SetBool("isWalk", false);
+                anim.SetBool("isFalling", true); // 落下ポーズ
+                break;
+     
+        }
+    }
+
+    public bool IsAutoMoving()
+    {
+        // state 4 (autoMoving) の間は true を返す
+        return state == moveState.autoMoving;
     }
 
     void walk()
@@ -497,29 +511,6 @@ public class Player_walk : MonoBehaviour
     public bool IsJumping()
     {
         return isJumping;
-    }
-
-    public void StateChange(int n)
-    {
-        switch (n)
-        {
-            case 0:
-                state = moveState.idol;
-                anim.SetBool("isWalk", false);
-                break;
-            case 1:
-                state = moveState.straight;
-                anim.SetBool("isWalk", isGrounded);
-                break;
-            case 2:
-                state = moveState.jump;
-                anim.SetBool("isWalk", false);
-                break;
-            case 3:
-                state = moveState.fall;
-                anim.SetBool("isWalk", false);
-                break;
-        }
     }
 
     public void ResetPlayerStatus()

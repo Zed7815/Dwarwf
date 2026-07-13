@@ -147,21 +147,28 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
+
     void HandleEditMode()
     {
-        if (!isDragging && IsDragButtonPressed())
+        float scrollValue = Mouse.current.scroll.ReadValue().y;
+
+        if (Mathf.Abs(scrollValue) > 0.1f)
         {
-            isDragging = true;
-            dragOrigin = Mouse.current.position.ReadValue();
-        }
-        if (isDragging && !IsDragButtonPressed()) isDragging = false;
-        if (isDragging)
-        {
-            Vector3 currentMousePos = Mouse.current.position.ReadValue();
-            Vector3 difference = dragOrigin - currentMousePos;
-            dragOrigin = currentMousePos;
-            float factor = Camera.main.orthographicSize * 2.0f / Screen.height;
-            Vector3 move = (stageType == StageType.Horizontal) ? new Vector3(difference.x * factor * dragSensitivity, 0, 0) : new Vector3(0, difference.y * factor * dragSensitivity, 0);
+            // 感度調整用の基本値
+            float factor = 0.01f * dragSensitivity;
+            Vector3 move = Vector3.zero;
+
+            if (stageType == StageType.Horizontal)
+            {
+                // 横スクロール：下回しで右(+)へ進むようにマイナスを維持
+                move = new Vector3(-scrollValue * factor * 10f, 0, 0);
+            }
+            else
+            {
+                // 縦スクロール：上回し(プラス)でカメラが上(+)へ動くように修正
+                move = new Vector3(0, scrollValue * factor * 10f, 0);
+            }
+
             transform.position = ClampPosition(transform.position + move);
         }
     }

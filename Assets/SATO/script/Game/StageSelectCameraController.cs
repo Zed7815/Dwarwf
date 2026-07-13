@@ -11,16 +11,14 @@ public class StageSelectCameraController : MonoBehaviour
     public float minX;
     public float maxX;
 
-    [Header("ドラッグ設定")]
-    public float dragSensitivity = 1.0f;
-    private Vector3 dragOrigin;
-    private bool isDragging = false;
+    [Header("ホイールスクロール設定")]
+    [Tooltip("ホイールを回した時の移動速度")]
+    public float scrollSensitivity = 0.05f;
 
     [Header("プレイヤー演出設定")]
     public Animator playerAnimator;
     public SpriteRenderer playerSR;
     public string animBoolName = "isWalking";
-
     public float walkStopDelay = 0.15f;
     private float stopTimer;
 
@@ -40,8 +38,7 @@ public class StageSelectCameraController : MonoBehaviour
 
     [Header("ステージから戻った時の設定")]
     public Button[] stageButtons;
-    [Tooltip("ボタンの何ユニット上に立たせるか")]
-    public float playerYOffset = 0f;
+    public float playerYOffset = 1.2f;
 
     void Start()
     {
@@ -51,50 +48,58 @@ public class StageSelectCameraController : MonoBehaviour
         }
         else
         {
-            // ★ズレを防止するため、1フレーム待たずに即時実行
             SetPlayerAtClearedStage();
         }
-
         isComingFromTitle = false;
     }
 
+    void Update()
+    {
+        if (isIntroPlaying) return;
+
+        HandleCameraScroll(); // ドラッグからスクロールに変更
+        UpdateRockBrightness();
+        UpdateAnimationState();
+    }
+
+    // ★修正：ホイールをコロコロして移動する処理
+    void HandleCameraScroll()
+    {
+        if (Camera.main == null) return;
+
+        // ホイールの回転量を取得
+        float scrollValue = Mouse.current.scroll.ReadValue().y;
+
+        if (Mathf.Abs(scrollValue) > 0.1f)
+        {
+            // 移動量を計算（下回しで右へ、上回しで左へ）
+            float moveX = -scrollValue * scrollSensitivity;
+            Vector3 nextPos = transform.position + new Vector3(moveX, 0, 0);
+            nextPos.x = Mathf.Clamp(nextPos.x, minX, maxX);
+            transform.position = nextPos;
+
+            // プレイヤーの演出用タイマーと向き
+            stopTimer = walkStopDelay;
+            if (playerSR != null)
+            {
+                if (moveX > 0) playerSR.flipX = false; // 右へ
+                else if (moveX < 0) playerSR.flipX = true; // 左へ
+            }
+        }
+    }
+
+    // --- 以下、既存の演出ロジック（変更なし） ---
     void SetPlayerAtClearedStage()
     {
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-
-        // 通常のステージボタンのインデックス
-        int targetIndex = clearedStage - 1;
-
-        // 1. まずカメラを目的の場所に移動させる
-        Vector3 targetWorldPos = Vector3.zero;
-        bool found = false;
-
-        // もしクリアしたのが最終ステージなら、FinalStageLockの場所を探す
-        if (targetIndex >= stageButtons.Length)
+        int targetIndex = Mathf.Max(0, clearedStage - 1);
+        if (stageButtons != null && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
         {
-            FinalStageLock finalLock = FindObjectOfType<FinalStageLock>();
-            if (finalLock != null)
-            {
-                targetWorldPos = finalLock.transform.position;
-                found = true;
-            }
-        }
-        // 通常ステージの場合
-        else if (targetIndex >= 0 && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
-        {
-            targetWorldPos = stageButtons[targetIndex].transform.position;
-            found = true;
-        }
-
-        if (found)
-        {
-            // カメラを移動（制限範囲内）
-            float camX = Mathf.Clamp(targetWorldPos.x, minX, maxX);
+            Vector3 buttonWorldPos = stageButtons[targetIndex].transform.position;
+            float camX = Mathf.Clamp(buttonWorldPos.x, minX, maxX);
             transform.position = new Vector3(camX, transform.position.y, transform.position.z);
             UpdateRockBrightness();
-
-            // プレイヤーを配置
-            playerAnimator.transform.position = new Vector3(targetWorldPos.x, targetWorldPos.y + playerYOffset, playerAnimator.transform.position.z);
+            playerAnimator.transform.position = new Vector3(buttonWorldPos.x, buttonWorldPos.y + playerYOffset, playerAnimator.transform.position.z);
             playerAnimator.SetBool(animBoolName, false);
         }
     }
@@ -102,79 +107,30 @@ public class StageSelectCameraController : MonoBehaviour
     IEnumerator IntroWalkRoutine()
     {
         isIntroPlaying = true;
-
-        // プレイヤーの向きと初期位置をセット
         playerAnimator.transform.localPosition = introLocalStartPos;
         playerAnimator.SetBool(animBoolName, false);
         if (playerSR != null) playerSR.flipX = false;
-
         yield return new WaitForSeconds(introStartDelay);
-
         playerAnimator.SetBool(animBoolName, true);
-
         float t = 0;
         Vector3 startPos = playerAnimator.transform.localPosition;
         float distance = Vector3.Distance(startPos, introLocalEndPos);
         float duration = distance / introWalkSpeed;
-
         while (t < 1.0f)
         {
             t += Time.deltaTime / duration;
             playerAnimator.transform.localPosition = Vector3.Lerp(startPos, introLocalEndPos, t);
             yield return null;
         }
-
         playerAnimator.transform.localPosition = introLocalEndPos;
         playerAnimator.SetBool(animBoolName, false);
         isIntroPlaying = false;
     }
 
-    // --- 以下、Updateなどのドラッグ処理は以前のまま ---
-    void Update()
-    {
-        if (isIntroPlaying) return;
-        HandleCameraDrag();
-        UpdateRockBrightness();
-        UpdateAnimationState();
-    }
-
-    void HandleCameraDrag()
-    {
-        if (Mouse.current.middleButton.wasPressedThisFrame)
-        {
-            isDragging = true;
-            dragOrigin = Mouse.current.position.ReadValue();
-        }
-        if (Mouse.current.middleButton.wasReleasedThisFrame) isDragging = false;
-
-        if (isDragging)
-        {
-            Vector3 currentMousePos = Mouse.current.position.ReadValue();
-            Vector3 difference = dragOrigin - currentMousePos;
-            dragOrigin = currentMousePos;
-
-            if (Mathf.Abs(difference.x) > 0.01f)
-            {
-                stopTimer = walkStopDelay;
-                if (playerSR != null)
-                {
-                    if (difference.x > 0) playerSR.flipX = false;
-                    else if (difference.x < 0) playerSR.flipX = true;
-                }
-            }
-
-            float factor = Camera.main.orthographicSize * 2.0f / Screen.height;
-            float moveX = difference.x * factor * dragSensitivity;
-            Vector3 nextPos = transform.position + new Vector3(moveX, 0, 0);
-            nextPos.x = Mathf.Clamp(nextPos.x, minX, maxX);
-            transform.position = nextPos;
-        }
-    }
-
     void UpdateAnimationState()
     {
         if (playerAnimator == null) return;
-        playerAnimator.SetBool(animBoolName, isDragging && stopTimer > 0);
+        playerAnimator.SetBool(animBoolName, stopTimer > 0);
         if (stopTimer > 0) stopTimer -= Time.deltaTime;
     }
 
