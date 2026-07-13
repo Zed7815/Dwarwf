@@ -8,6 +8,10 @@ public class Item : MonoBehaviour
     private SpriteRenderer sr;
     private Collider2D col;
 
+    [Header("SE設定")]
+    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
+    public AudioClip collectSE;    // 拾った時の音
+
     void Awake()
     {
         originPos = transform.position;
@@ -17,13 +21,15 @@ public class Item : MonoBehaviour
 
     void Start()
     {
+        // AudioSourceが未設定なら自分から取得を試みる
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
         // すでにクリア済み（セーブデータがある）かチェック
         if (GameManager.instance != null)
         {
             int alreadyGot = PlayerPrefs.GetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 0);
             if (alreadyGot == 1)
             {
-                // ★修正：半透明ではなく、オブジェクト自体を非表示にする
                 gameObject.SetActive(false);
             }
         }
@@ -34,6 +40,13 @@ public class Item : MonoBehaviour
         if (collision.CompareTag("Player") && !isCollected)
         {
             isCollected = true;
+
+            // SE再生：拾った瞬間
+            if (audioSource != null && collectSE != null)
+            {
+                audioSource.PlayOneShot(collectSE);
+            }
+
             GameManager.instance.AddItem();
             StartCoroutine(CollectRoutine());
         }
@@ -59,14 +72,11 @@ public class Item : MonoBehaviour
             }
             yield return null;
         }
-        // 拾った演出の後に非表示にする
         gameObject.SetActive(false);
     }
 
-    // リセットボタンなどでオブジェクトが再表示された時の処理
     private void OnEnable()
     {
-        // ★重要：以前のプレイですでに取得済みなら、表示されようとしても即座に消す
         if (GameManager.instance != null)
         {
             int alreadyGot = PlayerPrefs.GetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 0);
@@ -77,7 +87,6 @@ public class Item : MonoBehaviour
             }
         }
 
-        // 今回のプレイで初めて拾う場合のリセット処理
         isCollected = false;
         transform.position = originPos;
         if (col != null) col.enabled = true;

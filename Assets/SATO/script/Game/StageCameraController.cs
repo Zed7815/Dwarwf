@@ -20,10 +20,11 @@ public class StageCameraController : MonoBehaviour
     public float maxLimit;
 
     [Header("演出設定")]
-    public bool playIntro = true;      // 初回イントロをやるか
-    public float introWaitTime = 1.0f; // ゴールで待つ時間
-    public float introSpeed = 10.0f;   // イントロの速度
-    public float resetSpeed = 25.0f;   // ★リセット時に戻る速度
+    public nextscene nextSceneScript;  // ★追加：nextsceneスクリプトの参照
+    public bool playIntro = true;
+    public float introWaitTime = 1.0f;
+    public float introSpeed = 10.0f;
+    public float resetSpeed = 25.0f;
 
     private bool isEffectPlaying = false;
 
@@ -57,14 +58,26 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
-    // 初回イントロ演出（ゴール→スタートサイドへ）
+    // 初回イントロ演出
     IEnumerator IntroSequence()
     {
         isEffectPlaying = true;
 
-        // 一旦ゴール端へワープ
+       
+        // --- ここまで ---
+
+        // カメラを一旦ゴール端へワープ
         float goalPoint = (startSide == StartSide.MinSide) ? maxLimit : minLimit;
         SetCameraPos(goalPoint);
+
+        // --- ★ここから追加：シーン開始時の演出 ---
+        if (nextSceneScript != null)
+        {
+            // 黒い板をどかすアニメーションを実行
+            yield return StartCoroutine(nextSceneScript.startKuro());
+            // どかし終わった後、指示通り0.5秒待機
+           // yield return new WaitForSecondsRealtime(0.2f);
+        }
 
         yield return new WaitForSeconds(introWaitTime);
 
@@ -80,8 +93,6 @@ public class StageCameraController : MonoBehaviour
         StopAllCoroutines();
         isDragging = false;
         currentVelocity = Vector3.zero;
-
-        // スタートサイド（開始位置）へスーッと戻る演出を開始
         StartCoroutine(ResetSequence());
     }
 
@@ -92,10 +103,8 @@ public class StageCameraController : MonoBehaviour
         isEffectPlaying = false;
     }
 
-    // 指定した速度で Start Side の座標まで移動する共通処理
     IEnumerator MoveToStartSideRoutine(float speed)
     {
-        // 目標地点の計算
         float targetVal = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
 
         while (true)
@@ -110,7 +119,6 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
-    // 特定の軸だけカメラ位置を書き換えるヘルパー
     void SetCameraPos(float value)
     {
         if (stageType == StageType.Horizontal)
@@ -119,7 +127,6 @@ public class StageCameraController : MonoBehaviour
             transform.position = new Vector3(initialPosition.x, value, transform.position.z);
     }
 
-    // 瞬時に開始位置へ
     void ResetToStartSideInstant()
     {
         float targetVal = (startSide == StartSide.MinSide) ? minLimit : maxLimit;
@@ -140,23 +147,28 @@ public class StageCameraController : MonoBehaviour
         }
     }
 
-    // --- 以下、ドラッグ・追従・クランプ（変更なし） ---
 
     void HandleEditMode()
     {
-        if (!isDragging && IsDragButtonPressed())
+        float scrollValue = Mouse.current.scroll.ReadValue().y;
+
+        if (Mathf.Abs(scrollValue) > 0.1f)
         {
-            isDragging = true;
-            dragOrigin = Mouse.current.position.ReadValue();
-        }
-        if (isDragging && !IsDragButtonPressed()) isDragging = false;
-        if (isDragging)
-        {
-            Vector3 currentMousePos = Mouse.current.position.ReadValue();
-            Vector3 difference = dragOrigin - currentMousePos;
-            dragOrigin = currentMousePos;
-            float factor = Camera.main.orthographicSize * 2.0f / Screen.height;
-            Vector3 move = (stageType == StageType.Horizontal) ? new Vector3(difference.x * factor * dragSensitivity, 0, 0) : new Vector3(0, difference.y * factor * dragSensitivity, 0);
+            // 感度調整用の基本値
+            float factor = 0.01f * dragSensitivity;
+            Vector3 move = Vector3.zero;
+
+            if (stageType == StageType.Horizontal)
+            {
+                // 横スクロール：下回しで右(+)へ進むようにマイナスを維持
+                move = new Vector3(-scrollValue * factor * 10f, 0, 0);
+            }
+            else
+            {
+                // 縦スクロール：上回し(プラス)でカメラが上(+)へ動くように修正
+                move = new Vector3(0, scrollValue * factor * 10f, 0);
+            }
+
             transform.position = ClampPosition(transform.position + move);
         }
     }

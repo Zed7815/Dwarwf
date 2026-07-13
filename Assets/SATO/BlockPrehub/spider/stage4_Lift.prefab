@@ -230,7 +230,8 @@ MonoBehaviour:
   yOffset: 1
   tilemap: {fileID: 0}
   maxSearchDistance: 50
-  minMoveDistance: 2.2
+  minMoveDistance: 0
+  minDownMoveDistance: 2
   downYOffset: -2
   playerYOffsetOnLift: 0.4
   spiderObject: {fileID: 2087512625168727838}

@@ -111,9 +111,9 @@ MonoBehaviour:
   waitTime: 0.5
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 9
   maxSearchDistance: 50
-  heightOffset: 1.5
+  heightOffset: 0.25
   grabOffsetY: -1.7
   landYOffset: 0.5
   birdSprite: {fileID: 0}

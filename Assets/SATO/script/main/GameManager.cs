@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip startGameSE;
     public AudioClip resetGameSE;
+    public AudioClip startDeniedSE; // 配置不足の時に鳴らす音
 
     public int totalItemCount = 0;
     public TextMeshProUGUI itemCountText;
@@ -45,14 +46,21 @@ public class GameManager : MonoBehaviour
     public void AddItem()
     {
         totalItemCount++;
-        hasCollectedStarInThisRun = true; // ★星取得フラグを立てる
+        hasCollectedStarInThisRun = true;
         UpdateItemUI();
     }
 
     public void StartGame()
     {
-        if (blockManager != null && !blockManager.IsAllBlocksPlaced()) return;
-        PlaySE(startGameSE);
+        // すべてのブロックが置かれていない場合
+        if (blockManager != null && !blockManager.IsAllBlocksPlaced())
+        {
+            PlaySE(startDeniedSE); // 警告音を鳴らす
+            Debug.Log("まだすべてのブロックを配置していません");
+            return;
+        }
+
+        PlaySE(startGameSE); // 正常な開始音
         currentState = GameState.Play;
         player.StartMove();
         if (editUIController != null) editUIController.HideEditUI();
@@ -63,7 +71,7 @@ public class GameManager : MonoBehaviour
     {
         PlaySE(resetGameSE);
         currentState = GameState.Edit;
-        hasCollectedStarInThisRun = false; // ★リセット時はフラグもリセット
+        hasCollectedStarInThisRun = false;
 
         foreach (var res in GimmickResetter.allResetters)
         {
