@@ -9204,7 +9204,7 @@ MonoBehaviour:
     individualCountText: {fileID: 1999736136}
     targetFrameScale: {x: 1.5, y: 1.5, z: 1}
   - name: "\u30AF\u30E2"
-    prefab: {fileID: 7516150027820396629, guid: 75e465938db89bd489a604a115becd38, type: 3}
+    prefab: {fileID: 4073684052718090129, guid: 7626ea4eab34e8c458bc200468667f54, type: 3}
     maxCount: 2
     currentCount: 0
     individualCountText: {fileID: 1112868525}
