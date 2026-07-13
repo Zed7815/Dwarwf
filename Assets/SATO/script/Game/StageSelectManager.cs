@@ -74,22 +74,42 @@ public class StageSelectManager : MonoBehaviour
 
     public void RefreshStageButtons()
     {
+        // 現在までにクリアしたステージ番号を取得
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
+
         for (int i = 0; i < stageButtons.Length; i++)
         {
             if (stageButtons[i] == null) continue;
 
+            // ステージ番号（1, 2, 3...）
+            int stageNum = i + 1;
+
+            // 解放されているか（今のステージがクリア済み、または一つ前のステージがクリア済みなら解放）
             bool isUnlocked = (i <= clearedStage);
+
+            // クリア済みかどうか（ユーザーの既存ロジック：次のステージが解放されていればクリア済み）
             bool isActuallyCleared = (i < clearedStage);
+
+            // ★追加：星を獲得しているかチェック
+            bool hasStar = (PlayerPrefs.GetInt("StarCollected_Stage_" + stageNum, 0) == 1);
 
             stageButtons[i].interactable = isUnlocked;
             stageButtons[i].onClick.RemoveAllListeners();
 
-            // ★ここだけ修正：ボタンの中にある "ClearedVisual" を探して表示・非表示を切り替える
+            // 1. "ClearedVisual"（クリア済み画像）の表示切り替え
             Transform clearedVisual = stageButtons[i].transform.Find("ClearedVisual");
             if (clearedVisual != null)
             {
                 clearedVisual.gameObject.SetActive(isActuallyCleared);
+            }
+
+            // ★追加：2. "MissingStarVisual"（星未獲得のビックリマーク等）の表示切り替え
+            // 条件：クリア済み、かつ、星を持っていない
+            Transform missingStarVisual = stageButtons[i].transform.Find("MissingStarVisual");
+            if (missingStarVisual != null)
+            {
+                bool shouldShowWarning = (isActuallyCleared && !hasStar);
+                missingStarVisual.gameObject.SetActive(shouldShowWarning);
             }
 
             if (isUnlocked)
@@ -100,10 +120,11 @@ public class StageSelectManager : MonoBehaviour
                     if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
                 });
             }
-
-            FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
-            if (fsl != null) fsl.RefreshLockStatus();
         }
+
+        // 最終ステージのロック状態も更新
+        FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
+        if (fsl != null) fsl.RefreshLockStatus();
     }
 
     void UnlockAllStages()

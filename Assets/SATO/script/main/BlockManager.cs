@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class BlockManager : MonoBehaviour
 {
@@ -45,16 +46,34 @@ public class BlockManager : MonoBehaviour
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
-        // 右クリックで削除
-        if (Mouse.current.rightButton.wasPressedThisFrame)
+        if (draggingBlock == null && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
-            DeleteBlockAtMouse();
+            return;
         }
 
-        // 左クリック押し込みで「設置済みブロック」を掴む
+
+        // 右クリック
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            // ★修正：ドラッグ中に右クリックしたら、配置せずにキャンセル（破棄）する
+            if (draggingBlock != null)
+            {
+                CancelDragging();
+            }
+            else
+            {
+                DeleteBlockAtMouse();
+            }
+        }
+
+        // 左クリック押し込み
         if (Mouse.current.leftButton.wasPressedThisFrame && draggingBlock == null)
         {
-            TryGrabPlacedBlock();
+            // UIの上でなければ掴む
+            if (EventSystem.current != null && !EventSystem.current.IsPointerOverGameObject())
+            {
+                TryGrabPlacedBlock();
+            }
         }
 
         if (draggingBlock != null)
@@ -67,6 +86,19 @@ public class BlockManager : MonoBehaviour
         {
             DropBlock();
         }
+    }
+
+    void CancelDragging()
+    {
+        if (draggingBlock != null) Destroy(draggingBlock);
+        if (previewBlock != null) Destroy(previewBlock);
+
+        if (activeFrame != null) activeFrame.ResetScale();
+        ResetOldBlockHighlight();
+
+        draggingBlock = null;
+        previewBlock = null;
+        activeFrame = null;
     }
 
     // 設置済みブロックを掴む機能
