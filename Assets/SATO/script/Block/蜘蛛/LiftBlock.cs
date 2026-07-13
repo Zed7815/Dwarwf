@@ -51,6 +51,8 @@ public class LiftBlock : MonoBehaviour
 
     private float myHalfHeight;
 
+    private bool isPlayerTouching = false;
+
     private void Start()
     {
         SetupReferences();
@@ -119,6 +121,8 @@ public class LiftBlock : MonoBehaviour
         }
     }
 
+
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (Application.isPlaying && GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
@@ -126,22 +130,35 @@ public class LiftBlock : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Player"))
         {
-            float myX = transform.position.x;
-            float myZ = transform.position.z;
-
-            Vector3 target;
-            if (FindNextDestination(myX, out target))
+            Player_walk pWalk = collision.gameObject.GetComponent<Player_walk>();
+            if (pWalk != null)
             {
-                Player_walk pWalk = collision.gameObject.GetComponent<Player_walk>();
-                if (pWalk != null)
+                float myX = transform.position.x;
+                float myZ = transform.position.z;
+
+                Vector3 target;
+                if (FindNextDestination(myX, out target))
                 {
+                    // ★【修正ポイント】
+                    // プレイヤー側で動いているジャンプ等のコルーチンを即座に殺す
+                    pWalk.ForceStopAbilities();
+
+                    isPlayerTouching = true;
+
+                    // 完全に静止させてからリフトの中央へ
+                    pWalk.transform.position = new Vector3(myX, pWalk.transform.position.y, myZ);
+
                     StartCoroutine(MoveRoutine(pWalk, myX, myZ, target.y));
                 }
             }
-            else
-            {
-                GetComponent<Collider2D>().enabled = false;
-            }
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            isPlayerTouching = false; // 離れた！
         }
     }
 
@@ -199,16 +216,24 @@ public class LiftBlock : MonoBehaviour
     IEnumerator MoveRoutine(Player_walk pWalk, float lockX, float lockZ, float targetY)
     {
         isMoving = true;
+
+        // ★リフトが反応した瞬間の演出（任意：音を鳴らすなど）
+        // if (audioSource != null && startSE != null) audioSource.PlayOneShot(startSE);
+
+        // 出発前のタメ時間（プレイヤーはすでに中央で止まっている）
+        yield return new WaitForSeconds(waitTime);
+
+        // 万が一、待機中にリセットされたりしてプレイヤーが消えた場合の安全策
+        if (pWalk == null) { isMoving = false; yield break; }
+
+        // --- 移動開始の演出 ---
         if (audioSource != null && startSE != null) audioSource.PlayOneShot(startSE);
         if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, true);
 
         float startY = transform.position.y;
-        pWalk.StateChange(0);
         float playerYOffset = playerYOffsetOnLift;
-        pWalk.transform.position = new Vector3(lockX, pWalk.transform.position.y, lockZ);
 
-        yield return new WaitForSeconds(waitTime);
-
+        // 移動処理
         float distance = Mathf.Abs(startY - targetY);
         float duration = distance / speed;
         float elapsed = 0f;
@@ -218,20 +243,31 @@ public class LiftBlock : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0, 1, elapsed / duration);
             float currentY = Mathf.Lerp(startY, targetY, t);
+
             transform.position = new Vector3(lockX, currentY, lockZ);
-            if (pWalk != null) pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
+
+            // プレイヤーをリフトの高さに合わせて運ぶ
+            if (pWalk != null)
+                pWalk.transform.position = new Vector3(lockX, transform.position.y + playerYOffset, lockZ);
+
             yield return null;
         }
 
+        // 到着処理
         transform.position = new Vector3(lockX, targetY, lockZ);
         if (audioSource != null && stopSE != null) audioSource.PlayOneShot(stopSE);
 
+        // 到着後の余韻
         yield return new WaitForSeconds(waitTime);
-        if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, false);
-        if (pWalk != null) pWalk.StateChange(1);
-        isMoving = false;
-    }
 
+        if (spiderAnimator != null) spiderAnimator.SetBool(animBoolName, false);
+
+        // プレイヤーを歩行再開
+        if (pWalk != null) pWalk.StateChange(1);
+
+        isMoving = false;
+        isPlayerTouching = false;
+    }
     void OnGimmickReset()
     {
         StopAllCoroutines();

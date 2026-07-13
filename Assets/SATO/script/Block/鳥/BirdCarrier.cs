@@ -92,19 +92,19 @@ public class BirdCarrier : MonoBehaviour
     {
         isMoving = true;
         Rigidbody2D rb = pWalk.GetComponent<Rigidbody2D>();
+        Collider2D playerCol = pWalk.GetComponent<Collider2D>(); // プレイヤーのコライダーを取得
+
         if (rb != null) rb.linearVelocity = Vector2.zero;
-        pWalk.StateChange(0);
+        pWalk.StateChange(0); // 一旦停止
 
         int moveDir = pWalk.direction;
-
         SetBirdFacing(moveDir);
-       
+
         yield return new WaitForSeconds(waitTime);
 
-      
-
         if (audioSource != null && grabSE != null) audioSource.PlayOneShot(grabSE);
-        
+
+        // --- 離陸フェーズ ---
         Vector3 takeoffStartBird = transform.position;
         Vector3 takeoffEndBird = transform.position + new Vector3(0, heightOffset, 0);
         float takeoffDuration = 0.5f;
@@ -112,6 +112,7 @@ public class BirdCarrier : MonoBehaviour
         Vector3 startPlayerPos = pWalk.transform.position;
 
         if (animator != null) animator.SetBool(flyBoolParam, true);
+
         while (takeoffElapsed < takeoffDuration)
         {
             takeoffElapsed += Time.deltaTime;
@@ -130,12 +131,14 @@ public class BirdCarrier : MonoBehaviour
             audioSource.Play();
         }
 
+        // --- 水平飛行フェーズ ---
         Vector3 birdStartPos = transform.position;
         Vector3 birdEndPos = targetPos + new Vector3(0, heightOffset - grabOffsetY, 0);
         float distance = Vector3.Distance(birdStartPos, birdEndPos);
         float duration = distance / speed;
         float elapsed = 0f;
 
+        // 飛行中はオート移動状態（当たり判定OFF/物理OFF）
         pWalk.StateChange(4);
 
         while (elapsed < duration)
@@ -147,26 +150,54 @@ public class BirdCarrier : MonoBehaviour
             yield return null;
         }
 
+        // --- 水平飛行フェーズ終了後 ---
         if (audioSource != null) audioSource.Stop();
 
-        pWalk.StateChange(1);
-
+        // --- 着陸（降下）フェーズ ---
         Vector3 landStartBird = transform.position;
-        Vector3 landEndBird = targetPos;
-        float landDuration = 0.5f;
+        Vector3 landEndBird = targetPos; // 鳥の最終目的地
+        float landDuration = 0.6f;       // 降りる時間
         float landElapsed = 0f;
+        bool isReleased = false;         // 離したかどうかのフラグ
 
         while (landElapsed < landDuration)
         {
             landElapsed += Time.deltaTime;
-            float t = Mathf.SmoothStep(0, 1, landElapsed / landDuration);
-            transform.position = Vector3.Lerp(landStartBird, landEndBird, t);
+            float t = landElapsed / landDuration;
+            float easedT = Mathf.SmoothStep(0, 1, t);
+
+            // 鳥を降下させる
+            transform.position = Vector3.Lerp(landStartBird, landEndBird, easedT);
+
+            // ★【ここがポイント！】
+            // 降下し始めてから 30% くらい進んだら、プレイヤーを離す
+            if (!isReleased && t > 0.3f)
+            {
+                isReleased = true;
+
+                // プレイヤーの状態を「落下(Fall)」に切り替える
+                // これにより当たり判定が戻り、重力がかかるようになります
+                pWalk.StateChange(3);
+
+                // 物理演算を動かすために Rigidbody を Dynamic に戻す
+                Rigidbody2D pRb = pWalk.GetComponent<Rigidbody2D>();
+                if (pRb != null) pRb.bodyType = RigidbodyType2D.Dynamic;
+
+                Debug.Log("[BirdCarrier] プレイヤーを空中で離しました");
+            }
+
+            // まだ離していない間だけ、プレイヤーを鳥の位置に固定する
+            if (!isReleased)
+            {
+                pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
+            }
+
             yield return null;
         }
 
         if (animator != null) animator.SetBool(flyBoolParam, false);
 
-        pWalk.StateChange(3);
+        // 鳥は着地完了。プレイヤーはすでに物理演算で落ちているはず
         yield return new WaitForSeconds(waitTime);
         SetBirdFacing(-moveDir);
         isMoving = false;

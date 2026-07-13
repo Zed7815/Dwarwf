@@ -232,7 +232,15 @@ public class Player_walk : MonoBehaviour
         Collider2D myCol = GetComponent<Collider2D>();
         switch (n)
         {
-            case 0: state = moveState.idol; anim.SetBool("isWalk", false); if (myCol != null) myCol.enabled = true; break;
+            case 0: // idol
+                state = moveState.idol;
+                if (anim != null)
+                {
+                    anim.SetBool("isWalk", false);
+                    anim.SetBool("isFalling", false); // 空中で捕まった場合も考えてOFFにする
+                }
+                if (myCol != null) myCol.enabled = true;
+                break;
             case 1: state = moveState.straight; anim.SetBool("isWalk", isGrounded); if (myCol != null) myCol.enabled = true; break;
             case 2: state = moveState.jump; anim.SetBool("isWalk", false); if (myCol != null) myCol.enabled = true; break;
             case 3: state = moveState.fall; anim.SetBool("isWalk", false); if (myCol != null) myCol.enabled = true; break;
@@ -321,6 +329,33 @@ public class Player_walk : MonoBehaviour
             transform.position = new Vector3(jumpBlock.position.x, transform.position.y, transform.position.z);
 
         if (rb != null) rb.linearVelocity = Vector2.zero;
+    }
+
+    public void ForceStopAbilities()
+    {
+        // 1. 実行中のコルーチン（ジャンプや着地演出）をすべて止める
+        StopAllCoroutines();
+
+        // 2. 物理移動を止める
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+        isJumping = false;
+
+        // 3. ★【ここが最重要】固まっている可能性のあるアニメーションフラグをすべて強制OFFにする
+        if (anim != null)
+        {
+            anim.SetBool("isCharging", false);
+            anim.SetBool("isLanding", false);
+            anim.SetBool("isWalk", false);
+            anim.SetBool("isFalling", false);
+            anim.SetBool("isWallKickRight", false);
+            anim.SetBool("isWallKickLeft", false);
+
+            // トリガーなどもあればリセット
+            anim.ResetTrigger("Vanish"); // 必要に応じて
+        }
+
+        // 4. Idol状態へ移行
+        StateChange(0);
     }
 
     public IEnumerator Jump(Transform jumpBlock)
