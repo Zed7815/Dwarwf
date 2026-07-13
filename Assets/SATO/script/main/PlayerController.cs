@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour
     // 初期位置に戻るための関数
     public void ResetPosition()
     {
-        // 親子関係を完全に切る（重要）
+        // 親子関係を完全に切る
         transform.SetParent(null);
 
         playerWalk.ResetPlayerStatus();

@@ -41,7 +41,7 @@ public class Item : MonoBehaviour
         {
             isCollected = true;
 
-            // ★SE再生：拾った瞬間
+            // SE再生：拾った瞬間
             if (audioSource != null && collectSE != null)
             {
                 audioSource.PlayOneShot(collectSE);

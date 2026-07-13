@@ -36,7 +36,7 @@ public class GoalPoint : MonoBehaviour
 
     IEnumerator GoalSequence()
     {
-        // 1. SE再生（一番最初に鳴らす）
+        // 1. SE再生
         if (audioSource != null && goalSE != null)
         {
             audioSource.PlayOneShot(goalSE);

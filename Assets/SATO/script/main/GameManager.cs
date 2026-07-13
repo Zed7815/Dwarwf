@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip startGameSE;
     public AudioClip resetGameSE;
-    public AudioClip startDeniedSE; // ★追加：配置不足の時に鳴らす音
+    public AudioClip startDeniedSE; // 配置不足の時に鳴らす音
 
     public int totalItemCount = 0;
     public TextMeshProUGUI itemCountText;

@@ -30,7 +30,7 @@ public class BlockManager : MonoBehaviour
     public AudioClip deleteSE;
 
     [Header("エフェクト設定")]
-    public GameObject poofEffectPrefab; // 配置・入れ替え時の煙エフェクト（任意）
+    public GameObject poofEffectPrefab; // 配置・入れ替え時の煙エフェクト
 
     private GameObject draggingBlock;
     private SpriteRenderer previewSR;
@@ -51,7 +51,7 @@ public class BlockManager : MonoBehaviour
             DeleteBlockAtMouse();
         }
 
-        // ★追加：左クリック押し込みで「設置済みブロック」を掴む
+        // 左クリック押し込みで「設置済みブロック」を掴む
         if (Mouse.current.leftButton.wasPressedThisFrame && draggingBlock == null)
         {
             TryGrabPlacedBlock();
@@ -69,7 +69,7 @@ public class BlockManager : MonoBehaviour
         }
     }
 
-    // ★強化：設置済みブロックを掴む機能
+    // 設置済みブロックを掴む機能
     void TryGrabPlacedBlock()
     {
         Vector3 mousePos = GetMouseWorldPosition();
@@ -97,7 +97,7 @@ public class BlockManager : MonoBehaviour
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
-        // ★案A：個数制限に達していたら、一番古い同じブロックを消してワープさせる
+        // 個数制限に達していたら、一番古い同じブロックを消してワープさせる
         if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount)
         {
             RemoveOldestBlockOfType(typeIndex);
@@ -160,7 +160,7 @@ public class BlockManager : MonoBehaviour
                 activeFrame.Expand(blockTypes[activeTypeIndex].targetFrameScale);
             }
 
-            // ★入れ替え予告の演出
+            // 入れ替え予告の演出
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
             if (blockHit != null)
             {
@@ -214,7 +214,7 @@ public class BlockManager : MonoBehaviour
             Vector3 snapPos = frameHit.transform.position;
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
 
-            // ★自動入れ替え：すでに何かあったら消去する
+            // すでに何かあったら消去する
             if (blockHit != null)
             {
                 DeleteBlockAt(blockHit.gameObject);
@@ -283,7 +283,6 @@ public class BlockManager : MonoBehaviour
         if (poofEffectPrefab != null) Instantiate(poofEffectPrefab, pos, Quaternion.identity);
     }
 
-    // 以下、共通メソッド（変更なし）
     void PlaySE(AudioClip clip) { if (audioSource != null && clip != null) audioSource.PlayOneShot(clip); }
     Collider2D GetColliderAtPos(Vector3 pos, string tag)
     {
@@ -307,7 +306,7 @@ public class BlockManager : MonoBehaviour
 
         try
         {
-            // 3. 奥行き(Z)を0ではなく、ニアクリップ面より少し先に設定する（これが重要）
+            // 3. 奥行き(Z)を0ではなく、ニアクリップ面より少し先に設定する
             float safeZ = Camera.main.nearClipPlane + 0.001f;
             Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, safeZ);
 
