@@ -1707,8 +1707,8 @@ Transform:
   m_GameObject: {fileID: 1592224009}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.09, y: 3.14, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 9.09, y: 3.32, z: 0}
+  m_LocalScale: {x: 1.3848583, y: 1.3848583, z: 1.3848583}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2383,7 +2383,7 @@ GameObject:
   - component: {fileID: 1755527813}
   - component: {fileID: 1755527812}
   - component: {fileID: 1755527816}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Wall
   m_TagString: wall
   m_Icon: {fileID: 0}

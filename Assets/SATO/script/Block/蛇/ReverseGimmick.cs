@@ -7,19 +7,16 @@ public class ReverseGimmick : MonoBehaviour
     private Animator anim;
 
     [Header("アニメーション設定")]
-    [Tooltip("右側から進入した際のアニメーショントリガー名")]
     public string rightEntryTrigger = "ReverseFromRight";
-    [Tooltip("左側から進入した際のアニメーショントリガー名")]
     public string leftEntryTrigger = "ReverseFromLeft";
 
     [Header("SE設定")]
-    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
-    public AudioClip reverseSE;    // 反転アクション時の音
+    public AudioSource audioSource;
+    public AudioClip reverseSE;
 
     void Start()
     {
         anim = GetComponent<Animator>();
-        // AudioSourceが未設定なら自分から取得
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
@@ -33,6 +30,9 @@ public class ReverseGimmick : MonoBehaviour
 
             if (p != null)
             {
+                // ★【修正ポイント1】触れた瞬間に、他のギミックの処理（ジャンプなど）を全て殺す！
+                p.ForceStopAbilities();
+
                 bool enteredFromRight = trigger.transform.position.x > transform.position.x;
                 StartCoroutine(ReverseSequence(p, enteredFromRight));
             }
@@ -43,35 +43,24 @@ public class ReverseGimmick : MonoBehaviour
     {
         isProcessing = true;
 
-        // --- ① 【待機フェーズ】 プレイヤーをピタッと中心に合わせて完全停止させる ---
+        // --- ① 【待機フェーズ】 ---
         float centerX = transform.position.x;
-
-        while (Mathf.Abs(p.transform.position.x - centerX) > 0.2f)
-        {
-            yield return null;
-        }
-
         p.transform.position = new Vector3(centerX, p.transform.position.y, p.transform.position.z);
-
         Rigidbody2D rb = p.GetComponent<Rigidbody2D>();
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
-        p.StateChange(0);
+        p.StateChange(0); // 停止
 
         yield return new WaitForSeconds(0.2f);
 
         // --- ② 【反転フェーズ】 ---
+        if (audioSource != null && reverseSE != null) audioSource.PlayOneShot(reverseSE);
 
-        // ★SE再生
-        if (audioSource != null && reverseSE != null)
-        {
-            audioSource.PlayOneShot(reverseSE);
-        }
+        string targetTrigger = enteredFromRight ? rightEntryTrigger : leftEntryTrigger;
 
         if (anim != null)
         {
-            if (enteredFromRight) anim.SetTrigger(rightEntryTrigger);
-            else anim.SetTrigger(leftEntryTrigger);
+            anim.SetTrigger(targetTrigger); // トリガーを引く
         }
 
         SpriteRenderer playerSr = p.GetComponent<SpriteRenderer>();
@@ -79,10 +68,11 @@ public class ReverseGimmick : MonoBehaviour
 
         yield return new WaitForSeconds(0.4f);
 
+        // ★【追加】トリガーをリセットして、何度も再生されないようにする
         if (anim != null)
         {
-            if (enteredFromRight) anim.ResetTrigger(rightEntryTrigger);
-            else anim.ResetTrigger(leftEntryTrigger);
+            anim.ResetTrigger(rightEntryTrigger);
+            anim.ResetTrigger(leftEntryTrigger);
         }
 
         // 向き反転

@@ -221,18 +221,21 @@ MonoBehaviour:
   wallBounceMultiplier: 1.7
   jumpCenterTolerance: 0.05
   direction: 1
-  JpRequest: 1
   state: 0
+  jumpRequest: 1
   groundCheck: {fileID: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDistance: 1.5
   boxSize: {x: 0.8, y: 0.00011}
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  wallCheckRayDistance: 0.3
   ceilingCheckWidth: 0.1
   ceilingCheckOffset: 0.2
   ceilingCheckDistance: 0.01
-  jumpRequest: 1
 --- !u!50 &3039353514117489425
 Rigidbody2D:
   serializedVersion: 5
