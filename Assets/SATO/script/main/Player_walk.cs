@@ -304,16 +304,23 @@ public class Player_walk : MonoBehaviour
     IEnumerator WalkToBlockCenter(Transform jumpBlock)
     {
         if (jumpBlock == null) { jumpCanceled = true; yield break; }
+
         state = moveState.idol;
         float targetX = jumpBlock.position.x;
-        while (jumpBlock != null && Mathf.Abs(transform.position.x - targetX) > jumpCenterTolerance)
+
+        // 中央に吸い寄せられる時間を短くし、確実に合わせる
+        float timeout = 0.3f;
+        while (jumpBlock != null && Mathf.Abs(transform.position.x - targetX) > 0.02f && timeout > 0)
         {
-            transform.position = new Vector3(Mathf.MoveTowards(transform.position.x, targetX, PlayerSpeed * Time.deltaTime), transform.position.y, transform.position.z);
+            timeout -= Time.deltaTime;
+            transform.position = new Vector3(Mathf.MoveTowards(transform.position.x, targetX, PlayerSpeed * 2.0f * Time.deltaTime), transform.position.y, transform.position.z);
             yield return null;
         }
-        if (jumpBlock != null) transform.position = new Vector3(jumpBlock.position.x, transform.position.y, transform.position.z);
-        if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        StateChange(0);
+
+        if (jumpBlock != null)
+            transform.position = new Vector3(jumpBlock.position.x, transform.position.y, transform.position.z);
+
+        if (rb != null) rb.linearVelocity = Vector2.zero;
     }
 
     public IEnumerator Jump(Transform jumpBlock)

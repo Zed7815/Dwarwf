@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d9b6eb97122cda4588cfee0090961e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerJumpBlock
-  topCheckTolerance: 0.1
+  topCheckTolerance: 0.3
   jumpTriggerName: OnJump
   useDirectPlayMethod: 1
   jumpStateName: baund

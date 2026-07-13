@@ -38,11 +38,23 @@ public class PlayerJumpBlock : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        CheckAndJump(collision);
+    }
+
+    // 追加：乗った瞬間に判定が漏れても、触れている間はジャンプを試みる
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        CheckAndJump(collision);
+    }
+
+    private void CheckAndJump(Collision2D collision)
+    {
         if (collision.gameObject.CompareTag("Player"))
         {
             Player_walk player = collision.gameObject.GetComponent<Player_walk>();
 
-            if (player != null && player.gameObject.activeInHierarchy && IsPlayerOnTop(collision.collider))
+            // 既にジャンプ中(IsJumping)でないか確認
+            if (player != null && !player.IsJumping() && player.gameObject.activeInHierarchy && IsPlayerOnTop(collision.collider))
             {
                 player.StartCoroutine(player.Jump(transform));
             }

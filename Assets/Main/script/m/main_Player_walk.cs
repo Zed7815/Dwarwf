@@ -246,67 +246,57 @@ public class main_Player_walk : MonoBehaviour
 
     public IEnumerator Jump(Transform jumpBlock)
     {
-        if (isJumping) yield break;
-
-        if (!isGrounded)
-        {
-            yield break;
-        }
-
+        if (isJumping) yield break; // 重複防止
         isJumping = true;
 
-        // --- 1. 中心へのピタッとした位置合わせ ---
+        // --- 修正ポイント：ジャンプ開始時に物理移動を止める ---
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero; // 慣性を消す
+                                              // rb.bodyType = RigidbodyType2D.Kinematic; // 必要に応じて完全に物理を止める（任意）
+        }
+
         yield return StartCoroutine(WalkToBlockCenter(jumpBlock));
 
-        if (jumpCanceled)
+        anim.SetBool("isCharging", true);
+        // タメている間も滑らないように位置を固定し続ける
+        float chargeTimer = 0.75f;
+        while (chargeTimer > 0)
         {
-            jumpCanceled = false;
-            isJumping = false;
-            jumpRequest = true;
-            yield break;
-        }
-
-        // --- 2. 溜めフェーズ (isCharging = true) ---
-        anim.SetBool("isCharging", true); // 溜めアニメの再生スイッチON!
-        rb.linearVelocity = Vector2.zero; // 溜め中は動かないようにピタッと止める
-        yield return new WaitForSeconds(0.75f); // 0.75秒ためる
-        anim.SetBool("isCharging", false); // 離陸と同時にスイッチOFF
-
-        // --- 3. 離陸フェーズ (大ジャンプ発動) ---
-        jumpRequest = false;
-        keepAirXVelocity = true;
-        StateChange(2); // moveState.jump にする
-
-        if (jumpBlock != null)
-        {
-            PlayerJumpBlock targetBlock = jumpBlock.GetComponent<PlayerJumpBlock>();
-            if (targetBlock != null)
+            chargeTimer -= Time.deltaTime;
+            if (jumpBlock != null)
             {
-                targetBlock.TriggerJumpAnimation();
+                // ジャンプ台の中心に強制的に合わせ続ける（滑り落ち防止）
+                transform.position = new Vector3(jumpBlock.position.x, transform.position.y, transform.position.z);
             }
+            yield return null;
         }
+
+        anim.SetBool("isCharging", false);
+        StateChange(2); // Jump状態へ
 
         if (rb != null)
         {
-            float jumpDirection = GetJumpDirection(jumpBlock);
-            rb.linearVelocity = new Vector2(jumpDirection * playerJumpForwardPower, playerJumpPower);
+            rb.bodyType = RigidbodyType2D.Dynamic; // 物理を戻す
+            if (jumpBlock != null)
+            {
+                PlayerJumpBlock block = jumpBlock.GetComponent<PlayerJumpBlock>();
+                if (block) block.TriggerJumpAnimation();
+            }
+            // 斜め上（ゴール方向）へ力を加える
+            rb.linearVelocity = new Vector2(direction * playerJumpForwardPower, playerJumpPower);
         }
 
         yield return new WaitForSeconds(0.2f);
         yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);
 
-        // --- 4. 着地しゃがみフェーズ (isLanding = true) ---
-        anim.SetBool("isLanding", true); // しゃがみアニメの再生スイッチON!
-        rb.linearVelocity = Vector2.zero; // その場にピタッと止める
-        yield return new WaitForSeconds(0.3f); // 0.3秒間しゃがみ待機
-        anim.SetBool("isLanding", false); // しゃがみスイッチOFF
+        anim.SetBool("isLanding", true);
+        yield return new WaitForSeconds(0.3f);
+        anim.SetBool("isLanding", false);
 
-        StateChange(1); // 通常歩行に戻す
-        keepAirXVelocity = false;
+        StateChange(1); // Walk状態へ
         isJumping = false;
-        jumpRequest = true;
     }
-
     public IEnumerator HandleDoubleJumpSequence(Transform targetBlock)
     {
         if (isJumping) yield break;
