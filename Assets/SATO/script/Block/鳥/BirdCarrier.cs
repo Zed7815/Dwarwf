@@ -96,12 +96,15 @@ public class BirdCarrier : MonoBehaviour
         pWalk.StateChange(0);
 
         int moveDir = pWalk.direction;
-        SetBirdFacing(moveDir);
 
+        SetBirdFacing(moveDir);
+       
         yield return new WaitForSeconds(waitTime);
 
-        if (audioSource != null && grabSE != null) audioSource.PlayOneShot(grabSE);
+      
 
+        if (audioSource != null && grabSE != null) audioSource.PlayOneShot(grabSE);
+        
         Vector3 takeoffStartBird = transform.position;
         Vector3 takeoffEndBird = transform.position + new Vector3(0, heightOffset, 0);
         float takeoffDuration = 0.5f;
@@ -109,7 +112,6 @@ public class BirdCarrier : MonoBehaviour
         Vector3 startPlayerPos = pWalk.transform.position;
 
         if (animator != null) animator.SetBool(flyBoolParam, true);
-
         while (takeoffElapsed < takeoffDuration)
         {
             takeoffElapsed += Time.deltaTime;
@@ -133,6 +135,8 @@ public class BirdCarrier : MonoBehaviour
         float distance = Vector3.Distance(birdStartPos, birdEndPos);
         float duration = distance / speed;
         float elapsed = 0f;
+
+        pWalk.StateChange(4);
 
         while (elapsed < duration)
         {
@@ -161,6 +165,8 @@ public class BirdCarrier : MonoBehaviour
         }
 
         if (animator != null) animator.SetBool(flyBoolParam, false);
+
+        pWalk.StateChange(3);
         yield return new WaitForSeconds(waitTime);
         SetBirdFacing(-moveDir);
         isMoving = false;

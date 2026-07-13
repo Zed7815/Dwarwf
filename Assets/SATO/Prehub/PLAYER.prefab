@@ -222,12 +222,16 @@ MonoBehaviour:
   jumpCenterTolerance: 0.05
   direction: 1
   JpRequest: 1
+  state: 0
   groundCheck: {fileID: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDistance: 1.5
   boxSize: {x: 0.8, y: 0.00011}
+  ceilingCheckWidth: 0.1
+  ceilingCheckOffset: 0.2
+  ceilingCheckDistance: 0.01
   jumpRequest: 1
 --- !u!50 &3039353514117489425
 Rigidbody2D:
@@ -290,7 +294,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.027353734, y: 0.31353626}
+  m_Offset: {x: -0.027353734, y: 0.22992879}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.6239178, y: 0.014562989}
@@ -300,7 +304,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.1809228, y: 0.5724723}
+  m_Size: {x: 0.1809228, y: 0.4052574}
   m_EdgeRadius: 0
 --- !u!95 &2947781058251339558
 Animator:

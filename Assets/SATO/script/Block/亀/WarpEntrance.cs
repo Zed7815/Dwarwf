@@ -44,15 +44,13 @@ public class WarpEntrance : MonoBehaviour
     {
         if (entranceAnimator == null) entranceAnimator = GetComponent<Animator>();
 
-        // シーン内のすべての WarpExit を探して、IDが一致するものを紐付ける
-        WarpExit[] allExits = FindObjectsOfType<WarpExit>(true); // 非表示も含めて検索
+        WarpExit[] allExits = FindObjectsOfType<WarpExit>(true);
         foreach (var exit in allExits)
         {
             if (exit.warpID == this.warpID)
             {
                 exitPoint = exit.transform;
                 exitAnimator = exit.GetComponent<Animator>();
-                // 見つかったのでループを抜ける
                 return;
             }
         }
@@ -62,8 +60,6 @@ public class WarpEntrance : MonoBehaviour
             Debug.LogWarning($"WarpID: {warpID} に対応する WarpExit が見つかりません！");
         }
     }
-
-    
 
     private bool HasParameter(Animator anim, string paramName)
     {
@@ -119,7 +115,10 @@ public class WarpEntrance : MonoBehaviour
         if (entranceAnimator != null)
         {
             if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
-            if (HasParameter(entranceAnimator, entranceBoolName)) entranceAnimator.SetBool(entranceBoolName, true);
+
+            if (HasParameter(entranceAnimator, entranceBoolName))
+                entranceAnimator.SetBool(entranceBoolName, true);
+
             if (pWalk.direction == 1 && HasParameter(entranceAnimator, "EnterRight")) entranceAnimator.SetTrigger("EnterRight");
             else if (HasParameter(entranceAnimator, "EnterLeft")) entranceAnimator.SetTrigger("EnterLeft");
         }
@@ -130,7 +129,9 @@ public class WarpEntrance : MonoBehaviour
 
         if (entranceAnimator != null)
         {
-            if (HasParameter(entranceAnimator, entranceBoolName)) entranceAnimator.SetBool(entranceBoolName, false);
+            if (HasParameter(entranceAnimator, entranceBoolName))
+                entranceAnimator.SetBool(entranceBoolName, false);
+
             entranceAnimator.ResetTrigger("EnterRight");
             entranceAnimator.ResetTrigger("EnterLeft");
         }
@@ -177,5 +178,22 @@ public class WarpEntrance : MonoBehaviour
         pWalk.StateChange(1);
         cooldownTimer = Time.time + 0.1f;
         isWarping = false;
+    }
+
+    // ★追加：リセットボタンが押された時に呼ばれる
+    void OnGimmickReset()
+    {
+        // 実行中のワープコルーチンを強制停止
+        StopAllCoroutines();
+
+        // フラグを初期化
+        isWarping = false;
+
+        // 音が鳴っていたら止める
+        if (audioSource != null) audioSource.Stop();
+
+        // アニメーションの状態もリセット（必要に応じて）
+        if (entranceAnimator != null && HasParameter(entranceAnimator, entranceBoolName))
+            entranceAnimator.SetBool(entranceBoolName, false);
     }
 }
