@@ -117,6 +117,8 @@ public class StageSelectManager : MonoBehaviour
                 AddHoverEvent(stageButtons[i]);
                 string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
                 stageButtons[i].onClick.AddListener(() => {
+                    PlayerPrefs.SetInt("LastSelectedStage", stageNum);
+                    PlayerPrefs.Save();
                     if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
                 });
             }

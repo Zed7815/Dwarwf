@@ -89,17 +89,34 @@ public class StageSelectCameraController : MonoBehaviour
     }
 
     // --- 以下、既存の演出ロジック（変更なし） ---
+    // StageSelectCameraController.cs の SetPlayerAtClearedStage を修正
+
     void SetPlayerAtClearedStage()
     {
-        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-        int targetIndex = Mathf.Max(0, clearedStage - 1);
+        // ★【修正】StageCleared ではなく、保存しておいた LastSelectedStage を使う
+        // 保存されていない場合（初めての起動など）はデフォルトで1にする
+        int lastPlayedStage = PlayerPrefs.GetInt("LastSelectedStage", 1);
+
+        // インデックスは番号マイナス1
+        int targetIndex = Mathf.Max(0, lastPlayedStage - 1);
+
         if (stageButtons != null && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
         {
             Vector3 buttonWorldPos = stageButtons[targetIndex].transform.position;
+
+            // カメラの位置を調整
             float camX = Mathf.Clamp(buttonWorldPos.x, minX, maxX);
             transform.position = new Vector3(camX, transform.position.y, transform.position.z);
+
             UpdateRockBrightness();
-            playerAnimator.transform.position = new Vector3(buttonWorldPos.x, buttonWorldPos.y + playerYOffset, playerAnimator.transform.position.z);
+
+            // プレイヤーの位置をボタンの上に配置
+            playerAnimator.transform.position = new Vector3(
+                buttonWorldPos.x,
+                buttonWorldPos.y + playerYOffset,
+                playerAnimator.transform.position.z
+            );
+
             playerAnimator.SetBool(animBoolName, false);
         }
     }
