@@ -18,6 +18,10 @@ public class ReverseGimmick : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
+        // ★【ここが解決策！】
+        // GameManagerのリセットボタンが押された時に、このオブジェクトも通知を受け取るようにする
+        // ※GameManager側に通知機能がない場合は、後述の「OnGimmickReset」で直接対応します
     }
 
     private void OnTriggerEnter2D(Collider2D trigger)
@@ -27,12 +31,9 @@ public class ReverseGimmick : MonoBehaviour
         if (trigger.gameObject.CompareTag("Player"))
         {
             Player_walk p = trigger.gameObject.GetComponent<Player_walk>();
-
             if (p != null)
             {
-                // ★【修正ポイント1】触れた瞬間に、他のギミックの処理（ジャンプなど）を全て殺す！
                 p.ForceStopAbilities();
-
                 bool enteredFromRight = trigger.transform.position.x > transform.position.x;
                 StartCoroutine(ReverseSequence(p, enteredFromRight));
             }
@@ -49,33 +50,24 @@ public class ReverseGimmick : MonoBehaviour
         Rigidbody2D rb = p.GetComponent<Rigidbody2D>();
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
-        p.StateChange(0); // 停止
-
+        p.StateChange(0);
         yield return new WaitForSeconds(0.2f);
 
         // --- ② 【反転フェーズ】 ---
         if (audioSource != null && reverseSE != null) audioSource.PlayOneShot(reverseSE);
-
         string targetTrigger = enteredFromRight ? rightEntryTrigger : leftEntryTrigger;
-
-        if (anim != null)
-        {
-            anim.SetTrigger(targetTrigger); // トリガーを引く
-        }
+        if (anim != null) anim.SetTrigger(targetTrigger);
 
         SpriteRenderer playerSr = p.GetComponent<SpriteRenderer>();
         if (playerSr != null) playerSr.enabled = false;
 
         yield return new WaitForSeconds(0.4f);
-
-        // ★【追加】トリガーをリセットして、何度も再生されないようにする
         if (anim != null)
         {
             anim.ResetTrigger(rightEntryTrigger);
             anim.ResetTrigger(leftEntryTrigger);
         }
 
-        // 向き反転
         p.direction *= -1;
         Vector3 s = p.transform.localScale;
         s.x = Mathf.Abs(s.x) * p.direction;
@@ -83,15 +75,46 @@ public class ReverseGimmick : MonoBehaviour
 
         // --- ③ 【待機フェーズ】 ---
         yield return new WaitForSeconds(0.4f);
-
         if (playerSr != null) playerSr.enabled = true;
 
         // --- ④ 通常歩行再開 ---
         p.StateChange(1);
-
         yield return new WaitForSeconds(0.5f);
         isProcessing = false;
     }
 
-    void OnGimmickReset() { isProcessing = false; }
+    // ★リセットボタンから呼ばれる大掃除処理
+    // ★リセットボタンから呼ばれる処理
+    void OnGimmickReset()
+    {
+        // 1. 実行中のコルーチン（反転演出）を強制停止
+        StopAllCoroutines();
+
+        // 2. フラグを初期化して、再び触れれば反応するようにする
+        isProcessing = false;
+
+        // 3. アニメーターの「大掃除」
+        if (anim != null)
+        {
+            // 溜まっているトリガーをすべて消去
+            anim.ResetTrigger(rightEntryTrigger);
+            anim.ResetTrigger(leftEntryTrigger);
+
+            // ★重要：アニメーションを強制的に「Idle」ステートに戻す
+            // 第2引数の 0 はレイヤー番号、第3引数の 0f はアニメーションの最初から再生することを意味します
+            anim.Play("hebiAnimator", 0, 0f);
+
+            // 変更を即座に反映
+            anim.Update(0f);
+        }
+
+        // 4. 音が鳴っていたら止める
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
+
+        // 5. プレイヤーがもし透明なままなら戻す処理（安全策）
+        // ※本来はプレイヤー側のResetで直りますが、ギミック側でも管理しているため
+    }
 }

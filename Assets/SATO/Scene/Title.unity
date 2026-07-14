@@ -613,10 +613,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::tirasi
   prefab: {fileID: 1070261299168687429, guid: 65f95ee2aafe586408999166d984f7ad, type: 3}
-  spawnRate: 2.55
+  spawnRate: 0.8
   minX: -8
   maxX: 8
-  spawnY: 5
+  spawnY: 13
   avoidTarget: {fileID: 546409548}
 --- !u!4 &727589647
 Transform:
@@ -674,6 +674,56 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -4.01697, y: 3.2262, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &973556719
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 973556721}
+  - component: {fileID: 973556720}
+  m_Layer: 0
+  m_Name: GameObject (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &973556720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 973556719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89baa162e3a77a74eac9cebc2574d10d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::tirasi
+  prefab: {fileID: 1070261299168687429, guid: 2bf62c55ec01d1a48870337a04fec669, type: 3}
+  spawnRate: 0.8
+  minX: -8
+  maxX: 8
+  spawnY: 13
+  avoidTarget: {fileID: 546409548}
+--- !u!4 &973556721
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 973556719}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.02, y: 5.32, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1340,4 +1390,5 @@ SceneRoots:
   - {fileID: 280983255}
   - {fileID: 168214214}
   - {fileID: 727589647}
+  - {fileID: 973556721}
   - {fileID: 546409548}

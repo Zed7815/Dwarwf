@@ -78,6 +78,12 @@ public class GameManager : MonoBehaviour
             if (res != null) res.ResetGimmick();
         }
 
+        GameObject[] allGimmicks = GameObject.FindObjectsOfType<GameObject>();
+        foreach (GameObject g in allGimmicks)
+        {
+            g.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+        }
+
         player.ResetPosition();
         blockManager.ResetAllBlocks();
         if (editUIController != null) editUIController.ShowEditUI();
