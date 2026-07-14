@@ -137,18 +137,21 @@ public class LiftBlock : MonoBehaviour
                 float myZ = transform.position.z;
 
                 Vector3 target;
+                // 移動先を探す
                 if (FindNextDestination(myX, out target))
                 {
-                    // ★【修正ポイント】
-                    // プレイヤー側で動いているジャンプ等のコルーチンを即座に殺す
+                    // 移動先が見つかった場合：通常通り移動開始
                     pWalk.ForceStopAbilities();
-
                     isPlayerTouching = true;
-
-                    // 完全に静止させてからリフトの中央へ
                     pWalk.transform.position = new Vector3(myX, pWalk.transform.position.y, myZ);
-
                     StartCoroutine(MoveRoutine(pWalk, myX, myZ, target.y));
+                }
+                else
+                {
+                    // ★追加：移動先が見つからない場合
+                    // リフトの当たり判定を消して、プレイヤーがすり抜けて（または落ちて）進めるようにする
+                    GetComponent<Collider2D>().enabled = false;
+                    Debug.Log("[LiftBlock] 移動先がないため、当たり判定を無効化しました");
                 }
             }
         }
