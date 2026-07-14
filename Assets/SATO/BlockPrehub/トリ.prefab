@@ -111,7 +111,7 @@ MonoBehaviour:
   waitTime: 0.5
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 9
+    m_Bits: 264
   maxSearchDistance: 50
   heightOffset: 0.25
   grabOffsetY: -1.7
