@@ -78,9 +78,10 @@ public class GameManager : MonoBehaviour
             if (res != null) res.ResetGimmick();
         }
 
-        GameObject[] allGimmicks = GameObject.FindObjectsOfType<GameObject>();
-        foreach (GameObject g in allGimmicks)
+        GameObject[] allG = GameObject.FindObjectsOfType<GameObject>();
+        foreach (GameObject g in allG)
         {
+            // OnGimmickResetという名前の関数をすべて実行
             g.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
 
