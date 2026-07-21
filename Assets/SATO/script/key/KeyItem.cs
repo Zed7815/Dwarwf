@@ -22,12 +22,9 @@ public class KeyItem : MonoBehaviour
         {
             FinalKeyManager.instance.CollectKey(keyID, transform.position);
 
-            if (collectSE) AudioSource.PlayClipAtPoint(collectSE, transform.position);
-            if (collectEffect) Instantiate(collectEffect, transform.position, Quaternion.identity);
-
-            // ★【修正】SetActive(false)ではなく、見た目と判定だけ消す
-            if (sr) sr.enabled = false;
-            if (col) col.enabled = false;
+            // ★重要：オブジェクトを消さずに、見た目と判定だけ消す
+            GetComponent<SpriteRenderer>().enabled = false;
+            GetComponent<Collider2D>().enabled = false;
         }
     }
 
@@ -35,7 +32,7 @@ public class KeyItem : MonoBehaviour
     void OnGimmickReset()
     {
         // 見た目と判定を復活させる
-        if (sr) sr.enabled = true;
-        if (col) col.enabled = true;
+        GetComponent<SpriteRenderer>().enabled = true;
+        GetComponent<Collider2D>().enabled = true;
     }
 }

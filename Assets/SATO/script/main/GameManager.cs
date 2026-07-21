@@ -1,7 +1,8 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using System.Collections.Generic;
 using TMPro;
-using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,6 +30,24 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI itemCountText;
     private List<GameObject> allItems = new List<GameObject>();
 
+    [Header("早送り設定")]
+    public GameObject fastForwardButton; // インスペクターで早送りボタンをアタッチ
+    public FastForwardUI ffScript;// インスペクターでボタンのスクリプトをアタッチ
+    private int playCount = 0; // 実行回数を数える
+
+    void Update()
+    {
+        // デバッグ用：Lキーを押すと無理やり全ブロック配置済みのフラグを立てて開始する
+        if (Keyboard.current.lKey.wasPressedThisFrame && currentState == GameState.Edit)
+        {
+            Debug.Log("Debug: Force Start");
+            currentState = GameState.Play;
+            player.StartMove();
+            if (editUIController != null) editUIController.HideEditUI();
+            SetUI();
+        }
+    }
+
     void Awake()
     {
         if (instance == null) instance = this;
@@ -40,6 +59,15 @@ public class GameManager : MonoBehaviour
         GameObject[] items = GameObject.FindGameObjectsWithTag("Item");
         allItems.AddRange(items);
         UpdateItemUI();
+        SetUI();
+
+        if (ffScript != null)
+        {
+            fastForwardButton.SetActive(true); // オブジェクトは出したまま
+            if (ffScript != null) ffScript.SetUIState("Hidden");
+            SetUI();
+        }
+
         SetUI();
     }
 
@@ -60,15 +88,45 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        playCount++; // 実行回数をカウント
+
         PlaySE(startGameSE); // 正常な開始音
         currentState = GameState.Play;
         player.StartMove();
         if (editUIController != null) editUIController.HideEditUI();
+
+        // 2回目以降のスタートなら早送りボタンを表示
+        if (ffScript != null)
+        {
+            if (playCount >= 2)
+            {
+                ffScript.SetUIState("Active"); // 2回目以降：有効
+            }
+            else
+            {
+                ffScript.SetUIState("Locked"); // 1回目：半透明ロック
+            }
+            ffScript.ResetToNormal();
+        }
+
+
         SetUI();
     }
 
     public void ResetGame()
     {
+
+        if (ffScript != null)
+        {
+            ffScript.ResetToNormal();
+            // ★リセットして編集モードに戻るので隠す
+            ffScript.SetUIState("Hidden");
+        }
+        else
+        {
+            Time.timeScale = 1.0f;
+        }
+
         PlaySE(resetGameSE);
         currentState = GameState.Edit;
         hasCollectedStarInThisRun = false;
@@ -78,11 +136,10 @@ public class GameManager : MonoBehaviour
             if (res != null) res.ResetGimmick();
         }
 
-        GameObject[] allG = GameObject.FindObjectsOfType<GameObject>();
-        foreach (GameObject g in allG)
+        MonoBehaviour[] allScripts = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+        foreach (var script in allScripts)
         {
-            // OnGimmickResetという名前の関数をすべて実行
-            g.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+            script.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
 
         player.ResetPosition();

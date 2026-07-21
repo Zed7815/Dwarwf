@@ -361,12 +361,15 @@ public class BlockManager : MonoBehaviour
 
     public void ResetAllBlocks()
     {
+        // 配置済みブロックを「削除」するのではなく「初期化」する
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
-        foreach (GameObject b in placedBlocks) Destroy(b);
-        foreach (var type in blockTypes) type.currentCount = 0;
-        DynamicDropFrame[] allFrames = FindObjectsOfType<DynamicDropFrame>();
-        foreach (DynamicDropFrame frame in allFrames) if (frame != null) frame.ResetScale();
-        activeFrame = null;
+        foreach (GameObject b in placedBlocks)
+        {
+            // もしブロック自体にアニメーションや消滅処理があるなら、
+            // そのスクリプトの OnGimmickReset() を呼ぶだけにする
+            b.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+        }
+        // currentCount はリセットしない（配置したままなので）
         UpdateUI();
     }
 

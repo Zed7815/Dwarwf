@@ -235,6 +235,7 @@ public class Player_walk : MonoBehaviour
         StateChange(0);
     }
 
+
     public void ResetPlayerStatus()
     {
         StopAllCoroutines();
@@ -244,7 +245,14 @@ public class Player_walk : MonoBehaviour
         consecutiveHeadBumps = 0;
         jumpRequest = true;
         direction = 1;
-        if (rb != null) { rb.bodyType = RigidbodyType2D.Dynamic; rb.linearVelocity = Vector2.zero; rb.simulated = false; rb.simulated = true; }
+
+        // ここでは速度のクリアだけ行う（simulatedの切り替えはController側に任せる）
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = Vector2.zero;
+        }
+
         if (sr != null) { sr.enabled = true; sr.flipX = false; }
         Collider2D myCol = GetComponent<Collider2D>();
         if (myCol != null) myCol.enabled = true;

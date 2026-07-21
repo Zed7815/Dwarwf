@@ -6,11 +6,11 @@ public class FinalKeyManager : MonoBehaviour
 {
     public static FinalKeyManager instance;
 
-    [Header("UI参照 (Canvas内のイメージ)")]
+    [Header("UI参照")]
     public RectTransform uiKeyA;
     public RectTransform uiKeyB;
     public RectTransform uiCombinedKey;
-    public Vector2 mergeCenterPos; // 合体する中心座標（UI上の座標）
+    public Vector2 mergeCenterPos;
 
     [Header("演出設定")]
     public float mergeSpeed = 500f;
@@ -20,10 +20,17 @@ public class FinalKeyManager : MonoBehaviour
     private bool hasKeyB = false;
     public bool isUnlocked { get; private set; } = false;
 
+    // ★追加：初期位置を保存する変数
+    private Vector2 initialPosA;
+    private Vector2 initialPosB;
+
     void Awake()
     {
         instance = this;
-        // 初期状態：UIはすべて非表示か半透明
+        // 初期位置を記憶しておく
+        if (uiKeyA) initialPosA = uiKeyA.anchoredPosition;
+        if (uiKeyB) initialPosB = uiKeyB.anchoredPosition;
+
         SetAlpha(uiKeyA, 0);
         SetAlpha(uiKeyB, 0);
         SetAlpha(uiCombinedKey, 0);
@@ -34,7 +41,6 @@ public class FinalKeyManager : MonoBehaviour
         if (id == 0) { hasKeyA = true; SetAlpha(uiKeyA, 1f); }
         else { hasKeyB = true; SetAlpha(uiKeyB, 1f); }
 
-        // 両方揃ったら合体演出開始
         if (hasKeyA && hasKeyB && !isUnlocked)
         {
             StartCoroutine(MergeKeyRoutine());
@@ -43,7 +49,6 @@ public class FinalKeyManager : MonoBehaviour
 
     IEnumerator MergeKeyRoutine()
     {
-        // 1. 鍵AとBが中心に向かって移動する
         float t = 0;
         while (Vector2.Distance(uiKeyA.anchoredPosition, mergeCenterPos) > 1f)
         {
@@ -52,14 +57,12 @@ public class FinalKeyManager : MonoBehaviour
             yield return null;
         }
 
-        // 2. AとBを消して、合体後の鍵を表示
         SetAlpha(uiKeyA, 0);
         SetAlpha(uiKeyB, 0);
         SetAlpha(uiCombinedKey, 1f);
 
         if (mergeSE) GetComponent<AudioSource>().PlayOneShot(mergeSE);
 
-        // 3. 少し大きくして強調する（演出）
         uiCombinedKey.localScale = Vector3.one * 1.5f;
         while (uiCombinedKey.localScale.x > 1.0f)
         {
@@ -68,13 +71,12 @@ public class FinalKeyManager : MonoBehaviour
         }
         uiCombinedKey.localScale = Vector3.one;
 
-        // 4. アンロック完了
         isUnlocked = true;
-        Debug.Log("すべての鍵が揃いました！鎖を解放します。");
     }
 
     void SetAlpha(RectTransform rt, float alpha)
     {
+        if (rt == null) return;
         Image img = rt.GetComponent<Image>();
         if (img)
         {
@@ -84,25 +86,21 @@ public class FinalKeyManager : MonoBehaviour
         }
     }
 
-
-
-    // FinalKeyManager.cs
-
+    // リセット命令
     public void OnGimmickReset()
     {
-        // 1. 演出を止める
         StopAllCoroutines();
 
-        // 2. ★フラグを確実にリセット
         hasKeyA = false;
         hasKeyB = false;
-        isUnlocked = false; // これが重要！
+        isUnlocked = false;
 
-        // 3. UIを消す
+        // ★座標を初期位置に戻す（これがないと2回目におかしくなる）
+        if (uiKeyA) uiKeyA.anchoredPosition = initialPosA;
+        if (uiKeyB) uiKeyB.anchoredPosition = initialPosB;
+
         SetAlpha(uiKeyA, 0f);
         SetAlpha(uiKeyB, 0f);
         SetAlpha(uiCombinedKey, 0f);
-
-        // 4. UIの位置を初期位置に戻したい場合は、Startで初期位置を保存してここで戻してください
     }
 }
