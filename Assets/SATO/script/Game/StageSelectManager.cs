@@ -118,6 +118,13 @@ public class StageSelectManager : MonoBehaviour
                 string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
                 stageButtons[i].onClick.AddListener(() => {
                     PlayerPrefs.SetInt("LastSelectedStage", stageNum);
+
+                    if (stageNum == 1)
+                    {
+                        StageOneGuide guide = FindObjectOfType<StageOneGuide>();
+                        if (guide != null) guide.HideGuide();
+                    }
+
                     PlayerPrefs.Save();
                     if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
                 });
