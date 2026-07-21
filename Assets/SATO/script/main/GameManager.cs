@@ -113,41 +113,43 @@ public class GameManager : MonoBehaviour
         SetUI();
     }
 
+    // GameManager.cs の ResetGame() 内
+
     public void ResetGame()
     {
-
-        if (ffScript != null)
-        {
-            ffScript.ResetToNormal();
-            // ★リセットして編集モードに戻るので隠す
-            ffScript.SetUIState("Hidden");
-        }
-        else
-        {
-            Time.timeScale = 1.0f;
-        }
+        // 早送りのリセット等
+        if (ffScript != null) ffScript.ResetToNormal();
+        else Time.timeScale = 1.0f;
 
         PlaySE(resetGameSE);
         currentState = GameState.Edit;
         hasCollectedStarInThisRun = false;
 
+        // 1. マップに最初から置いてあるギミックのリセット
         foreach (var res in GimmickResetter.allResetters)
         {
             if (res != null) res.ResetGimmick();
         }
 
+        // 2. プレイヤーが配置したブロックを含む全オブジェクトへのリセット通知
         MonoBehaviour[] allScripts = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
         foreach (var script in allScripts)
         {
             script.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
 
+        // 3. プレイヤー・UIのリセット
         player.ResetPosition();
-        blockManager.ResetAllBlocks();
         if (editUIController != null) editUIController.ShowEditUI();
+
+        // 4. ★最重要：ブロックの状態と個数カウントの完全リセット
+        blockManager.ResetAllBlocks();
+
+        // 星アイテムなどの復活
         totalItemCount = 0;
         UpdateItemUI();
         foreach (GameObject item in allItems) { if (item != null) item.SetActive(true); }
+
         SetUI();
     }
 

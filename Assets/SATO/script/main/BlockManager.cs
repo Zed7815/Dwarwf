@@ -263,6 +263,9 @@ public class BlockManager : MonoBehaviour
             BlockInfo info = draggingBlock.AddComponent<BlockInfo>();
             info.typeIndex = activeTypeIndex;
 
+            PlacedBlockMarker marker = draggingBlock.AddComponent<PlacedBlockMarker>();
+            marker.SavePlacedState();
+
             blockTypes[activeTypeIndex].currentCount++;
             draggingBlock = null;
             activeFrame = null;
@@ -370,7 +373,29 @@ public class BlockManager : MonoBehaviour
             b.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
         // currentCount はリセットしない（配置したままなので）
-        UpdateUI();
+        RecalculateAllCounts();
+    }
+
+    public void RecalculateAllCounts()
+    {
+        // 一旦全てのカウントを0にする
+        foreach (var type in blockTypes)
+        {
+            type.currentCount = 0;
+        }
+
+        // シーン内の PlacedBlock をすべて探し、typeIndex を元にカウントし直す
+        GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
+        foreach (GameObject b in placedBlocks)
+        {
+            BlockInfo info = b.GetComponent<BlockInfo>();
+            if (info != null && info.typeIndex < blockTypes.Count)
+            {
+                blockTypes[info.typeIndex].currentCount++;
+            }
+        }
+
+        UpdateUI(); // UIに反映
     }
 
     void UpdateUI()
