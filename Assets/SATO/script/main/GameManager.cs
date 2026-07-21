@@ -84,6 +84,18 @@ public class GameManager : MonoBehaviour
         if (blockManager != null && !blockManager.IsAllBlocksPlaced())
         {
             PlaySE(startDeniedSE); // 警告音を鳴らす
+
+            int remaining = 0;
+            foreach (var b in blockManager.blockTypes)
+            {
+                remaining += (b.maxCount - b.currentCount);
+            }
+
+            if (TutorialMessageUI.instance != null)
+            {
+                TutorialMessageUI.instance.ShowMessage("すべて置き切らないとスタートできないよ！");
+            }
+
             Debug.Log("まだすべてのブロックを配置していません");
             return;
         }

@@ -4,17 +4,27 @@ using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 
 public class StageSelectManager : MonoBehaviour
 {
-    public Button[] stageButtons;
-    public string[] stageSceneNames;
+    // 各ステージの設定をまとめるクラス
+    [System.Serializable]
+    public class StageSetting
+    {
+        public string stageName;           // 識別用（例：Stage1）
+        public Button button;              // ステージボタン
+        public string sceneName;           // 遷移先シーン名
+        public GameObject animalVisual;    // クリア時に出る動物
+        public GameObject missingStarVisual; // 【追加】クリア済みかつ星未獲得時に出るビックリマーク等
+    }
+
+    [Header("ステージ別設定")]
+    public List<StageSetting> stageSettings;
 
     [Header("演出設定")]
-    [Tooltip("シーン開始時に黒い板が退く演出スクリプト")]
     public nextscene fadeInScript;
-    [Tooltip("ボタン押下時に黒い板が降りてくる演出スクリプト")]
     public nextscene fadeOutScript;
 
     [Header("SE設定")]
@@ -28,30 +38,21 @@ public class StageSelectManager : MonoBehaviour
 
     private static bool sessionResetDone = false;
 
-
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void Init()
-    {
-        sessionResetDone = false;
-    }
+    static void Init() { sessionResetDone = false; }
 
     void Start()
     {
-        if (audioSource == null) audioSource = GetComponent<AudioSource>();
-
-        // シーン開始時のフェードイン（黒い板がどく）演出
-        if (fadeInScript != null)
-        {
-            StartCoroutine(fadeInScript.startKuro());
-        }
-
         if (!sessionResetDone)
         {
             PlayerPrefs.DeleteAll();
             PlayerPrefs.Save();
             sessionResetDone = true;
-            Debug.Log("セーブデータを完全に初期化しました");
+            Debug.Log("<color=red>アプリ起動：セーブデータをすべて初期化しました</color>");
         }
+
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+        if (fadeInScript != null) StartCoroutine(fadeInScript.startKuro());
 
         UpdateStarCountUI();
         RefreshStageButtons();
@@ -60,6 +61,59 @@ public class StageSelectManager : MonoBehaviour
     void Update()
     {
         if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) UnlockAllStages();
+    }
+
+    public void RefreshStageButtons()
+    {
+        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
+
+        for (int i = 0; i < stageSettings.Count; i++)
+        {
+            StageSetting setting = stageSettings[i];
+            if (setting.button == null) continue;
+
+            int stageNum = i + 1;
+            bool isUnlocked = (i <= clearedStage);
+            bool isActuallyCleared = (i < clearedStage);
+            bool hasStar = (PlayerPrefs.GetInt("StarCollected_Stage_" + stageNum, 0) == 1);
+
+            setting.button.interactable = isUnlocked;
+            setting.button.onClick.RemoveAllListeners();
+
+            // 1. 動物ビジュアルの表示切り替え（直接指定）
+            if (setting.animalVisual != null)
+            {
+                setting.animalVisual.SetActive(isActuallyCleared);
+            }
+
+            // 2. 星未獲得ビジュアルの表示切り替え（直接指定）
+            if (setting.missingStarVisual != null)
+            {
+                // 「クリア済み」かつ「星を持っていない」時だけ表示
+                bool shouldShowWarning = (isActuallyCleared && !hasStar);
+                setting.missingStarVisual.SetActive(shouldShowWarning);
+            }
+
+            if (isUnlocked)
+            {
+                AddHoverEvent(setting.button);
+                setting.button.onClick.AddListener(() => {
+                    PlayerPrefs.SetInt("LastSelectedStage", stageNum);
+                    PlayerPrefs.Save();
+
+                    if (stageNum == 1)
+                    {
+                        StageOneGuide guide = FindObjectOfType<StageOneGuide>();
+                        if (guide != null) guide.HideGuide();
+                    }
+
+                    if (!string.IsNullOrEmpty(setting.sceneName)) LoadStage(setting.sceneName);
+                });
+            }
+        }
+
+        FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
+        if (fsl != null) fsl.RefreshLockStatus();
     }
 
     public void UpdateStarCountUI()
@@ -72,87 +126,20 @@ public class StageSelectManager : MonoBehaviour
         if (totalStarText != null) totalStarText.text = totalStars.ToString();
     }
 
-    public void RefreshStageButtons()
-    {
-        // 現在までにクリアしたステージ番号を取得
-        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-
-        for (int i = 0; i < stageButtons.Length; i++)
-        {
-            if (stageButtons[i] == null) continue;
-
-            // ステージ番号（1, 2, 3...）
-            int stageNum = i + 1;
-
-            // 解放されているか（今のステージがクリア済み、または一つ前のステージがクリア済みなら解放）
-            bool isUnlocked = (i <= clearedStage);
-
-            // クリア済みかどうか（ユーザーの既存ロジック：次のステージが解放されていればクリア済み）
-            bool isActuallyCleared = (i < clearedStage);
-
-            // ★追加：星を獲得しているかチェック
-            bool hasStar = (PlayerPrefs.GetInt("StarCollected_Stage_" + stageNum, 0) == 1);
-
-            stageButtons[i].interactable = isUnlocked;
-            stageButtons[i].onClick.RemoveAllListeners();
-
-            // 1. "ClearedVisual"（クリア済み画像）の表示切り替え
-            Transform clearedVisual = stageButtons[i].transform.Find("ClearedVisual");
-            if (clearedVisual != null)
-            {
-                clearedVisual.gameObject.SetActive(isActuallyCleared);
-            }
-
-            // ★追加：2. "MissingStarVisual"（星未獲得のビックリマーク等）の表示切り替え
-            // 条件：クリア済み、かつ、星を持っていない
-            Transform missingStarVisual = stageButtons[i].transform.Find("MissingStarVisual");
-            if (missingStarVisual != null)
-            {
-                bool shouldShowWarning = (isActuallyCleared && !hasStar);
-                missingStarVisual.gameObject.SetActive(shouldShowWarning);
-            }
-
-            if (isUnlocked)
-            {
-                AddHoverEvent(stageButtons[i]);
-                string sceneName = stageSceneNames.Length > i ? stageSceneNames[i] : "";
-                stageButtons[i].onClick.AddListener(() => {
-                    PlayerPrefs.SetInt("LastSelectedStage", stageNum);
-
-                    if (stageNum == 1)
-                    {
-                        StageOneGuide guide = FindObjectOfType<StageOneGuide>();
-                        if (guide != null) guide.HideGuide();
-                    }
-
-                    PlayerPrefs.Save();
-                    if (!string.IsNullOrEmpty(sceneName)) LoadStage(sceneName);
-                });
-            }
-        }
-
-        // 最終ステージのロック状態も更新
-        FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
-        if (fsl != null) fsl.RefreshLockStatus();
-    }
-
     void UnlockAllStages()
     {
-        PlayerPrefs.SetInt("StageCleared", stageButtons.Length + 1);
-        for (int i = 1; i <= 20; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
+        PlayerPrefs.SetInt("StageCleared", stageSettings.Count + 1);
+        for (int i = 1; i <= 30; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
         PlayerPrefs.Save();
         UpdateStarCountUI();
         RefreshStageButtons();
-        FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
-        if (fsl != null) fsl.RefreshLockStatus();
     }
 
     void AddHoverEvent(Button btn)
     {
-        EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
-        if (trigger == null) trigger = btn.gameObject.AddComponent<EventTrigger>();
-        EventTrigger.Entry entry = new EventTrigger.Entry();
-        entry.eventID = EventTriggerType.PointerEnter;
+        EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>() ?? btn.gameObject.AddComponent<EventTrigger>();
+        trigger.triggers.Clear();
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
         entry.callback.AddListener((data) => { if (audioSource != null && hoverSE != null) audioSource.PlayOneShot(hoverSE); });
         trigger.triggers.Add(entry);
     }
@@ -163,8 +150,7 @@ public class StageSelectManager : MonoBehaviour
     {
         if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
         if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
-
-        yield return StartCoroutine(fadeOutScript.endKuro());
+        if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
         yield return new WaitForSecondsRealtime(0.5f);
         SceneManager.LoadScene(sceneName);
     }
