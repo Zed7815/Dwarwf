@@ -21,9 +21,9 @@ public class VanishingBlock : MonoBehaviour
     public bool useFlickerEffect = false;
 
     [Header("SE設定")]
-    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
-    public AudioClip touchSE;       // 触れた瞬間の音
-    public AudioClip vanishSE;      // 消滅する瞬間の音
+    public AudioSource audioSource;
+    public AudioClip touchSE;
+    public AudioClip vanishSE;
 
     private bool isTouched = false;
     private SpriteRenderer spriteRenderer;
@@ -31,10 +31,9 @@ public class VanishingBlock : MonoBehaviour
 
     void Start()
     {
-        // コンポーネントの自動取得
         spriteRenderer = GetComponent<SpriteRenderer>();
         blockCollider = GetComponent<Collider2D>();
-
+        if (animator == null) animator = GetComponent<Animator>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
@@ -45,13 +44,10 @@ public class VanishingBlock : MonoBehaviour
             if (!isTouched)
             {
                 isTouched = true;
-
-                // ★SE再生：触れた瞬間
                 if (audioSource != null && touchSE != null)
                 {
                     audioSource.PlayOneShot(touchSE);
                 }
-
                 StartCoroutine(VanishSequence());
             }
         }
@@ -72,7 +68,7 @@ public class VanishingBlock : MonoBehaviour
             }
         }
 
-        // 2. フォールバック
+        // 2. フォールバック（Animatorがない場合のフリッカー）
         if (animator == null && useFlickerEffect && spriteRenderer != null)
         {
             float elapsed = 0f;
@@ -91,27 +87,46 @@ public class VanishingBlock : MonoBehaviour
         }
 
         // --- 消滅処理 ---
-
-        // ★SE再生：消滅する瞬間
         if (audioSource != null && vanishSE != null)
         {
             audioSource.PlayOneShot(vanishSE);
         }
 
-        // 当たり判定と見た目を先に消す（オブジェクトはまだ壊さない）
+        // 当たり判定と見た目を消す
         if (blockCollider != null) blockCollider.enabled = false;
         if (spriteRenderer != null) spriteRenderer.enabled = false;
 
-        // 音が鳴り終わるまで少し待つ（vanishSEの長さ分待機）
+        // 音が鳴り終わるまで少し待つ
         float waitTime = (vanishSE != null) ? vanishSE.length : 0.1f;
         yield return new WaitForSeconds(waitTime);
 
-        // ヒエラルキーから完全に消去
-        //Destroy(gameObject);
-        gameObject.SetActive(false);
+        // ★修正ポイント：SetActive(false) は使わない
+        // オブジェクトを非活性にするとリセット命令(SendMessage)が届かなくなるため、
+        // ColliderとRendererをOFFにした状態で「シーンに残しておく」のが正解です。
+        // gameObject.SetActive(false); 
     }
 
+    // ★リセット機能を追加
+    void OnGimmickReset()
+    {
+        // 1. 進行中の消滅処理を止める
+        StopAllCoroutines();
 
-    void OnGimmickReset() { isTouched = false; }
+        // 2. フラグを戻す
+        isTouched = false;
 
+        // 3. 見た目と当たり判定を復活させる
+        if (spriteRenderer != null) spriteRenderer.enabled = true;
+        if (blockCollider != null) blockCollider.enabled = true;
+
+        // 4. アニメーターを初期状態に巻き戻す
+        if (animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
+        // 5. 音を止める
+        if (audioSource != null) audioSource.Stop();
+    }
 }
