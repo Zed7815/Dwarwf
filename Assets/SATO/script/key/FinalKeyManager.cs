@@ -18,16 +18,14 @@ public class FinalKeyManager : MonoBehaviour
 
     private bool hasKeyA = false;
     private bool hasKeyB = false;
-    public bool isUnlocked { get; private set; } = false;
+    public bool isUnlocked { get; private set; } = false; // これを監視する
 
-    // ★追加：初期位置を保存する変数
     private Vector2 initialPosA;
     private Vector2 initialPosB;
 
     void Awake()
     {
         instance = this;
-        // 初期位置を記憶しておく
         if (uiKeyA) initialPosA = uiKeyA.anchoredPosition;
         if (uiKeyB) initialPosB = uiKeyB.anchoredPosition;
 
@@ -50,7 +48,7 @@ public class FinalKeyManager : MonoBehaviour
     IEnumerator MergeKeyRoutine()
     {
         float t = 0;
-        while (Vector2.Distance(uiKeyA.anchoredPosition, mergeCenterPos) > 1f)
+        while (uiKeyA != null && Vector2.Distance(uiKeyA.anchoredPosition, mergeCenterPos) > 1f)
         {
             uiKeyA.anchoredPosition = Vector2.MoveTowards(uiKeyA.anchoredPosition, mergeCenterPos, mergeSpeed * Time.deltaTime);
             uiKeyB.anchoredPosition = Vector2.MoveTowards(uiKeyB.anchoredPosition, mergeCenterPos, mergeSpeed * Time.deltaTime);
@@ -63,15 +61,7 @@ public class FinalKeyManager : MonoBehaviour
 
         if (mergeSE) GetComponent<AudioSource>().PlayOneShot(mergeSE);
 
-        uiCombinedKey.localScale = Vector3.one * 1.5f;
-        while (uiCombinedKey.localScale.x > 1.0f)
-        {
-            uiCombinedKey.localScale -= Vector3.one * Time.deltaTime * 2f;
-            yield return null;
-        }
-        uiCombinedKey.localScale = Vector3.one;
-
-        isUnlocked = true;
+        isUnlocked = true; // ここでアンロック
     }
 
     void SetAlpha(RectTransform rt, float alpha)
@@ -86,19 +76,21 @@ public class FinalKeyManager : MonoBehaviour
         }
     }
 
-    // リセット命令
+    // ★リセットボタンで呼ばれる
     public void OnGimmickReset()
     {
         StopAllCoroutines();
 
+        // 1. 全てのフラグを折る
+        isUnlocked = false;
         hasKeyA = false;
         hasKeyB = false;
-        isUnlocked = false;
 
-        // ★座標を初期位置に戻す（これがないと2回目におかしくなる）
+        // 2. UI位置を戻す
         if (uiKeyA) uiKeyA.anchoredPosition = initialPosA;
         if (uiKeyB) uiKeyB.anchoredPosition = initialPosB;
 
+        // 3. UIを消す
         SetAlpha(uiKeyA, 0f);
         SetAlpha(uiKeyB, 0f);
         SetAlpha(uiCombinedKey, 0f);

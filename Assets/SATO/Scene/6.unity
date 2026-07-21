@@ -477,10 +477,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 471506948}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
 --- !u!1001 &156559126
@@ -1405,7 +1402,6 @@ GameObject:
   - component: {fileID: 471506948}
   - component: {fileID: 471506951}
   - component: {fileID: 471506950}
-  - component: {fileID: 471506949}
   m_Layer: 0
   m_Name: k12_0
   m_TagString: Untagged
@@ -1422,26 +1418,12 @@ Transform:
   m_GameObject: {fileID: 471506947}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.0049991608, y: -0.045000076, z: 0}
+  m_LocalPosition: {x: -0.82312965, y: 0.6581502, z: 0}
   m_LocalScale: {x: 2.455474, y: 2.455474, z: 2.455474}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1249637991}
+  m_Father: {fileID: 726008752}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &471506949
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 471506947}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f93d0ede70ad1e469836d232ea69219, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GoalChainLock
-  chainGraphics: {fileID: 471506947}
-  goalCollider: {fileID: 1249637988}
 --- !u!95 &471506950
 Animator:
   serializedVersion: 7
@@ -2413,6 +2395,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3601742c15f2414b90453ecf2304810, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::nextscene
+--- !u!1 &726008750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 726008752}
+  - component: {fileID: 726008751}
+  m_Layer: 0
+  m_Name: goalManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &726008751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726008750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f93d0ede70ad1e469836d232ea69219, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GoalChainLock
+  chainGraphics: {fileID: 471506947}
+  goalCollider: {fileID: 1249637988}
+--- !u!4 &726008752
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726008750}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -30.32887, y: -5.57315, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 471506948}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &779844180
 GameObject:
   m_ObjectHideFlags: 0
@@ -6184,11 +6213,6 @@ MonoBehaviour:
 --- !u!61 &1249637988 stripped
 BoxCollider2D:
   m_CorrespondingSourceObject: {fileID: 6219512685488514903, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
-  m_PrefabInstance: {fileID: 146616003}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1249637991 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 9081747361037309846, guid: 83c34be5ddadc9a44b9b60275279cef8, type: 3}
   m_PrefabInstance: {fileID: 146616003}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1262300511
@@ -9999,6 +10023,7 @@ SceneRoots:
   - {fileID: 1621468796}
   - {fileID: 464187281}
   - {fileID: 146616003}
+  - {fileID: 726008752}
   - {fileID: 519683672}
   - {fileID: 1206908131}
   - {fileID: 962112908}
