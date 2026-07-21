@@ -36,6 +36,8 @@ public class GoalPoint : MonoBehaviour
 
     IEnumerator GoalSequence()
     {
+        Time.timeScale = 1.0f;
+
         // 1. SE再生
         if (audioSource != null && goalSE != null)
         {

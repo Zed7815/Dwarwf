@@ -129,9 +129,15 @@ public class GameManager : MonoBehaviour
 
     public void ResetGame()
     {
-        // 早送りのリセット等
-        if (ffScript != null) ffScript.ResetToNormal();
-        else Time.timeScale = 1.0f;
+        if (ffScript != null)
+        {
+            ffScript.ResetToNormal();      // 速度を1.0に戻す
+            ffScript.SetUIState("Hidden"); // ボタンを完全に隠す(SetActive(false))
+        }
+        else
+        {
+            Time.timeScale = 1.0f; // 万が一スクリプトがなくても時間を戻す
+        }
 
         PlaySE(resetGameSE);
         currentState = GameState.Edit;

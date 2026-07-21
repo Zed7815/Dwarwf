@@ -68,7 +68,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -6538648937686156536, guid: ea883d8d7284a6c48864c0054fdbb2c9, type: 3}
+  m_Sprite: {fileID: -9124150989176367663, guid: 53da52459c018c34db965254e250309d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -97,7 +97,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -113,10 +113,10 @@ MonoBehaviour:
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
     m_NormalTrigger: Normal
-    m_HighlightedTrigger: Highlighted
-    m_PressedTrigger: Pressed
-    m_SelectedTrigger: Selected
-    m_DisabledTrigger: Disabled
+    m_HighlightedTrigger: FastForwarding
+    m_PressedTrigger: FastForwarding
+    m_SelectedTrigger: Normal
+    m_DisabledTrigger: Normal
   m_Interactable: 1
   m_TargetGraphic: {fileID: 4632723219311587461}
   m_OnClick:
@@ -148,11 +148,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FastForwardUI
   fastForwardSpeed: 1.5
   buttonImage: {fileID: 4632723219311587461}
-  normalSprite: {fileID: 0}
-  fastSprite: {fileID: 0}
   button: {fileID: 2164042416343746102}
+  animator: {fileID: 0}
+  animBoolName: isFastForwarding
   audioSource: {fileID: 8728995997552858910}
   clickSE: {fileID: 8300000, guid: 8ce44180aafd2294abf5ae9bdd421b7a, type: 3}
+  useScriptAnim: 1
+  pulseSpeed: 10
+  pulseAmount: 0.1
 --- !u!82 &8728995997552858910
 AudioSource:
   m_ObjectHideFlags: 0
