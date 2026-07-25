@@ -1141,7 +1141,7 @@ Animator:
   m_GameObject: {fileID: 1168924253}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: b63857beb8a3de64780a3833b69689e9, type: 2}
+  m_Controller: {fileID: 9100000, guid: b4fbf58aeefd57b48b96bd9472f353d7, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1519,6 +1519,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5670611291324065730, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: gameManager
+      value: 
+      objectReference: {fileID: 1904973439}
+    - target: {fileID: -5670611291324065730, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: playerAnimator
+      value: 
+      objectReference: {fileID: 1408958659}
     - target: {fileID: 8598960151255025368, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
       propertyPath: m_Name
       value: PLAYER
@@ -1568,6 +1576,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+--- !u!95 &1408958659 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 2947781058251339558, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+  m_PrefabInstance: {fileID: 1408958658}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1414980947 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1898569117585916414, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}

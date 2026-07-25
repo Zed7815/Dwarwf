@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 3039353514117489425}
   - component: {fileID: 479459635021972411}
   - component: {fileID: 2947781058251339558}
+  - component: {fileID: -5670611291324065730}
   m_Layer: 6
   m_Name: PLAYER
   m_TagString: Player
@@ -331,3 +332,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-5670611291324065730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8598960151255025368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 176b3e48a2605e54cb68c5ded1777266, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEditAnimator
+  gameManager: {fileID: 0}
+  playerAnimator: {fileID: 0}
+  dragBoolParam: isPointing

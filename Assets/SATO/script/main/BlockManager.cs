@@ -24,6 +24,8 @@ public class BlockManager : MonoBehaviour
     public GameManager gameManager;
     public List<BlockData> blockTypes;
 
+    public bool IsDragging => draggingBlock != null;
+
     [Header("SE設定")]
     public AudioSource audioSource;
     public AudioClip dragSE;

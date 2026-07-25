@@ -2198,6 +2198,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5670611291324065730, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: gameManager
+      value: 
+      objectReference: {fileID: 1416668719}
+    - target: {fileID: -5670611291324065730, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: playerAnimator
+      value: 
+      objectReference: {fileID: 840008533}
     - target: {fileID: 3662779884302434057, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
       propertyPath: gameManager
       value: 
@@ -2266,6 +2274,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fdc2293da6e27247ba3b83241df6a49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+--- !u!95 &840008533 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 2947781058251339558, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+  m_PrefabInstance: {fileID: 840008531}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &867931196 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1898569117585916414, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
