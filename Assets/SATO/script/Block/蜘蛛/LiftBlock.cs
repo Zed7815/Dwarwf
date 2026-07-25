@@ -53,8 +53,11 @@ public class LiftBlock : MonoBehaviour
 
     private bool isPlayerTouching = false;
 
+    private SpriteRenderer mySR;
+
     private void Start()
     {
+        mySR = GetComponent<SpriteRenderer>();
         SetupReferences();
         UpdateDimensions();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
@@ -67,6 +70,27 @@ public class LiftBlock : MonoBehaviour
             SetupReferences();
         }
         UpdateThreadPosition();
+
+        if (Application.isPlaying && GameManager.instance != null)
+        {
+            if (GameManager.instance.currentState == GameManager.GameState.Edit)
+            {
+                Vector3 dummy;
+                // 現在の場所から移動先が見つかるかチェック
+                bool canMove = FindNextDestination(transform.position.x, out dummy);
+
+                // 見つからなければ赤っぽく、見つかれば白（通常）にする
+                if (mySR != null)
+                {
+                    mySR.color = canMove ? Color.white : new Color(1f, 0.3f, 0.3f, 0.8f);
+                }
+            }
+            else if (mySR != null && mySR.color != Color.white)
+            {
+                // プレイモードになったら色を戻す
+                mySR.color = Color.white;
+            }
+        }
     }
 
     void SetupReferences()

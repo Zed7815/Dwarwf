@@ -259,7 +259,7 @@ public class BlockManager : MonoBehaviour
             PlaySE(dropSE);
             draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
             draggingBlock.GetComponent<Collider2D>().enabled = true;
-            draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
+          //  draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
             draggingBlock.tag = "PlacedBlock";
 
             BlockInfo info = draggingBlock.AddComponent<BlockInfo>();

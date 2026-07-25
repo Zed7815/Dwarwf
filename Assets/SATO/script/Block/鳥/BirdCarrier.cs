@@ -33,6 +33,47 @@ public class BirdCarrier : MonoBehaviour
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
+    private void Update()
+    {
+        // 編集モード中のみチェックを行う
+        if (GameManager.instance != null && GameManager.instance.currentState == GameManager.GameState.Edit)
+        {
+            // 鳥の向きを判定（localScale.x がプラスなら右(1)、マイナスなら左(-1)）
+            float dir = transform.localScale.x > 0 ? 1f : -1f;
+            Vector2 rayDir = new Vector2(dir, 0);
+
+            // 前方に着地できる場所があるかレイを飛ばして確認
+            // 自分自身に当たらないよう、少し前(1.5f)から発射
+            RaycastHit2D hit = Physics2D.Raycast(transform.position + (Vector3)rayDir * 1.5f, rayDir, maxSearchDistance, obstacleLayer);
+
+            // 【判定ロジックの整理】
+            // 1. hit.collider != null ➔ 前方に何かしらの障害物（足場など）が見つかった
+            // 2. !hit.collider.CompareTag("wall") ➔ それが「壁(wall)」タグではない（＝着地できる地面である）
+            // この2つが揃えば「運び先がある（有効）」とみなす
+            bool hasDestination = (hit.collider != null && !hit.collider.CompareTag("wall"));
+
+            if (birdSprite != null)
+            {
+                // ★ここを確実に修正
+                if (hasDestination)
+                {
+                    // 運び先がある ➔ 正常（白）
+                    birdSprite.color = Color.white;
+                }
+                else
+                {
+                    // 運び先がない、または壁で行き止まり ➔ 警告（赤）
+                    birdSprite.color = new Color(1f, 0.3f, 0.3f, 0.8f);
+                }
+            }
+        }
+        else if (birdSprite != null)
+        {
+            // プレイモード（実行中）は常に元の色に戻す
+            birdSprite.color = Color.white;
+        }
+    }
+
     bool FindNextDestination(Player_walk pWalk)
     {
         int dir = pWalk.direction;
