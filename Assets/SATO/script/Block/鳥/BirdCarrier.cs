@@ -13,6 +13,14 @@ public class BirdCarrier : MonoBehaviour
     public float grabOffsetY = -0.7f;
     public float landYOffset = 0.0f;
 
+    [Header("判定（BoxCast）の設定")]
+    [Tooltip("プレイヤーの体の大きさを想定した判定サイズ")]
+    public Vector2 boxSize = new Vector2(0.5f, 0.8f);
+
+    [Header("レイヤー設定")]
+    public LayerMask landableLayer; // 地面（白くなる対象）
+    public LayerMask blockingLayer; // 壁（赤くなる対象）
+
     [Header("ビジュアル・演出設定")]
     public SpriteRenderer birdSprite;
     public Animator animator;
@@ -35,73 +43,91 @@ public class BirdCarrier : MonoBehaviour
 
     private void Update()
     {
-        // 編集モード中のみチェックを行う
+        // --- 1. 色検知ロジック (BoxCast を使用) ---
         if (GameManager.instance != null && GameManager.instance.currentState == GameManager.GameState.Edit)
         {
-            // 鳥の向きを判定（localScale.x がプラスなら右(1)、マイナスなら左(-1)）
-            float dir = transform.localScale.x > 0 ? 1f : -1f;
-            Vector2 rayDir = new Vector2(dir, 0);
-
-            // 前方に着地できる場所があるかレイを飛ばして確認
-            // 自分自身に当たらないよう、少し前(1.5f)から発射
-            RaycastHit2D hit = Physics2D.Raycast(transform.position + (Vector3)rayDir * 1.5f, rayDir, maxSearchDistance, obstacleLayer);
-
-            // 【判定ロジックの整理】
-            // 1. hit.collider != null ➔ 前方に何かしらの障害物（足場など）が見つかった
-            // 2. !hit.collider.CompareTag("wall") ➔ それが「壁(wall)」タグではない（＝着地できる地面である）
-            // この2つが揃えば「運び先がある（有効）」とみなす
-            bool hasDestination = (hit.collider != null && !hit.collider.CompareTag("wall"));
-
-            if (birdSprite != null)
-            {
-                // ★ここを確実に修正
-                if (hasDestination)
-                {
-                    // 運び先がある ➔ 正常（白）
-                    birdSprite.color = Color.white;
-                }
-                else
-                {
-                    // 運び先がない、または壁で行き止まり ➔ 警告（赤）
-                    birdSprite.color = new Color(1f, 0.3f, 0.3f, 0.8f);
-                }
-            }
+            UpdateVisualColor();
         }
         else if (birdSprite != null)
         {
-            // プレイモード（実行中）は常に元の色に戻す
             birdSprite.color = Color.white;
         }
     }
+
+    // エディットモード中の色を更新する
+    void UpdateVisualColor()
+    {
+        if (birdSprite == null) return;
+
+        // ★右方向と左方向の両方をチェック
+        bool canCarryRight = CheckDirection(Vector2.right);
+        bool canCarryLeft = CheckDirection(Vector2.left);
+
+        // どちらか一方向でも成功していれば白、両方ダメなら赤
+        bool canCarry = canCarryRight || canCarryLeft;
+
+        birdSprite.color = canCarry ? Color.white : new Color(1f, 0.3f, 0.3f, 0.8f);
+    }
+
+    // 指定した方向へのBoxCast判定をまとめた関数
+    bool CheckDirection(Vector2 rayDir)
+    {
+        float estimatedPlayerFootY = transform.position.y + grabOffsetY;
+        Vector3 boxStart = new Vector3(transform.position.x, estimatedPlayerFootY + (boxSize.y / 2f), transform.position.z);
+
+        // BoxCastAllで自分自身を無視して取得
+        RaycastHit2D[] hits = Physics2D.BoxCastAll(boxStart, boxSize, 0f, rayDir, maxSearchDistance, landableLayer | blockingLayer);
+
+        float hitDist = maxSearchDistance;
+        bool success = false;
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider.gameObject == gameObject || hit.transform.IsChildOf(transform)) continue;
+
+            hitDist = hit.distance;
+            // 最初に当たったのが「着地可能レイヤー」なら成功
+            if (((1 << hit.collider.gameObject.layer) & landableLayer) != 0)
+            {
+                success = true;
+            }
+            // 壁(blockingLayer)に当たった、または地面だった場合、この方向の探索は終了
+            break;
+        }
+
+        // デバッグ用の箱を表示（成功なら緑、失敗なら赤）
+        DrawBoxCastDebug(boxStart, boxSize, rayDir, hitDist, success ? Color.green : Color.red);
+
+        return success;
+    }
+
+    // --- 2. 実際の動作ロジック (Raycast を使用) ---
 
     bool FindNextDestination(Player_walk pWalk)
     {
         int dir = pWalk.direction;
         Vector2 rayDir = dir > 0 ? Vector2.right : Vector2.left;
-        float rayOffset = 1.5f;
+        float rayOffset = 1.2f;
         Vector3 rayStart = new Vector3(transform.position.x + (rayDir.x * rayOffset), pWalk.transform.position.y, transform.position.z);
 
-        // レイキャストを実行
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, rayDir, maxSearchDistance, obstacleLayer);
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, rayDir, maxSearchDistance, landableLayer | blockingLayer);
 
         if (hit.collider != null)
         {
-            // ★修正ポイント1：当たったものが「Wall」タグだった場合
-            // レイキャストは最初に見つけたものを返すため、Wallが手前にあればこれより奥は見ません
-            if (hit.collider.CompareTag("wall"))
-            {
-                Debug.Log("[BirdCarrier] 壁に遮られたため検知を中止しました");
-                return false;
-            }
+            if (((1 << hit.collider.gameObject.layer) & blockingLayer) != 0) return false;
 
-            // 壁でなければ目的地を計算（地面とみなす）
-            float targetX = hit.point.x + (dir * 0.8f);
-            float targetY = pWalk.transform.position.y + landYOffset;
-            targetPos = new Vector3(targetX, targetY, transform.position.z);
-            return true;
+            if (((1 << hit.collider.gameObject.layer) & landableLayer) != 0)
+            {
+                float targetX = hit.point.x + (dir * 0.8f);
+                float targetY = pWalk.transform.position.y + landYOffset;
+                targetPos = new Vector3(targetX, targetY, transform.position.z);
+                return true;
+            }
         }
         return false;
     }
+
+    // --- 以下、既存の挙動 ---
 
     private void OnTriggerEnter2D(Collider2D trigger)
     {
@@ -111,41 +137,23 @@ public class BirdCarrier : MonoBehaviour
             Player_walk p = trigger.gameObject.GetComponent<Player_walk>();
             if (p != null)
             {
-                bool found = FindNextDestination(p);
-                if (found)
-                {
-                    StartCoroutine(CarrySequence(p));
-                }
-                else
-                {
-                    // ★修正ポイント2：何も検知できなかった場合
-                    // 鳥の当たり判定（トリガー）を無効化して、プレイヤーを素通りさせます
-                    Debug.Log("[BirdCarrier] 運び先がないため当たり判定を無効化します");
-                    GetComponent<Collider2D>().enabled = false;
-                }
+                if (FindNextDestination(p)) StartCoroutine(CarrySequence(p));
+                else GetComponent<Collider2D>().enabled = false;
             }
         }
     }
-
-    // --- CarrySequence, SetBirdFacing は変更なし ---
 
     IEnumerator CarrySequence(Player_walk pWalk)
     {
         isMoving = true;
         Rigidbody2D rb = pWalk.GetComponent<Rigidbody2D>();
-        Collider2D playerCol = pWalk.GetComponent<Collider2D>(); // プレイヤーのコライダーを取得
-
         if (rb != null) rb.linearVelocity = Vector2.zero;
-        pWalk.StateChange(0); // 一旦停止
-
+        pWalk.StateChange(0);
         int moveDir = pWalk.direction;
         SetBirdFacing(moveDir);
-
         yield return new WaitForSeconds(waitTime);
-
         if (audioSource != null && grabSE != null) audioSource.PlayOneShot(grabSE);
 
-        // --- 離陸フェーズ ---
         Vector3 takeoffStartBird = transform.position;
         Vector3 takeoffEndBird = transform.position + new Vector3(0, heightOffset, 0);
         float takeoffDuration = 0.5f;
@@ -153,7 +161,6 @@ public class BirdCarrier : MonoBehaviour
         Vector3 startPlayerPos = pWalk.transform.position;
 
         if (animator != null) animator.SetBool(flyBoolParam, true);
-
         while (takeoffElapsed < takeoffDuration)
         {
             takeoffElapsed += Time.deltaTime;
@@ -164,7 +171,6 @@ public class BirdCarrier : MonoBehaviour
         }
 
         yield return new WaitForSeconds(0.2f);
-
         if (audioSource != null && flyLoopSE != null)
         {
             audioSource.clip = flyLoopSE;
@@ -172,14 +178,11 @@ public class BirdCarrier : MonoBehaviour
             audioSource.Play();
         }
 
-        // --- 水平飛行フェーズ ---
         Vector3 birdStartPos = transform.position;
         Vector3 birdEndPos = targetPos + new Vector3(0, heightOffset - grabOffsetY, 0);
         float distance = Vector3.Distance(birdStartPos, birdEndPos);
         float duration = distance / speed;
         float elapsed = 0f;
-
-        // 飛行中はオート移動状態（当たり判定OFF/物理OFF）
         pWalk.StateChange(4);
 
         while (elapsed < duration)
@@ -191,54 +194,32 @@ public class BirdCarrier : MonoBehaviour
             yield return null;
         }
 
-        // --- 水平飛行フェーズ終了後 ---
         if (audioSource != null) audioSource.Stop();
-
-        // --- 着陸（降下）フェーズ ---
         Vector3 landStartBird = transform.position;
-        Vector3 landEndBird = targetPos; // 鳥の最終目的地
-        float landDuration = 0.6f;       // 降りる時間
+        Vector3 landEndBird = targetPos;
+        float landDuration = 0.6f;
         float landElapsed = 0f;
-        bool isReleased = false;         // 離したかどうかのフラグ
+        bool isReleased = false;
 
         while (landElapsed < landDuration)
         {
             landElapsed += Time.deltaTime;
             float t = landElapsed / landDuration;
             float easedT = Mathf.SmoothStep(0, 1, t);
-
-            // 鳥を降下させる
             transform.position = Vector3.Lerp(landStartBird, landEndBird, easedT);
 
-            // ★【ここがポイント！】
-            // 降下し始めてから 30% くらい進んだら、プレイヤーを離す
             if (!isReleased && t > 0.3f)
             {
                 isReleased = true;
-
-                // プレイヤーの状態を「落下(Fall)」に切り替える
-                // これにより当たり判定が戻り、重力がかかるようになります
                 pWalk.StateChange(3);
-
-                // 物理演算を動かすために Rigidbody を Dynamic に戻す
                 Rigidbody2D pRb = pWalk.GetComponent<Rigidbody2D>();
                 if (pRb != null) pRb.bodyType = RigidbodyType2D.Dynamic;
-
-                Debug.Log("[BirdCarrier] プレイヤーを空中で離しました");
             }
-
-            // まだ離していない間だけ、プレイヤーを鳥の位置に固定する
-            if (!isReleased)
-            {
-                pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
-            }
-
+            if (!isReleased) pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
             yield return null;
         }
 
         if (animator != null) animator.SetBool(flyBoolParam, false);
-
-        // 鳥は着地完了。プレイヤーはすでに物理演算で落ちているはず
         yield return new WaitForSeconds(waitTime);
         SetBirdFacing(-moveDir);
         isMoving = false;
@@ -258,11 +239,23 @@ public class BirdCarrier : MonoBehaviour
     {
         StopAllCoroutines();
         isMoving = false;
-
-        // ★修正ポイント3：リセット時に当たり判定を復活させる
         GetComponent<Collider2D>().enabled = true;
-
         if (audioSource != null) audioSource.Stop();
         if (animator != null) animator.SetBool(flyBoolParam, false);
+    }
+
+    void DrawBoxCastDebug(Vector3 origin, Vector2 size, Vector2 direction, float distance, Color color)
+    {
+        Vector3 pos = origin + (Vector3)direction * distance;
+        Vector3 halfSize = size / 2f;
+        Debug.DrawLine(origin + new Vector3(-halfSize.x, halfSize.y), origin + new Vector3(halfSize.x, halfSize.y), color);
+        Debug.DrawLine(origin + new Vector3(halfSize.x, halfSize.y), origin + new Vector3(halfSize.x, -halfSize.y), color);
+        Debug.DrawLine(origin + new Vector3(halfSize.x, -halfSize.y), origin + new Vector3(-halfSize.x, -halfSize.y), color);
+        Debug.DrawLine(origin + new Vector3(-halfSize.x, -halfSize.y), origin + new Vector3(-halfSize.x, halfSize.y), color);
+        Debug.DrawLine(pos + new Vector3(-halfSize.x, halfSize.y), pos + new Vector3(halfSize.x, halfSize.y), color);
+        Debug.DrawLine(pos + new Vector3(halfSize.x, halfSize.y), pos + new Vector3(halfSize.x, -halfSize.y), color);
+        Debug.DrawLine(pos + new Vector3(halfSize.x, -halfSize.y), pos + new Vector3(-halfSize.x, -halfSize.y), color);
+        Debug.DrawLine(pos + new Vector3(-halfSize.x, -halfSize.y), pos + new Vector3(-halfSize.x, halfSize.y), color);
+        Debug.DrawLine(origin, pos, color);
     }
 }

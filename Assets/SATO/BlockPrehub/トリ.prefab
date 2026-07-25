@@ -109,13 +109,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BirdCarrier
   speed: 4
   waitTime: 0.5
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 264
   maxSearchDistance: 50
   heightOffset: 0.25
   grabOffsetY: -1.7
   landYOffset: 0.5
+  landableLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  blockingLayer:
+    serializedVersion: 2
+    m_Bits: 256
   birdSprite: {fileID: 0}
   animator: {fileID: 3125531859124568823}
   flyBoolParam: isFlying
