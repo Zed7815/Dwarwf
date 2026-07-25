@@ -1,108 +1,139 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 public class TutorialManager : MonoBehaviour
 {
-    [Header("QÆİ’è")]
+    [Header("å‚ç…§è¨­å®š")]
     public GameManager gameManager;
-    public RectTransform startPointA; // A: UI‚ÌƒAƒCƒRƒ“‚È‚Ç
-    public Transform targetFrameB;   // B: ƒXƒe[ƒWã‚Ì˜g
-    public GameObject startButton;
+    public RectTransform startPointA;
+    public RectTransform placementTargetUI;
+    public RectTransform startButtonUI;
 
-    [Header("ƒKƒCƒhƒIƒuƒWƒFƒNƒg (UI/Canvas“à‚ğ„§)")]
-    public RectTransform placementHand; // “®‚­w‚ÌƒAƒCƒRƒ“
-    public GameObject scrollIcon;      // ƒ}ƒEƒXƒzƒC[ƒ‹à–¾
-    public GameObject startArrow;      // ƒXƒ^[ƒgƒ{ƒ^ƒ“—p–îˆó
+    [Header("ã‚¬ã‚¤ãƒ‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ")]
+    public RectTransform placementHand;
+    public GameObject scrollIcon;
+    public GameObject startArrowWorld;
 
-    [Header("ƒAƒjƒ[ƒVƒ‡ƒ“‰‰oİ’è")]
+    [Header("æ¼”å‡ºè¨­å®š")]
     public float moveSpeed = 2.0f;
     public float startDelay = 0.5f;
     public float endDelay = 0.8f;
+    public Vector3 startArrowOffset; // ã‚¤ãƒ³ã‚¹ãƒšã‚¯ã‚¿ãƒ¼ã§ (0, 0.5, 0) ãªã©èª¿æ•´
 
     private bool isPlacementDone = false;
     private Camera mainCam;
+    private Transform startArrowTransform;
 
     void Start()
     {
         mainCam = Camera.main;
 
-        // ‰Šú•\¦İ’è
         if (placementHand) placementHand.gameObject.SetActive(true);
         if (scrollIcon) scrollIcon.SetActive(true);
-        if (startArrow) startArrow.SetActive(false);
 
-        // ƒXƒNƒ[ƒ‹à–¾‚Í5•bŒã‚ÉÁ‚·
+        if (startArrowWorld)
+        {
+            startArrowWorld.SetActive(false);
+            startArrowTransform = startArrowWorld.transform;
+
+            // â˜…è£æŠ€ï¼šå¯èƒ½ã§ã‚ã‚Œã°æŒ‡ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ã‚«ãƒ¡ãƒ©ã®å­ä¾›ã«å¼·åˆ¶è¨­å®šã™ã‚‹
+            // ã“ã‚Œã«ã‚ˆã‚Šã€ã‚«ãƒ¡ãƒ©ãŒå‹•ã„ãŸæ™‚ã®ã‚¬ã‚¿ã¤ãã‚’æ ¹æœ¬ã‹ã‚‰é˜²ãã¾ã™
+            // startArrowTransform.SetParent(mainCam.transform); 
+        }
+
         StartCoroutine(HideScrollIconAfterDelay(5f));
-
-        // İ’uƒAƒjƒ[ƒVƒ‡ƒ“ŠJn
         StartCoroutine(PlacementAnimationRoutine());
     }
 
-    void Update()
+    // ã‚«ãƒ¡ãƒ©ã®ç§»å‹•(Update)ãŒå®Œå…¨ã«çµ‚ã‚ã£ãŸç›´å¾Œã® LateUpdate ã§å®Ÿè¡Œ
+    void LateUpdate()
     {
         if (gameManager == null || gameManager.blockManager == null) return;
 
-        // yƒXƒeƒbƒv1Fİ’uƒKƒCƒh‚Ì•\¦”»’èz
-        if (!isPlacementDone)
+        int placedCount = GetPlacedCount();
+
+        // 1. è¨­ç½®ã‚¬ã‚¤ãƒ‰ã®æ¶ˆå»åˆ¤å®š
+        if (!isPlacementDone && placedCount >= 1)
         {
-            // w’è‚µ‚½˜g(B)‚ÉƒuƒƒbƒN‚ª’u‚©‚ê‚½‚©ƒ`ƒFƒbƒN
-            if (IsBlockInTargetFrame())
-            {
-                isPlacementDone = true;
-                if (placementHand) placementHand.gameObject.SetActive(false);
-            }
+            isPlacementDone = true;
+            if (placementHand) placementHand.gameObject.SetActive(false);
         }
 
-        // yƒXƒeƒbƒv2FƒXƒ^[ƒgƒ{ƒ^ƒ“‚Ö‚Ì—U“±”»’èz
+        // 2. ã‚¹ã‚¿ãƒ¼ãƒˆã‚¬ã‚¤ãƒ‰ã®è¡¨ç¤ºã¨ã€Viewportç²¾å¯†åŒæœŸã€‘
         if (gameManager.currentState == GameManager.GameState.Edit)
         {
-            // ‚·‚×‚Ä’u‚«I‚í‚Á‚½‚ç–îˆó‚ğo‚·
-            bool allPlaced = gameManager.blockManager.IsAllBlocksPlaced();
-            if (startArrow) startArrow.SetActive(allPlaced);
+            if (placedCount >= 1 && startArrowWorld != null)
+            {
+                startArrowWorld.SetActive(true);
+                SyncWorldObjectToUIPrecise(startArrowTransform, startButtonUI);
+            }
+            else if (startArrowWorld != null)
+            {
+                startArrowWorld.SetActive(false);
+            }
         }
         else
         {
-            // ƒvƒŒƒC’†iÀsƒ‚[ƒhj‚ÍƒKƒCƒh‚ğ‚·‚×‚ÄÁ‚·
             HideAllGuides();
         }
     }
 
-    // wƒAƒCƒRƒ“‚ª AiUIj‚©‚ç Bi˜gj‚ÖˆÚ“®‚·‚éƒ‹[ƒv
+    // æœ€ã‚‚ã‚ºãƒ¬ã«ãã„ç²¾å¯†åŒæœŸãƒ¡ã‚½ãƒƒãƒ‰
+    void SyncWorldObjectToUIPrecise(Transform worldObj, RectTransform uiTarget)
+    {
+        if (worldObj == null || uiTarget == null || mainCam == null) return;
+
+        // 1. UIãƒœã‚¿ãƒ³ã®ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ä¸Šã®ä½ç½®ã‚’ Viewportï¼ˆç”»é¢ã®å·¦ä¸‹0,0ã€œå³ä¸Š1,1ã®æ¯”ç‡ï¼‰ã«å¤‰æ›
+        // Canvasã®RenderModeã‚’å•ã‚ãšã€ç¾åœ¨ã®ç”»é¢ä¸Šã®ä½ç½®ã‚’ 0.0ã€œ1.0 ã§å–å¾—ã—ã¾ã™
+        Vector2 screenPoint = uiTarget.position;
+        Vector3 viewportPoint = mainCam.ScreenToViewportPoint(screenPoint);
+
+        // 2. å¥¥è¡Œã(Z)ã‚’ã‚«ãƒ¡ãƒ©ã‹ã‚‰è¦‹ãŸã‚²ãƒ¼ãƒ å¹³é¢ï¼ˆé€šå¸¸ã¯ã‚«ãƒ¡ãƒ©ã®åå¯¾å´ï¼‰ã«è¨­å®š
+        viewportPoint.z = Mathf.Abs(mainCam.transform.position.z);
+
+        // 3. Viewportåº§æ¨™ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã«å†å¤‰æ›
+        Vector3 worldPoint = mainCam.ViewportToWorldPoint(viewportPoint);
+
+        // 4. åº§æ¨™ã‚’é©ç”¨
+        worldObj.position = worldPoint + startArrowOffset;
+    }
+
+    // --- ä»¥ä¸‹ã€æ—¢å­˜ã®ã‚³ãƒ«ãƒ¼ãƒãƒ³ç­‰ã¯ãã®ã¾ã¾ ---
+
     IEnumerator PlacementAnimationRoutine()
     {
         while (!isPlacementDone)
         {
-            if (startPointA == null || targetFrameB == null || placementHand == null) yield break;
-
-            // 1. A’n“_‚ÉˆÚ“®‚µ‚Ä­‚µ‘Ò‹@
+            if (startPointA == null || placementTargetUI == null || placementHand == null) yield break;
             placementHand.position = startPointA.position;
             yield return new WaitForSeconds(startDelay);
-
-            // 2. A‚©‚çB‚ÖƒX[ƒb‚ÆˆÚ“®
             float t = 0;
-            Vector3 startPos = startPointA.position;
-
             while (t < 1.0f)
             {
                 if (isPlacementDone) yield break;
-
-                // ƒXƒe[ƒWã‚Ì˜g(B)‚ÌŒ»İ’n‚ğA‰æ–Êã‚ÌÀ•W‚ÉƒŠƒAƒ‹ƒ^ƒCƒ€•ÏŠ·
-                // ‚±‚ê‚É‚æ‚èAƒJƒƒ‰‚ª“®‚¢‚Ä‚à³Šm‚É˜g‚ğw‚µ¦‚µ‚Ü‚·
-                Vector3 endPos = mainCam.WorldToScreenPoint(targetFrameB.position);
-
                 t += Time.deltaTime * moveSpeed;
-                placementHand.position = Vector3.Lerp(startPos, endPos, t);
+                placementHand.position = Vector3.Lerp(startPointA.position, placementTargetUI.position, t);
                 yield return null;
             }
-
-            // 3. B’n“_‚Å­‚µ‘Ò‹@
             yield return new WaitForSeconds(endDelay);
         }
     }
 
+    int GetPlacedCount()
+    {
+        GameObject[] blocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
+        int count = 0;
+        foreach (var b in blocks)
+        {
+            Collider2D col = b.GetComponent<Collider2D>();
+            if (col != null && col.enabled) count++;
+        }
+        return count;
+    }
+
     void HideAllGuides()
     {
-        if (startArrow) startArrow.SetActive(false);
+        if (startArrowWorld) startArrowWorld.SetActive(false);
         if (placementHand) placementHand.gameObject.SetActive(false);
         if (scrollIcon) scrollIcon.SetActive(false);
     }
@@ -113,15 +144,6 @@ public class TutorialManager : MonoBehaviour
         if (scrollIcon) scrollIcon.SetActive(false);
     }
 
-    // •¨—”»’è‚Å˜g(B)‚Ì’†‚ÉuPlacedBlockvƒ^ƒO‚ÌƒIƒuƒWƒFƒNƒg‚ª‚ ‚é‚©Šm”F
-    bool IsBlockInTargetFrame()
-    {
-        if (targetFrameB == null) return false;
-        Collider2D hit = Physics2D.OverlapPoint(targetFrameB.position);
-        return hit != null && hit.CompareTag("PlacedBlock");
-    }
-
-    // ƒŠƒZƒbƒgƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚Æ‚«i‚â‚è’¼‚µj
     void OnGimmickReset()
     {
         StopAllCoroutines();
