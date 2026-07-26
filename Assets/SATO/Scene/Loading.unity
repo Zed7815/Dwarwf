@@ -523,7 +523,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0231c6d7f62e6ac489273d51528aa58e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadingScreenManager
-  minLoadingTime: 6
+  minLoadingTime: 8
   fadeInScript: {fileID: 81672668}
   fadeOutScript: {fileID: 1945876391}
   progressBar: {fileID: 166708255}
