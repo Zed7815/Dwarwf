@@ -28,7 +28,6 @@ public class GoalChainLock : MonoBehaviour
         }
         else
         {
-            // ★【ここが解決策】
             // 鍵がない（またはリセットされた）なら、強制的に鎖を出して判定を消す（クリア不可）
             if (chainGraphics != null && !chainGraphics.activeSelf)
             {

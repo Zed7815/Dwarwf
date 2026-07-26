@@ -48,7 +48,7 @@ public class StageSelectManager : MonoBehaviour
             PlayerPrefs.DeleteAll();
             PlayerPrefs.Save();
             sessionResetDone = true;
-            Debug.Log("<color=red>アプリ起動：セーブデータをすべて初期化しました</color>");
+            Debug.Log("初回起動：リセット実行");
         }
 
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
@@ -129,10 +129,18 @@ public class StageSelectManager : MonoBehaviour
     void UnlockAllStages()
     {
         PlayerPrefs.SetInt("StageCleared", stageSettings.Count + 1);
-        for (int i = 1; i <= 30; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
+        for (int i = 1; i <= 20; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
+
+        // ★追加：エンディング入り口も強制的に解放する
+        PlayerPrefs.SetInt("GameFullCleared", 1);
+
         PlayerPrefs.Save();
         UpdateStarCountUI();
         RefreshStageButtons();
+
+        // ★追加：シーン内の入口スクリプトに「今すぐ表示して」と命令を送る
+        FinalEntrance entrance = FindObjectOfType<FinalEntrance>();
+        if (entrance != null) entrance.RefreshEntrance();
     }
 
     void AddHoverEvent(Button btn)

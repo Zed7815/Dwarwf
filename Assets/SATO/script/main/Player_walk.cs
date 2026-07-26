@@ -246,16 +246,32 @@ public class Player_walk : MonoBehaviour
         jumpRequest = true;
         direction = 1;
 
-        // ここでは速度のクリアだけ行う（simulatedの切り替えはController側に任せる）
+        // Rigidbodyの状態を強制的に通常（Dynamic）に戻す
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0;
         }
 
         if (sr != null) { sr.enabled = true; sr.flipX = false; }
+
+        //コライダーの状態を強制的に「すり抜け不可」に戻す
         Collider2D myCol = GetComponent<Collider2D>();
-        if (myCol != null) myCol.enabled = true;
+        if (myCol != null)
+        {
+            myCol.enabled = true;
+            myCol.isTrigger = false; // これを追加！
+        }
+
+        // アニメーションフラグも掃除
+        if (anim != null)
+        {
+            anim.SetBool("isCharging", false);
+            anim.SetBool("isLanding", false);
+            anim.SetBool("isWalk", false);
+            anim.SetBool("isFalling", false);
+        }
     }
 
     public IEnumerator Jump(Transform jumpBlock)

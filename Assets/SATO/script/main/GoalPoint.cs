@@ -36,8 +36,6 @@ public class GoalPoint : MonoBehaviour
 
     IEnumerator GoalSequence()
     {
-        Time.timeScale = 1.0f;
-
         // 1. SE再生
         if (audioSource != null && goalSE != null)
         {
@@ -55,23 +53,29 @@ public class GoalPoint : MonoBehaviour
         {
             PlayerPrefs.SetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 1);
         }
+
+        // データを確実に書き込む
         PlayerPrefs.Save();
 
-        // 3. 黒い板が降りてくる演出を実行
+        // 3. 暗転演出（黒い板が降りてくる）
         if (nextSceneScript != null)
         {
             yield return StartCoroutine(nextSceneScript.endKuro());
         }
 
+        // 演出の余韻
         yield return new WaitForSecondsRealtime(0.5f);
 
-        // 4. シーン切り替え
+        // 4. シーン切り替え判定
         if (isFinalStage)
         {
+            // ★最終ステージなら直接エンディングシーンへ
+            Debug.Log("最終クリア！エンディングへ移行します");
             SceneManager.LoadScene(endingSceneName);
         }
         else
         {
+            // それ以外は通常通りステージセレクトへ
             SceneManager.LoadScene("StageSelect");
         }
     }
