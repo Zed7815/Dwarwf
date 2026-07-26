@@ -16,6 +16,7 @@ public class StageSelectManager : MonoBehaviour
         public string stageName;           // 識別用（例：Stage1）
         public Button button;              // ステージボタン
         public string sceneName;           // 遷移先シーン名
+        public GimmickType stageGimmick;　 // このステージで紹介したいギミックを選択
         public GameObject animalVisual;    // クリア時に出る動物
         public GameObject missingStarVisual; // 【追加】クリア済みかつ星未獲得時に出るビックリマーク等
     }
@@ -107,7 +108,7 @@ public class StageSelectManager : MonoBehaviour
                         if (guide != null) guide.HideGuide();
                     }
 
-                    if (!string.IsNullOrEmpty(setting.sceneName)) LoadStage(setting.sceneName);
+                    if (!string.IsNullOrEmpty(setting.sceneName)) LoadStage(setting.sceneName, setting.stageGimmick);
                 });
             }
         }
@@ -152,14 +153,18 @@ public class StageSelectManager : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
-    public void LoadStage(string sceneName) { StartCoroutine(LoadSequence(sceneName)); }
+    public void LoadStage(string sceneName, GimmickType gimmick)
+    {
+        StartCoroutine(LoadSequence(sceneName, gimmick));
+    }
 
-    IEnumerator LoadSequence(string sceneName)
+    IEnumerator LoadSequence(string sceneName, GimmickType gimmick)
     {
         if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
         if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
         if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
         yield return new WaitForSecondsRealtime(0.5f);
-        SceneManager.LoadScene(sceneName);
+
+        SceneLoader.Load(sceneName, gimmick);
     }
 }

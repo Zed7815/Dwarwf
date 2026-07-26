@@ -76,7 +76,7 @@ public class GoalPoint : MonoBehaviour
         else
         {
             // それ以外は通常通りステージセレクトへ
-            SceneManager.LoadScene("StageSelect");
+            SceneLoader.Load("StageSelect", GimmickType.Generic);
         }
     }
 }
