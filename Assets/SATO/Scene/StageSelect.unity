@@ -1872,6 +1872,7 @@ MonoBehaviour:
   requiredStars: 5
   thisStageNumber: 6
   finalStageSceneName: 6
+  finalStageGimmick: 4
   needStarText: {fileID: 1418096272}
   fadeOutScript: {fileID: 1265498437}
   lockGraphic: {fileID: 707594971}
@@ -2834,12 +2835,6 @@ MonoBehaviour:
     stageGimmick: 2
     animalVisual: {fileID: 102229929}
     missingStarVisual: {fileID: 593333355}
-  - stageName: 6
-    button: {fileID: 583431920}
-    sceneName: 6
-    stageGimmick: 4
-    animalVisual: {fileID: 0}
-    missingStarVisual: {fileID: 0}
   fadeInScript: {fileID: 1743203983}
   fadeOutScript: {fileID: 893884122}
   audioSource: {fileID: 781650900}

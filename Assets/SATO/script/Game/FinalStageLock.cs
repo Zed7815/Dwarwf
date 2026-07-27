@@ -11,6 +11,7 @@ public class FinalStageLock : MonoBehaviour
     public int requiredStars = 5;
     public int thisStageNumber = 6;    // 最終ステージの番号
     public string finalStageSceneName;
+    public GimmickType finalStageGimmick;
     public TextMeshProUGUI needStarText;
 
     [Header("演出設定")]
@@ -120,6 +121,7 @@ public class FinalStageLock : MonoBehaviour
         }
 
         yield return new WaitForSecondsRealtime(0.5f);
-        SceneManager.LoadScene(finalStageSceneName);
+
+        SceneLoader.Load(finalStageSceneName, finalStageGimmick);
     }
 }
