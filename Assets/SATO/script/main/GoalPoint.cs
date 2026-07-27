@@ -13,6 +13,10 @@ public class GoalPoint : MonoBehaviour
     public bool isFinalStage = false;
     public string endingSceneName = "Ending";
 
+    [Header("クリア後のロード設定")]
+    [Tooltip("クリアしてセレクト画面に戻る時に表示する説明の種類")]
+    public GimmickType returnGimmickType = GimmickType.Generic;
+
     [Header("SE設定")]
     public AudioSource audioSource; // インスペクターで割り当てるか自動取得
     public AudioClip goalSE;       // ゴールした時の音
@@ -76,7 +80,7 @@ public class GoalPoint : MonoBehaviour
         else
         {
             // それ以外は通常通りステージセレクトへ
-            SceneLoader.Load("StageSelect", GimmickType.Generic);
+            SceneLoader.Load("StageSelect", returnGimmickType);
         }
     }
 }

@@ -1,8 +1,8 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// š Spring ‚ğ’Ç‰Á
-public enum GimmickType { Generic, Spider, Bird, Lift, Warp, Vanishing, Spring }
+// â˜… Spring ã‚’è¿½åŠ 
+public enum GimmickType { Generic, Spider, Bird, Lift, Warp, Vanishing, Spring, FastForward }
 
 public static class SceneLoader
 {
