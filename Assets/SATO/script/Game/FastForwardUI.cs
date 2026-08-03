@@ -80,27 +80,28 @@ public class FastForwardUI : MonoBehaviour
         }
     }
 
+    // FastForwardUI.cs の修正案
     public void OnButtonClick()
     {
         isFastForwarding = !isFastForwarding;
 
+        // 現在の「シーンの基本速度」を取得（SceneBaseSpeedがあればそれ、なければ1.0）
+        float baseSpd = 1.0f;
+        var speedComp = FindObjectOfType<SceneBaseSpeed>();
+        if (speedComp != null) baseSpd = speedComp.baseSpeedMultiplier;
+
+        // 基本速度に対して 3倍 にする
         if (isFastForwarding)
         {
-            Time.timeScale = fastForwardSpeed;
-            // Animatorの Trigger「FastForwarding」を起動
-            if (animator != null) animator.SetTrigger("FastForwarding");
+            Time.timeScale = baseSpd * 3.0f;
         }
         else
         {
-            Time.timeScale = 1.0f;
-            // Animatorの Trigger「Normal」を起動
-            if (animator != null) animator.SetTrigger("Normal");
+            Time.timeScale = baseSpd;
         }
 
-        if (audioSource != null && clickSE != null)
-        {
-            audioSource.PlayOneShot(clickSE);
-        }
+        // 物理も同期
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
     }
 
     public void ResetToNormal()

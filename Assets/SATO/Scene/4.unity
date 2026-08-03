@@ -2573,6 +2573,7 @@ GameObject:
   - component: {fileID: 1416668719}
   - component: {fileID: 1416668721}
   - component: {fileID: 1416668722}
+  - component: {fileID: 1416668723}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2737,6 +2738,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1416668723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1416668718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 814184ef5b3988b40aba147b01a1184a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneBaseSpeed
+  baseSpeedMultiplier: 1.25
 --- !u!224 &1478788311 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3326770527911655092, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
