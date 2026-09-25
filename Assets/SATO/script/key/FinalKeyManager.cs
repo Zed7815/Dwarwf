@@ -16,8 +16,8 @@ public class FinalKeyManager : MonoBehaviour
     public float mergeSpeed = 500f;
     public AudioClip mergeSE;
 
-    private bool hasKeyA = false;
-    private bool hasKeyB = false;
+    public bool hasKeyA { get; private set; } = false;
+    public bool hasKeyB { get; private set; } = false;
     public bool isUnlocked { get; private set; } = false; // これを監視する
 
     private Vector2 initialPosA;
@@ -75,6 +75,23 @@ public class FinalKeyManager : MonoBehaviour
             img.color = c;
         }
     }
+
+    public void RestoreSnapshotState(bool keyA, bool keyB, bool unlocked)
+    {
+        StopAllCoroutines();
+        hasKeyA = keyA;
+        hasKeyB = keyB;
+        isUnlocked = unlocked;
+
+        // UIの復元
+        SetAlpha(uiKeyA, hasKeyA ? 1f : 0f);
+        SetAlpha(uiKeyB, hasKeyB ? 1f : 0f);
+        SetAlpha(uiCombinedKey, isUnlocked ? 1f : 0f);
+
+        if (uiKeyA) uiKeyA.anchoredPosition = initialPosA;
+        if (uiKeyB) uiKeyB.anchoredPosition = initialPosB;
+    }
+
 
     // ★リセットボタンで呼ばれる
     public void OnGimmickReset()

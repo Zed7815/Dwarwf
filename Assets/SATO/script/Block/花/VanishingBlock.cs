@@ -107,6 +107,22 @@ public class VanishingBlock : MonoBehaviour
     }
 
     // ★リセット機能を追加
+
+    public void SetVanishedState(bool vanished)
+    {
+        StopAllCoroutines();
+        isTouched = vanished;
+
+        if (spriteRenderer != null) spriteRenderer.enabled = !vanished;
+        if (blockCollider != null) blockCollider.enabled = !vanished;
+
+        if (!vanished && animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+    }
+
     void OnGimmickReset()
     {
         // 1. 進行中の消滅処理を止める
