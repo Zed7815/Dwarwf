@@ -19,7 +19,7 @@ public class menuAnimation : MonoBehaviour
         transform.localPosition = startPosition;
     }
 
-    public void OnMouseDown()
+    public void menu()
     {
         StartCoroutine(Drop());
     }
