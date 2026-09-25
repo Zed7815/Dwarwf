@@ -36,19 +36,34 @@ public class PlayerController : MonoBehaviour
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.simulated = false; // 一旦物理を止める
             rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0;
+            rb.simulated = false;
         }
 
-        // 先に Player_walk 側の ResetPlayerStatus を呼んで isTrigger = false にする
+        // 復活位置と向きを決定
+        Vector3 targetPos = startPosition;
+        int targetDir = 1;
+
+        if (CheckpointManager.instance != null)
+        {
+            targetPos = CheckpointManager.instance.GetRespawnPosition();
+            targetDir = CheckpointManager.instance.GetRespawnDirection();
+        }
+
+        // プレイヤーのステータスリセット（向きを渡す）
         if (playerWalk != null)
         {
-            playerWalk.ResetPlayerStatus();
+            playerWalk.ResetPlayerStatus(targetDir);
         }
 
-        // その後に位置を戻す
-        transform.position = startPosition;
-        transform.localScale = startScale;
+        // 座標を反映
+        transform.position = targetPos;
+
+        // ★スケール（左右の見た目）を向きに合わせて反転！
+        Vector3 newScale = startScale;
+        newScale.x = Mathf.Abs(startScale.x) * targetDir;
+        transform.localScale = newScale;
 
         Animator anim = GetComponent<Animator>();
         if (anim != null)
@@ -57,9 +72,6 @@ public class PlayerController : MonoBehaviour
             anim.Update(0f);
         }
 
-        if (rb != null)
-        {
-            rb.simulated = true; // 物理再開
-        }
+        if (rb != null) rb.simulated = true;
     }
 }

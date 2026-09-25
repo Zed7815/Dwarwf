@@ -236,7 +236,7 @@ public class Player_walk : MonoBehaviour
     }
 
 
-    public void ResetPlayerStatus()
+    public void ResetPlayerStatus(int targetDirection = 1)
     {
         StopAllCoroutines();
         state = moveState.idol;
@@ -244,9 +244,10 @@ public class Player_walk : MonoBehaviour
         ignoreJumpBlocks = false;
         consecutiveHeadBumps = 0;
         jumpRequest = true;
-        direction = 1;
 
-        // Rigidbodyの状態を強制的に通常（Dynamic）に戻す
+        // ★保存された向きを適用！
+        direction = targetDirection;
+
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -256,15 +257,13 @@ public class Player_walk : MonoBehaviour
 
         if (sr != null) { sr.enabled = true; sr.flipX = false; }
 
-        //コライダーの状態を強制的に「すり抜け不可」に戻す
         Collider2D myCol = GetComponent<Collider2D>();
         if (myCol != null)
         {
             myCol.enabled = true;
-            myCol.isTrigger = false; // これを追加！
+            myCol.isTrigger = false;
         }
 
-        // アニメーションフラグも掃除
         if (anim != null)
         {
             anim.SetBool("isCharging", false);
