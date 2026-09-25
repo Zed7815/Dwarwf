@@ -168,6 +168,11 @@ public class GameManager : MonoBehaviour
         UpdateItemUI();
         foreach (GameObject item in allItems) { if (item != null) item.SetActive(true); }
 
+        if (CheckpointManager.instance != null && CheckpointManager.instance.HasActiveCheckpoint)
+        {
+            CheckpointManager.instance.RestoreSnapshot();
+        }
+
         SetUI();
     }
 
