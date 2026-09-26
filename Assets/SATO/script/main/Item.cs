@@ -97,4 +97,25 @@ public class Item : MonoBehaviour
             sr.color = c;
         }
     }
+    public void OnGimmickReset()
+    {
+        // 浮遊・消滅アニメーションを即座に停止
+        StopAllCoroutines();
+
+        // 状態を新品に戻す
+        isCollected = false;
+        transform.position = originPos; // 元の位置に戻す
+
+        if (col != null) col.enabled = true; // 当たり判定を復活
+
+        // ★最重要：透明になっていた色を完全に不透明（見える状態）に戻す
+        if (sr != null)
+        {
+            Color c = sr.color;
+            c.a = 1f;
+            sr.color = c;
+        }
+
+        gameObject.SetActive(true);
+    }
 }

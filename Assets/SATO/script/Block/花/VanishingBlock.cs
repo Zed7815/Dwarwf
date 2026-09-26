@@ -25,7 +25,7 @@ public class VanishingBlock : MonoBehaviour
     public AudioClip touchSE;
     public AudioClip vanishSE;
 
-    private bool isTouched = false;
+    public bool isTouched = false;
     private SpriteRenderer spriteRenderer;
     private Collider2D blockCollider;
 
@@ -121,6 +121,14 @@ public class VanishingBlock : MonoBehaviour
             animator.Rebind();
             animator.Update(0f);
         }
+    }
+
+    public void ForceVanishedState()
+    {
+        StopAllCoroutines();
+        isTouched = true; // 接触済み
+        if (blockCollider != null) blockCollider.enabled = false;
+        if (spriteRenderer != null) spriteRenderer.enabled = false;
     }
 
     void OnGimmickReset()
