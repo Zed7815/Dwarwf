@@ -3,9 +3,10 @@ using System.Collections;
 
 public class menuAnimation : MonoBehaviour
 {
-    public float startY = 10f;
-    public float targetY = 0f;
-    public float duration = 0.5f;
+    public float startY = 10f;//目標地点
+    public float duration = 0.5f;//何秒で目標地点にいけるかの秒数
+
+    private float targetY = 0f;
 
     private Vector3 targetPosition;
 
@@ -19,11 +20,11 @@ public class menuAnimation : MonoBehaviour
         transform.localPosition = startPosition;
     }
 
-    public void menu_Drop()
+    public void menu_Drop()//上から下にメニューが降りてくるアニメーション
     {
         StartCoroutine(Drop());
     }
-    public void menu_up()
+    public void menu_up()//舌から上にメニューが上がっていくアニメーション
     {
         StartCoroutine(Up());
     }
