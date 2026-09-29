@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -6,14 +6,14 @@ public class InGameMenuController : MonoBehaviour
 {
     public static InGameMenuController instance;
 
-    [Header("UIƒpƒlƒ‹QÆ")]
-    public GameObject menuModalPanel;   // ƒƒjƒ…[‚Ìƒ|ƒbƒvƒAƒbƒveƒIƒuƒWƒFƒNƒg
-    public GameObject guideBookPanel;   // ƒMƒ~ƒbƒN}ŠÓ‚ÌƒTƒuƒpƒlƒ‹i”CˆÓj
+    [Header("UIãƒ‘ãƒãƒ«å‚ç…§")]
+    public GameObject menuModalPanel;   // ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®ãƒãƒƒãƒ—ã‚¢ãƒƒãƒ—è¦ªã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+    public GameObject guideBookPanel;   // ã‚®ãƒŸãƒƒã‚¯å›³é‘‘ã®ã‚µãƒ–ãƒ‘ãƒãƒ«ï¼ˆä»»æ„ï¼‰
 
-    [Header("‰‰oQÆ")]
+    [Header("æ¼”å‡ºå‚ç…§")]
     public nextscene fadeOutScript;
 
-    [Header("SEİ’è")]
+    [Header("SEè¨­å®š")]
     public AudioSource audioSource;
     public AudioClip openSE;
     public AudioClip closeSE;
@@ -34,7 +34,7 @@ public class InGameMenuController : MonoBehaviour
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
     }
 
-    // --- ƒƒjƒ…[‚ÌŠJ•Â ---
+    // --- ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®é–‹é–‰ ---
 
     public void OpenMenu()
     {
@@ -43,7 +43,7 @@ public class InGameMenuController : MonoBehaviour
 
         if (audioSource != null && openSE != null) audioSource.PlayOneShot(openSE);
 
-        // Œ»İ‚ÌƒQ[ƒ€‘¬“x‚ğ‹L‰¯‚µ‚Äˆê’â~
+        // ç¾åœ¨ã®ã‚²ãƒ¼ãƒ é€Ÿåº¦ã‚’è¨˜æ†¶ã—ã¦ä¸€æ™‚åœæ­¢
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
@@ -61,35 +61,35 @@ public class InGameMenuController : MonoBehaviour
         if (menuModalPanel != null) menuModalPanel.SetActive(false);
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
 
-        // ŠÔ‚ğŒ³‚É–ß‚·
+        // æ™‚é–“ã‚’å…ƒã«æˆ»ã™
         Time.timeScale = previousTimeScale;
     }
 
-    // --- ƒ{ƒ^ƒ“1FÅ‰‚©‚ç‚â‚è’¼‚·i‘SƒŠƒZƒbƒgj ---
+    // --- ãƒœã‚¿ãƒ³1ï¼šæœ€åˆã‹ã‚‰ã‚„ã‚Šç›´ã™ï¼ˆå…¨ãƒªã‚»ãƒƒãƒˆï¼‰ ---
 
     public void OnFullResetClicked()
     {
         PlayClickSE();
 
-        // 1. ƒ`ƒFƒbƒNƒ|ƒCƒ“ƒg‚ğŠ®‘S‚ÉÁ‹iŠø‚ğ–¢’Ê‰ßF‚É–ß‚·j
+        // 1. ãƒã‚§ãƒƒã‚¯ãƒã‚¤ãƒ³ãƒˆã‚’å®Œå…¨ã«æ¶ˆå»ï¼ˆæ——ã‚’æœªé€šéè‰²ã«æˆ»ã™ï¼‰
         if (CheckpointManager.instance != null)
         {
             CheckpointManager.instance.ClearCheckpoint();
         }
 
-        // 2. ƒƒjƒ…[‚ğ•Â‚¶‚ÄŠÔ‚ğ–ß‚·
+        // 2. ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’é–‰ã˜ã¦æ™‚é–“ã‚’æˆ»ã™
         CloseMenu();
 
-        // 3. ’Êí‚ÌƒŠƒZƒbƒg‚ğÀsi‚±‚ê‚ÅƒXƒe[ƒW‰ŠúˆÊ’uE‰Šúó‘Ô‚ÅƒŠƒXƒ^[ƒgIj
+        // 3. é€šå¸¸ã®ãƒªã‚»ãƒƒãƒˆã‚’å®Ÿè¡Œï¼ˆã“ã‚Œã§ã‚¹ãƒ†ãƒ¼ã‚¸åˆæœŸä½ç½®ãƒ»åˆæœŸçŠ¶æ…‹ã§ãƒªã‚¹ã‚¿ãƒ¼ãƒˆï¼ï¼‰
         if (GameManager.instance != null)
         {
             GameManager.instance.ResetGame();
         }
 
-        Debug.Log("<color=yellow>yÅ‰‚©‚ç‚â‚è’¼‚·i‘SƒŠƒZƒbƒgÀsjz</color>");
+        Debug.Log("<color=yellow>ã€æœ€åˆã‹ã‚‰ã‚„ã‚Šç›´ã™ï¼ˆå…¨ãƒªã‚»ãƒƒãƒˆå®Ÿè¡Œï¼‰ã€‘</color>");
     }
 
-    // --- ƒ{ƒ^ƒ“2FƒMƒ~ƒbƒN}ŠÓ‚ğŠJ‚­ ---
+    // --- ãƒœã‚¿ãƒ³2ï¼šã‚®ãƒŸãƒƒã‚¯å›³é‘‘ã‚’é–‹ã ---
 
     public void OnOpenGuideClicked()
     {
@@ -105,12 +105,16 @@ public class InGameMenuController : MonoBehaviour
         if (menuModalPanel != null) menuModalPanel.SetActive(true);
     }
 
-    // --- ƒ{ƒ^ƒ“3FƒXƒe[ƒWƒZƒŒƒNƒg‚Ö–ß‚é ---
+    // --- ãƒœã‚¿ãƒ³3ï¼šã‚¹ãƒ†ãƒ¼ã‚¸ã‚»ãƒ¬ã‚¯ãƒˆã¸æˆ»ã‚‹ ---
 
     public void OnReturnToStageSelectClicked()
     {
         PlayClickSE();
-        Time.timeScale = 1f; // ŠÔ‚ğŠmÀ‚É–ß‚·
+
+        if (menuModalPanel != null) menuModalPanel.SetActive(false);
+        if (guideBookPanel != null) guideBookPanel.SetActive(false);
+
+        Time.timeScale = 1f; // æ™‚é–“ã‚’ç¢ºå®Ÿã«æˆ»ã™
         StartCoroutine(ReturnSequence());
     }
 

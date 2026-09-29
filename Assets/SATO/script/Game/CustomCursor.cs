@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
@@ -6,11 +6,11 @@ public class CustomCursor : MonoBehaviour
 {
     public static CustomCursor instance;
 
-    [Header("ƒJ[ƒ\ƒ‹‰æ‘œ")]
+    [Header("ã‚«ãƒ¼ã‚½ãƒ«ç”»åƒ")]
     public Sprite normalSprite;
     public Sprite clickSprite;
 
-    [Header("ƒTƒCƒYEˆÊ’uİ’è")]
+    [Header("ã‚µã‚¤ã‚ºãƒ»ä½ç½®è¨­å®š")]
     public Vector2 cursorScale = Vector2.one;
     public Vector2 offset = Vector2.zero;
 
@@ -20,16 +20,16 @@ public class CustomCursor : MonoBehaviour
 
     void Awake()
     {
-        // --- ƒV[ƒ“‚ğ‚Ü‚½‚¢‚Å‚àÁ‚¦‚È‚¢‚æ‚¤‚É‚·‚éİ’è ---
+        // --- ã‚·ãƒ¼ãƒ³ã‚’ã¾ãŸã„ã§ã‚‚æ¶ˆãˆãªã„ã‚ˆã†ã«ã™ã‚‹è¨­å®š ---
         if (instance == null)
         {
             instance = this;
-            // e‚ÌCanvas‚²‚Æc‚·
+            // è¦ªã®Canvasã”ã¨æ®‹ã™
             DontDestroyOnLoad(transform.root.gameObject);
         }
         else
         {
-            // Šù‚É‘¶İ‚µ‚Ä‚¢‚ê‚ÎV‚µ‚¢•û‚Ííœ
+            // æ—¢ã«å­˜åœ¨ã—ã¦ã„ã‚Œã°æ–°ã—ã„æ–¹ã¯å‰Šé™¤
             Destroy(transform.root.gameObject);
             return;
         }
@@ -37,25 +37,42 @@ public class CustomCursor : MonoBehaviour
         cursorImage = GetComponent<Image>();
         rectTransform = GetComponent<RectTransform>();
 
-        // ƒJ[ƒ\ƒ‹‚Ì”ñ•\¦İ’èiˆê‰ñŒÄ‚×‚ÎŠî–{OKj
+        // ã‚«ãƒ¼ã‚½ãƒ«ã®éè¡¨ç¤ºè¨­å®šï¼ˆä¸€å›å‘¼ã¹ã°åŸºæœ¬OKï¼‰
         Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Confined; // ‰æ–ÊŠO‚É“¦‚°‚È‚¢‚æ‚¤‚É‚·‚éê‡
+        Cursor.lockState = CursorLockMode.Confined; // ç”»é¢å¤–ã«é€ƒã’ãªã„ã‚ˆã†ã«ã™ã‚‹å ´åˆ
 
         if (cursorImage != null) cursorImage.raycastTarget = false;
+
+        // Canvas ã‚’å–å¾—ã—ã€æç”»å„ªå…ˆåº¦ã‚’ã€Œæœ€å¤§å€¤ã€ã«è¨­å®šã™ã‚‹ï¼
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay; // ç”»é¢æœ€å‰é¢ãƒ¢ãƒ¼ãƒ‰
+            canvas.overrideSorting = true; // å„ªå…ˆåº¦ã‚’ä¸Šæ›¸ã
+            canvas.sortingOrder = 32767;    // Unityã®æœ€å¤§å€¤ï¼ˆã“ã‚Œã‚ˆã‚Šæ‰‹å‰ã«ã¯èª°ã‚‚æ¥ã‚‰ã‚Œãªã„ï¼‰
+        }
     }
 
     void Update()
     {
         if (Mouse.current == null) return;
 
-        // 1. ˆÊ’u‚ÌXV
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas != null && canvas.sortingOrder != 32767)
+        {
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 32767;
+        }
+
+
+        // 1. ä½ç½®ã®æ›´æ–°
         Vector2 mousePos = Mouse.current.position.ReadValue();
         rectTransform.position = mousePos + offset;
 
-        // 2. ƒTƒCƒY‚Ì“K—p
+        // 2. ã‚µã‚¤ã‚ºã®é©ç”¨
         rectTransform.localScale = new Vector3(cursorScale.x, cursorScale.y, 1.0f);
 
-        // 3. ‰æ‘œ‚ÌØ‚è‘Ö‚¦
+        // 3. ç”»åƒã®åˆ‡ã‚Šæ›¿ãˆ
         if (Mouse.current.leftButton.isPressed)
         {
             if (clickSprite != null) cursorImage.sprite = clickSprite;
@@ -65,10 +82,10 @@ public class CustomCursor : MonoBehaviour
             if (normalSprite != null) cursorImage.sprite = normalSprite;
         }
 
-        // ”O‰Ÿ‚µFí‚Éƒ}ƒEƒX‚ğ‰B‚µ‘±‚¯‚é
+        // å¿µæŠ¼ã—ï¼šå¸¸ã«ãƒã‚¦ã‚¹ã‚’éš ã—ç¶šã‘ã‚‹
         if (Cursor.visible) Cursor.visible = false;
     }
 
-    // šd—vFOnDisable ‚Å Cursor.visible = true ‚É‚µ‚È‚¢I
-    // ‚±‚¤‚·‚é‚±‚Æ‚ÅAƒV[ƒ“Ø‚è‘Ö‚¦’†‚àƒ}ƒEƒX‚ª•œŠˆ‚µ‚È‚­‚È‚è‚Ü‚·
+    // â˜…é‡è¦ï¼šOnDisable ã§ Cursor.visible = true ã«ã—ãªã„ï¼
+    // ã“ã†ã™ã‚‹ã“ã¨ã§ã€ã‚·ãƒ¼ãƒ³åˆ‡ã‚Šæ›¿ãˆä¸­ã‚‚ãƒã‚¦ã‚¹ãŒå¾©æ´»ã—ãªããªã‚Šã¾ã™
 }
