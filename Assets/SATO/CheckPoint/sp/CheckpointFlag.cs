@@ -5,7 +5,7 @@ public class CheckpointFlag : MonoBehaviour
     [Header("ビジュアル設定")]
     public SpriteRenderer flagRenderer;
     public Color inactiveColor = Color.gray;   // 未通過の色
-    public Color activeColor = new Color(1f, 0.85f, 0.2f); // 通過中（金色など）
+    public Color activeColor = new Color(1f, 0.85f, 0.2f); // 通過中（金色）
 
     [Header("SE設定")]
     public AudioClip activateSE;
@@ -14,7 +14,7 @@ public class CheckpointFlag : MonoBehaviour
     [Header("出現位置の微調整")]
     public Vector3 respawnOffset = Vector3.zero;
 
-    private bool isActive = false;
+    [HideInInspector] public bool isActive = false;
 
     void Start()
     {
@@ -30,12 +30,21 @@ public class CheckpointFlag : MonoBehaviour
         // プレイモード中のみ反応
         if (GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
 
-        if (collision.CompareTag("Player") && !isActive)
+        // ★重要：センサー判定（isTrigger=true）は無視！
+        // プレイヤーの実体（実コライダー）が触れた時だけ受け付ける
+        if (collision.isTrigger) return;
+
+        if (collision.CompareTag("Player"))
         {
             Player_walk pWalk = collision.GetComponent<Player_walk>();
+            if (pWalk == null) pWalk = collision.GetComponentInParent<Player_walk>();
+
             if (pWalk != null && CheckpointManager.instance != null)
             {
-                // マネージャーに旗と「プレイヤーの現在の向き」を渡す
+                // すでにこの旗がアクティブなら無視
+                if (CheckpointManager.instance.currentActiveCheckpoint == this) return;
+
+                // 旗の登録
                 CheckpointManager.instance.ActivateCheckpoint(this, pWalk.direction);
             }
         }

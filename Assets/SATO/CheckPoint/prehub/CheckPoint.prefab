@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: -9142116430129286927, guid: becdf5d2906cc2a4aa87fd9bcb9568c3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -156,3 +156,4 @@ MonoBehaviour:
   activeColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   activateSE: {fileID: 0}
   respawnOffset: {x: 0, y: 0, z: 0}
+  isActive: 0
