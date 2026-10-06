@@ -10,12 +10,18 @@ public class InGameMenuController : MonoBehaviour
     public GameObject menuModalPanel;   // メニューのポップアップ親オブジェクト
     public GameObject guideBookPanel;   // ギミック図鑑のサブパネル（任意）
 
+    [Header("本のアニメーション設定")]
+    public Animator bookAnimator;       // ★本のアニメーター
+    public string bookOpenTrigger = "Open";   // 本を開くトリガー名
+    public string bookCloseTrigger = "Close"; // 本を閉じるトリガー名
+    public RectTransform bookWindow;    // アニメーターが無い場合の拡縮用（任意）
+
     [Header("演出参照")]
     public nextscene fadeOutScript;
 
     [Header("SE設定")]
     public AudioSource audioSource;
-    public AudioClip openSE;
+    public AudioClip bookOpenSE;        // ★本を開く時の音（バサッ、パカッなど）
     public AudioClip closeSE;
     public AudioClip clickSE;
 
@@ -34,22 +40,59 @@ public class InGameMenuController : MonoBehaviour
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
     }
 
-    // --- メニューの開閉 ---
+    // --- メニューを開く（本を開く） ---
 
     public void OpenMenu()
     {
         if (isMenuOpen) return;
         isMenuOpen = true;
 
-        if (audioSource != null && openSE != null) audioSource.PlayOneShot(openSE);
+        // 本を開く効果音
+        if (audioSource != null && bookOpenSE != null) audioSource.PlayOneShot(bookOpenSE);
 
-        // 現在のゲーム速度を記憶して一時停止
+        // ゲーム時間を停止
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
         if (menuModalPanel != null) menuModalPanel.SetActive(true);
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
+
+        // ★本を開くアニメーションを開始！
+        StopAllCoroutines();
+        StartCoroutine(OpenBookRoutine());
     }
+
+    IEnumerator OpenBookRoutine()
+    {
+        // 1. Animatorがある場合はトリガーを引く
+        if (bookAnimator != null)
+        {
+            bookAnimator.SetTrigger(bookOpenTrigger);
+        }
+        // 2. Animatorが無くても綺麗に開いて見えるC#バックアップ演出（横にパカッと開く）
+        else if (bookWindow != null)
+        {
+            bookWindow.localScale = new Vector3(0f, 1f, 1f); // 閉じた状態（幅0）
+            float duration = 0.25f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime; // 一時停止中なので unscaledDeltaTime を使用
+                float t = elapsed / duration;
+
+                // 本がパカッと開くイージング
+                float scaleX = Mathf.Sin(t * Mathf.PI * 0.5f);
+                bookWindow.localScale = new Vector3(scaleX, 1f, 1f);
+                yield return null;
+            }
+            bookWindow.localScale = Vector3.one;
+        }
+
+        yield return null;
+    }
+
+    // --- メニューを閉じる ---
 
     public void CloseMenu()
     {
@@ -58,10 +101,22 @@ public class InGameMenuController : MonoBehaviour
 
         if (audioSource != null && closeSE != null) audioSource.PlayOneShot(closeSE);
 
+        StartCoroutine(CloseBookRoutine());
+    }
+
+    IEnumerator CloseBookRoutine()
+    {
+        // 本を閉じるアニメーションがあれば再生
+        if (bookAnimator != null && !string.IsNullOrEmpty(bookCloseTrigger))
+        {
+            bookAnimator.SetTrigger(bookCloseTrigger);
+            yield return new WaitForSecondsRealtime(0.2f); // 閉じるのを少し待つ
+        }
+
         if (menuModalPanel != null) menuModalPanel.SetActive(false);
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
 
-        // 時間を元に戻す
+        // 時間を再開
         Time.timeScale = previousTimeScale;
     }
 
@@ -71,22 +126,17 @@ public class InGameMenuController : MonoBehaviour
     {
         PlayClickSE();
 
-        // 1. チェックポイントを完全に消去（旗を未通過色に戻す）
         if (CheckpointManager.instance != null)
         {
             CheckpointManager.instance.ClearCheckpoint();
         }
 
-        // 2. メニューを閉じて時間を戻す
         CloseMenu();
 
-        // 3. 通常のリセットを実行（これでステージ初期位置・初期状態でリスタート！）
         if (GameManager.instance != null)
         {
             GameManager.instance.ResetGame();
         }
-
-        Debug.Log("<color=yellow>【最初からやり直す（全リセット実行）】</color>");
     }
 
     // --- ボタン2：ギミック図鑑を開く ---
@@ -114,7 +164,7 @@ public class InGameMenuController : MonoBehaviour
         if (menuModalPanel != null) menuModalPanel.SetActive(false);
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
 
-        Time.timeScale = 1f; // 時間を確実に戻す
+        Time.timeScale = 1f;
         StartCoroutine(ReturnSequence());
     }
 
