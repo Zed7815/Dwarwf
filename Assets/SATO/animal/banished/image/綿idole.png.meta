@@ -1,16 +1,16 @@
 fileFormatVersion: 2
-guid: 91be4d04d59335e408bf636b8103c9e2
+guid: 45ad1d1bec3affa4a9ee831565beb82a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1367023259894928411
-    second: "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_0"
+      213: 4292764613241563442
+    second: "\u7DBFidole_0"
   - first:
-      213: -1890461525136464356
-    second: "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_1"
+      213: -4609603742956442902
+    second: "\u7DBFidole_1"
   - first:
-      213: 3738578326467105439
-    second: "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_2"
+      213: 7257456378698109492
+    second: "\u7DBFidole_2"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -57,7 +57,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 205
+  spritePixelsToUnits: 120
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -106,67 +106,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_0"
+      name: "\u7DBFidole_0"
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 104
-        height: 134
-      alignment: 9
-      pivot: {x: 0.67, y: 0.007}
+        x: 1
+        y: 8
+        width: 102
+        height: 136
+      alignment: 0
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5eb2442869b570de0800000000000000
-      internalID: -1367023259894928411
+      spriteID: 23961a4fba6f29b30800000000000000
+      internalID: 4292764613241563442
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_1"
+      name: "\u7DBFidole_1"
       rect:
         serializedVersion: 2
-        x: 104
-        y: 0
-        width: 104
-        height: 134
-      alignment: 9
-      pivot: {x: 0.67, y: 0.007}
+        x: 105
+        y: 13
+        width: 102
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c16a2bc424bb3c5e0800000000000000
-      internalID: -1890461525136464356
+      spriteID: aea25c981d56700c0800000000000000
+      internalID: -4609603742956442902
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_2"
+      name: "\u7DBFidole_2"
       rect:
         serializedVersion: 2
-        x: 210
-        y: 0
-        width: 104
-        height: 134
-      alignment: 9
-      pivot: {x: 0.67, y: 0.007}
+        x: 209
+        y: 11
+        width: 102
+        height: 141
+      alignment: 0
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f92db0a1e2912e330800000000000000
-      internalID: 3738578326467105439
+      spriteID: 4329131ff1aa7b460800000000000000
+      internalID: 7257456378698109492
       vertices: []
       indices: 
       edges: []
@@ -175,7 +175,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: dd709b19dd1d1604980c03148fa502f1
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -183,13 +183,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":104.0,"y":134.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_0": -1367023259894928411
-      "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_1": -1890461525136464356
-      "\u81EA\u6A5F\u30B8\u30E3\u30F3\u30D73_2": 3738578326467105439
+      "\u7DBFidole_0": 4292764613241563442
+      "\u7DBFidole_1": -4609603742956442902
+      "\u7DBFidole_2": 7257456378698109492
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

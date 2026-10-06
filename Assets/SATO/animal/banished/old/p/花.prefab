@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3317521227924104918, guid: 01510aae123b2694092ef0fb4b8a52bf, type: 3}
+  m_Sprite: {fileID: 4292764613241563442, guid: 45ad1d1bec3affa4a9ee831565beb82a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -133,7 +133,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.8, y: 1.0307692}
+    oldSize: {x: 0.85, y: 1.1333333}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -162,6 +162,7 @@ MonoBehaviour:
   audioSource: {fileID: -7917353564466782219}
   touchSE: {fileID: 8300000, guid: aac048ce7bbacc24085daae143179002, type: 3}
   vanishSE: {fileID: 0}
+  isTouched: 0
 --- !u!95 &-7799788447006207588
 Animator:
   serializedVersion: 7
