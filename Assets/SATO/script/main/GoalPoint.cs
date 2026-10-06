@@ -18,14 +18,13 @@ public class GoalPoint : MonoBehaviour
     public GimmickType returnGimmickType = GimmickType.Generic;
 
     [Header("SE設定")]
-    public AudioSource audioSource; // インスペクターで割り当てるか自動取得
-    public AudioClip goalSE;       // ゴールした時の音
+    public AudioSource audioSource;
+    public AudioClip goalSE;
 
     private bool isGoalReached = false;
 
     private void Start()
     {
-        // AudioSourceが未設定なら自分から取得を試みる
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
@@ -67,35 +66,27 @@ public class GoalPoint : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(0.5f);
 
+        // クリア画面がある場合は、それを開いてコルーチンを即座に「終了」する！
         if (StageClearPopup.instance != null)
         {
             StageClearPopup.instance.ShowClearPopup();
-        }
-        else
-        {
-            // 万が一ポップアップが無い場合の予備動作
-            SceneLoader.Load("StageSelect", GimmickType.Generic);
+            yield break; // ★ここで完全に処理を止める！（下の自動移動を実行させない）
         }
 
-        // 3. 暗転演出（黒い板が降りてくる）
+        // --- 以下は万が一ポップアップが無い場合だけの予備動作 ---
         if (nextSceneScript != null)
         {
             yield return StartCoroutine(nextSceneScript.endKuro());
         }
 
-        // 演出の余韻
         yield return new WaitForSecondsRealtime(0.5f);
 
-        // 4. シーン切り替え判定
         if (isFinalStage)
         {
-            // 最終ステージなら直接エンディングシーンへ
-            Debug.Log("最終クリア！エンディングへ移行します");
             SceneManager.LoadScene(endingSceneName);
         }
         else
         {
-            // それ以外は通常通りステージセレクトへ
             SceneLoader.Load("StageSelect", returnGimmickType);
         }
     }
