@@ -61,6 +61,22 @@ public class GoalPoint : MonoBehaviour
         // データを確実に書き込む
         PlayerPrefs.Save();
 
+        // プレイヤーの動きを停止
+        Player_walk pWalk = FindObjectOfType<Player_walk>();
+        if (pWalk != null) pWalk.StateChange(0);
+
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        if (StageClearPopup.instance != null)
+        {
+            StageClearPopup.instance.ShowClearPopup();
+        }
+        else
+        {
+            // 万が一ポップアップが無い場合の予備動作
+            SceneLoader.Load("StageSelect", GimmickType.Generic);
+        }
+
         // 3. 暗転演出（黒い板が降りてくる）
         if (nextSceneScript != null)
         {
@@ -73,7 +89,7 @@ public class GoalPoint : MonoBehaviour
         // 4. シーン切り替え判定
         if (isFinalStage)
         {
-            // ★最終ステージなら直接エンディングシーンへ
+            // 最終ステージなら直接エンディングシーンへ
             Debug.Log("最終クリア！エンディングへ移行します");
             SceneManager.LoadScene(endingSceneName);
         }
