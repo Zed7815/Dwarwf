@@ -6,24 +6,31 @@ public class InGameMenuController : MonoBehaviour
 {
     public static InGameMenuController instance;
 
-    [Header("UIパネル参照")]
-    public GameObject menuModalPanel;   // メニューのポップアップ親オブジェクト
-    public GameObject guideBookPanel;   // ギミック図鑑のサブパネル（任意）
+    [Header("1. 暗幕（背景を暗くするUI）")]
+    public GameObject darkOverlayUI;
 
-    [Header("本のアニメーション設定")]
-    public Animator bookAnimator;       // ★本のアニメーター
-    public string bookOpenTrigger = "Open";   // 本を開くトリガー名
-    public string bookCloseTrigger = "Close"; // 本を閉じるトリガー名
-    public RectTransform bookWindow;    // アニメーターが無い場合の拡縮用（任意）
+    [Header("2. アニメーション専用の本（Canvas外のSprite）")]
+    public GameObject animatedBookWorld; // SpriteRenderer + Animatorを持つオブジェクト
+    public Animator worldBookAnimator;   // そのアニメーター
+    public string openTriggerName = "Open";
+    public string closeTriggerName = "Close";
+    [Tooltip("開くアニメーションの長さ（秒）")]
+    public float openAnimDuration = 0.4f;
+    [Tooltip("閉じるアニメーションの長さ（秒）")]
+    public float closeAnimDuration = 0.3f;
 
-    [Header("演出参照")]
-    public nextscene fadeOutScript;
+    [Header("3. 本物の本UI（Canvas内の静止画＋ボタン）")]
+    public GameObject staticBookUI;
+    public GameObject guideBookPanel; // ギミック図鑑（任意）
 
     [Header("SE設定")]
     public AudioSource audioSource;
-    public AudioClip bookOpenSE;        // ★本を開く時の音（バサッ、パカッなど）
-    public AudioClip closeSE;
+    public AudioClip bookOpenSE;
+    public AudioClip bookCloseSE;
     public AudioClip clickSE;
+
+    [Header("演出参照")]
+    public nextscene fadeOutScript;
 
     private float previousTimeScale = 1f;
     private bool isMenuOpen = false;
@@ -36,115 +43,112 @@ public class InGameMenuController : MonoBehaviour
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        if (menuModalPanel != null) menuModalPanel.SetActive(false);
+
+        // 初期状態：すべて非表示にしておく
+        if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
+        if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
+        if (staticBookUI != null) staticBookUI.SetActive(false);
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
     }
 
-    // --- メニューを開く（本を開く） ---
-
+    // --- メニューを開く処理 ---
     public void OpenMenu()
     {
         if (isMenuOpen) return;
         isMenuOpen = true;
 
-        // 本を開く効果音
+        previousTimeScale = Time.timeScale;
+        Time.timeScale = 0f; // ゲーム一時停止
+
+        StopAllCoroutines();
+        StartCoroutine(OpenSequence());
+    }
+
+    IEnumerator OpenSequence()
+    {
+        // 1. 暗幕を出す
+        if (darkOverlayUI != null) darkOverlayUI.SetActive(true);
+        if (staticBookUI != null) staticBookUI.SetActive(false);
+
+        // 2. アニメーション専用の本（Sprite）を出現させて再生
+        if (animatedBookWorld != null)
+        {
+            animatedBookWorld.SetActive(true);
+            if (worldBookAnimator != null)
+            {
+                worldBookAnimator.SetTrigger(openTriggerName);
+            }
+        }
+
         if (audioSource != null && bookOpenSE != null) audioSource.PlayOneShot(bookOpenSE);
 
-        // ゲーム時間を停止
-        previousTimeScale = Time.timeScale;
-        Time.timeScale = 0f;
+        // 3. アニメーションが終わるまで待つ（Realtimeで待機）
+        yield return new WaitForSecondsRealtime(openAnimDuration);
 
-        if (menuModalPanel != null) menuModalPanel.SetActive(true);
-        if (guideBookPanel != null) guideBookPanel.SetActive(false);
-
-        // ★本を開くアニメーションを開始！
-        StopAllCoroutines();
-        StartCoroutine(OpenBookRoutine());
+        // 4. ★すり替え！ アニメ用の本を消し、本物のUI本を表示する
+        if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
+        if (staticBookUI != null) staticBookUI.SetActive(true);
     }
 
-    IEnumerator OpenBookRoutine()
-    {
-        // 1. Animatorがある場合はトリガーを引く
-        if (bookAnimator != null)
-        {
-            bookAnimator.SetTrigger(bookOpenTrigger);
-        }
-        // 2. Animatorが無くても綺麗に開いて見えるC#バックアップ演出（横にパカッと開く）
-        else if (bookWindow != null)
-        {
-            bookWindow.localScale = new Vector3(0f, 1f, 1f); // 閉じた状態（幅0）
-            float duration = 0.25f;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime; // 一時停止中なので unscaledDeltaTime を使用
-                float t = elapsed / duration;
-
-                // 本がパカッと開くイージング
-                float scaleX = Mathf.Sin(t * Mathf.PI * 0.5f);
-                bookWindow.localScale = new Vector3(scaleX, 1f, 1f);
-                yield return null;
-            }
-            bookWindow.localScale = Vector3.one;
-        }
-
-        yield return null;
-    }
-
-    // --- メニューを閉じる ---
-
+    // --- メニューを閉じる処理 ---
     public void CloseMenu()
     {
         if (!isMenuOpen) return;
         isMenuOpen = false;
 
-        if (audioSource != null && closeSE != null) audioSource.PlayOneShot(closeSE);
-
-        StartCoroutine(CloseBookRoutine());
+        StopAllCoroutines();
+        StartCoroutine(CloseSequence());
     }
 
-    IEnumerator CloseBookRoutine()
+    IEnumerator CloseSequence()
     {
-        // 本を閉じるアニメーションがあれば再生
-        if (bookAnimator != null && !string.IsNullOrEmpty(bookCloseTrigger))
-        {
-            bookAnimator.SetTrigger(bookCloseTrigger);
-            yield return new WaitForSecondsRealtime(0.2f); // 閉じるのを少し待つ
-        }
-
-        if (menuModalPanel != null) menuModalPanel.SetActive(false);
+        // 1. ★すり替え！ 本物のUI本を即座に消す
+        if (staticBookUI != null) staticBookUI.SetActive(false);
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
 
-        // 時間を再開
-        Time.timeScale = previousTimeScale;
+        // 2. アニメーション専用の本（Sprite）を出現させて閉じるアニメ再生
+        if (animatedBookWorld != null)
+        {
+            animatedBookWorld.SetActive(true);
+            if (worldBookAnimator != null)
+            {
+                worldBookAnimator.SetTrigger(closeTriggerName);
+            }
+        }
+
+        if (audioSource != null && bookCloseSE != null) audioSource.PlayOneShot(bookCloseSE);
+
+        // 3. 閉じきるまで待つ
+        yield return new WaitForSecondsRealtime(closeAnimDuration);
+
+        // 4. すべて消してゲーム再開
+        if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
+        if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
+
+        Time.timeScale = previousTimeScale; // 時間を戻す
     }
 
-    // --- ボタン1：最初からやり直す（全リセット） ---
+    // --- 各ボタンの処理 ---
 
     public void OnFullResetClicked()
     {
         PlayClickSE();
+        if (CheckpointManager.instance != null) CheckpointManager.instance.ClearCheckpoint();
 
-        if (CheckpointManager.instance != null)
-        {
-            CheckpointManager.instance.ClearCheckpoint();
-        }
+        // パネルを消して時間を戻す
+        if (staticBookUI != null) staticBookUI.SetActive(false);
+        if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
+        if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
+        isMenuOpen = false;
+        Time.timeScale = previousTimeScale;
 
-        CloseMenu();
-
-        if (GameManager.instance != null)
-        {
-            GameManager.instance.ResetGame();
-        }
+        if (GameManager.instance != null) GameManager.instance.ResetGame();
     }
-
-    // --- ボタン2：ギミック図鑑を開く ---
 
     public void OnOpenGuideClicked()
     {
         PlayClickSE();
-        if (menuModalPanel != null) menuModalPanel.SetActive(false);
+        if (staticBookUI != null) staticBookUI.SetActive(false);
         if (guideBookPanel != null) guideBookPanel.SetActive(true);
     }
 
@@ -152,17 +156,15 @@ public class InGameMenuController : MonoBehaviour
     {
         PlayClickSE();
         if (guideBookPanel != null) guideBookPanel.SetActive(false);
-        if (menuModalPanel != null) menuModalPanel.SetActive(true);
+        if (staticBookUI != null) staticBookUI.SetActive(true);
     }
-
-    // --- ボタン3：ステージセレクトへ戻る ---
 
     public void OnReturnToStageSelectClicked()
     {
         PlayClickSE();
-
-        if (menuModalPanel != null) menuModalPanel.SetActive(false);
-        if (guideBookPanel != null) guideBookPanel.SetActive(false);
+        if (staticBookUI != null) staticBookUI.SetActive(false);
+        if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
+        if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
 
         Time.timeScale = 1f;
         StartCoroutine(ReturnSequence());
@@ -170,10 +172,7 @@ public class InGameMenuController : MonoBehaviour
 
     IEnumerator ReturnSequence()
     {
-        if (fadeOutScript != null)
-        {
-            yield return StartCoroutine(fadeOutScript.endKuro());
-        }
+        if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
         yield return new WaitForSecondsRealtime(0.2f);
         SceneManager.LoadScene("StageSelect");
     }
