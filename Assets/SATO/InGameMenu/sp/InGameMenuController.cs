@@ -39,6 +39,11 @@ public class InGameMenuController : MonoBehaviour
     [Header("演出参照")]
     public nextscene fadeOutScript;
 
+
+    [Header("位置の微調整（ズレがある場合）")]
+    [Tooltip("アニメ本とUI本の見た目のズレを調整する数値（XやYで微調整）")]
+    public Vector3 animationOffset = Vector3.zero;
+
     private float previousTimeScale = 1f;
     private bool isMenuOpen = false;
     private bool isAnimating = false;
@@ -223,14 +228,34 @@ public class InGameMenuController : MonoBehaviour
         SceneManager.LoadScene("StageSelect");
     }
 
-    // --- ズレ防止：UI本のワールド座標を取得してアニメ本を合わせる ---
+    // --- ズレ防止：Canvasのモードを自動判別して完璧に吸着させる ---
     void AlignWorldBookToUI()
     {
-        if (staticBookUI == null || Camera.main == null) return;
-        Vector3 screenPos = staticBookUI.position;
-        screenPos.z = Mathf.Abs(Camera.main.transform.position.z);
-        bookCenterWorldPos = Camera.main.ScreenToWorldPoint(screenPos);
+        if (staticBookUI == null) return;
+
+        Canvas parentCanvas = staticBookUI.GetComponentInParent<Canvas>();
+
+        // 1. Canvasのモードに合わせて正しいワールド座標を取得
+        if (parentCanvas != null && parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        {
+            // Overlayモードの場合：ピクセル座標なのでScreenToWorld変換が必要
+            if (Camera.main != null)
+            {
+                Vector3 screenPos = staticBookUI.position;
+                screenPos.z = Mathf.Abs(Camera.main.transform.position.z);
+                bookCenterWorldPos = Camera.main.ScreenToWorldPoint(screenPos);
+            }
+        }
+        else
+        {
+            // ★Cameraモードの場合：staticBookUI.position は「すでにワールド座標」！
+            // 二重変換せず、そのままの座標を採用する
+            bookCenterWorldPos = staticBookUI.position;
+        }
+
+        // 2D平面（Z=0）に揃え、微調整オフセットを足す
         bookCenterWorldPos.z = 0f;
+        bookCenterWorldPos += animationOffset;
     }
 
     void PlayClickSE()
