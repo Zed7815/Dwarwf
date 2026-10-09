@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 using System.Collections;
-
 public class InGameMenuController : MonoBehaviour
 {
     public static InGameMenuController instance;
@@ -40,6 +41,14 @@ public class InGameMenuController : MonoBehaviour
     [Header("演出参照")]
     public nextscene fadeOutScript;
 
+    [Header("左ページ（ステージ情報・メモ）のUI参照")]
+    public TextMeshProUGUI stageTitleText;       // 例: STAGE 2 - クモの谷
+    public TextMeshProUGUI thisStageStarText;     // 例: ★ 獲得済み / ☆ 未獲得
+    public GameObject thisStageStarCheckIcon;    // 星を取った時に出るチェックマーク（任意）
+    public TextMeshProUGUI totalStarText;         // 例: ★ 5 / 20
+    public Image playerPortraitImage;            // 自機の小さな立ち絵
+    public TextMeshProUGUI hintMemoText;         // 手書き風ヒント文章
+
     private float previousTimeScale = 1f;
     private bool isMenuOpen = false;
     private bool isAnimating = false;
@@ -76,13 +85,71 @@ public class InGameMenuController : MonoBehaviour
         isMenuOpen = true;
 
         previousTimeScale = Time.timeScale;
-        Time.timeScale = 0f; // 一時停止
+        Time.timeScale = 0f;
+
+        // メニューを開いた瞬間に、左ページの内容を最新に更新！
+        UpdateLeftPageInfo();
 
         StopAllCoroutines();
         StartCoroutine(OpenSequence());
     }
 
-    IEnumerator OpenSequence()
+    void UpdateLeftPageInfo()
+    {
+        // 1. ステージ情報の取得
+        int currentStageNum = 1;
+        string currentTitle = "STAGE";
+
+        if (StageInfo.instance != null)
+        {
+            currentStageNum = StageInfo.instance.stageNumber;
+            currentTitle = $"STAGE {currentStageNum} - {StageInfo.instance.stageTitle}";
+
+            // 自機のイラストとヒント文
+            if (playerPortraitImage != null && StageInfo.instance.playerPortrait != null)
+            {
+                playerPortraitImage.sprite = StageInfo.instance.playerPortrait;
+            }
+            if (hintMemoText != null)
+            {
+                hintMemoText.text = StageInfo.instance.hintMemo;
+            }
+        }
+        else if (GameManager.instance != null)
+        {
+            currentStageNum = GameManager.instance.stageNumber;
+            currentTitle = $"STAGE {currentStageNum}";
+        }
+
+        if (stageTitleText != null) stageTitleText.text = currentTitle;
+
+        // 2. このステージの星の獲得状況（過去にクリア済みか、今回のプレイで取ったか）
+        bool hasStarAlready = PlayerPrefs.GetInt("StarCollected_Stage_" + currentStageNum, 0) == 1;
+        bool gotStarNow = (GameManager.instance != null && GameManager.instance.hasCollectedStarInThisRun);
+        bool hasStar = hasStarAlready || gotStarNow;
+
+        if (thisStageStarText != null)
+        {
+            thisStageStarText.text = hasStar ? "獲得済み！" : "未獲得！";
+        }
+        if (thisStageStarCheckIcon != null)
+        {
+            thisStageStarCheckIcon.SetActive(hasStar);
+        }
+
+        // 3. 全ステージの総スター数
+        int totalStars = 0;
+        for (int i = 1; i <= 30; i++)
+        {
+            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) totalStars++;
+        }
+        if (totalStarText != null)
+        {
+            totalStarText.text = $"あつめた星 : {totalStars} / 6";
+        }
+    }
+
+IEnumerator OpenSequence()
     {
         isAnimating = true;
 

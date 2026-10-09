@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SimpleBGMManager : MonoBehaviour
 {
@@ -11,7 +11,11 @@ public class SimpleBGMManager : MonoBehaviour
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = bgmClip;
         audioSource.loop = true;
-        audioSource.volume = volume;
+
+        // セーブされた音量があればそれを使い、なければデフォルトのvolumeを使う
+        float savedVol = PlayerPrefs.GetFloat("SavedBGMVolume", volume);
+        audioSource.volume = savedVol;
+
         audioSource.playOnAwake = false;
         audioSource.Play();
     }
