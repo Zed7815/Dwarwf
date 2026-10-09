@@ -9,42 +9,44 @@ public class BookEncyclopediaUI : MonoBehaviour
     [System.Serializable]
     public class AnimalPage
     {
-        public string animalName;       // 名前
-        public Sprite illustration;     // 左ページの絵
+        public string animalName;
+        public Sprite illustration;
 
-        [Header("説明文（最大3つの枠に分割可能）")]
-        [TextArea(2, 5)]
-        public string descriptionBox1;  // 枠1（例：基本特徴）
-        [TextArea(2, 5)]
-        public string descriptionBox2;  // 枠2（例：使い方・ヒント）
-        [TextArea(2, 5)]
-        public string descriptionBox3;  // 枠3（例：注意点 ※空欄なら自動で隠れます）
+        [Header("説明文（3枠）")]
+        [TextArea(2, 5)] public string descriptionBox1;
+        [TextArea(2, 5)] public string descriptionBox2;
+        [TextArea(2, 5)] public string descriptionBox3;
     }
 
     [Header("図鑑データ集（1ページ＝1体）")]
     public List<AnimalPage> pages;
 
+    [Header("本の背景画像差し替え設定")]
+    public Image bookBackgroundImage;        // 本の背景Image
+    public Sprite normalBookSprite;          // 通常の見開き画像
+    public Sprite flippingBookSprite;        // めくる瞬間の一瞬の画像
+
+    [Header("演出時間・強調設定")]
+    [Tooltip("ページめくり全体の時間（0.16〜0.22秒が一番リアルに見えます）")]
+    public float flipDuration = 0.18f;
+    [Tooltip("めくる時の紙の傾き具合（度数）")]
+    public float paperTiltAngle = 4.0f;
+
     [Header("ページ枠（めくる対象）")]
-    public RectTransform leftPageTransform;
-    public RectTransform rightPageTransform;
+    public RectTransform leftPageTransform;  // 左ページの枠（Pivot X: 1推奨）
+    public RectTransform rightPageTransform; // 右ページの枠（Pivot X: 0推奨）
 
     [Header("左ページ（絵）")]
     public Image illustrationImage;
 
-    [Header("右ページ（名前 ＆ 3つの説明枠）")]
+    [Header("右ページ（名前 ＆ 3枠）")]
     public TextMeshProUGUI nameText;
-
-    // ★枠1のセット
-    public GameObject frameBox1;             // 枠1の親（枠画像など）
-    public TextMeshProUGUI descriptionText1; // 枠1のテキスト
-
-    // ★枠2のセット
-    public GameObject frameBox2;             // 枠2の親
-    public TextMeshProUGUI descriptionText2; // 枠2のテキスト
-
-    // ★枠3のセット（任意）
-    public GameObject frameBox3;             // 枠3の親
-    public TextMeshProUGUI descriptionText3; // 枠3のテキスト
+    public GameObject frameBox1;
+    public TextMeshProUGUI descriptionText1;
+    public GameObject frameBox2;
+    public TextMeshProUGUI descriptionText2;
+    public GameObject frameBox3;
+    public TextMeshProUGUI descriptionText3;
 
     [Header("共通UI")]
     public TextMeshProUGUI pageNumberText;
@@ -61,95 +63,151 @@ public class BookEncyclopediaUI : MonoBehaviour
     void OnEnable()
     {
         currentPageIndex = 0;
-        if (leftPageTransform != null) leftPageTransform.localScale = Vector3.one;
-        if (rightPageTransform != null) rightPageTransform.localScale = Vector3.one;
+
+        // 背景とページの回転・サイズを初期化
+        if (bookBackgroundImage != null && normalBookSprite != null)
+        {
+            bookBackgroundImage.sprite = normalBookSprite;
+        }
+        ResetPageTransforms();
+
         UpdatePageDisplayInstant();
     }
 
+    // --- 次へ ▶ ---
     public void NextPage()
     {
         if (isFlipping || currentPageIndex >= pages.Count - 1) return;
-        StartCoroutine(FlipRoutine(true));
+        StartCoroutine(EmphasizedFlipRoutine(true));
     }
 
+    // --- ◀ 前へ ---
     public void PrevPage()
     {
         if (isFlipping || currentPageIndex <= 0) return;
-        StartCoroutine(FlipRoutine(false));
+        StartCoroutine(EmphasizedFlipRoutine(false));
     }
 
-    IEnumerator FlipRoutine(bool isNext)
+    // ★【強調めくり ＋ 背景差し替えの合体コルーチン】
+    IEnumerator EmphasizedFlipRoutine(bool isNext)
     {
         isFlipping = true;
-        float duration = 0.07f;
-        float elapsed = 0f;
 
-        RectTransform foldingPage = isNext ? rightPageTransform : leftPageTransform;
-        RectTransform unfoldingPage = isNext ? leftPageTransform : rightPageTransform;
-
-        if (foldingPage != null)
+        // 1. 本の背景を「めくり中の絵」に切り替え！
+        if (bookBackgroundImage != null && flippingBookSprite != null)
         {
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / duration;
-                float scaleX = Mathf.Lerp(1.0f, 0.0f, t);
-                foldingPage.localScale = new Vector3(scaleX, 1.0f + (1f - scaleX) * 0.05f, 1f);
-                yield return null;
-            }
-            foldingPage.localScale = new Vector3(0f, 1f, 1f);
+            bookBackgroundImage.sprite = flippingBookSprite;
         }
 
         PlayFlipSound();
+
+        // めくる対象のページ（次へなら右、戻るなら左）
+        RectTransform foldingPage = isNext ? rightPageTransform : leftPageTransform;
+        RectTransform unfoldingPage = isNext ? leftPageTransform : rightPageTransform;
+
+        float halfDuration = flipDuration * 0.5f;
+        float elapsed = 0f;
+
+        // --- 前半：紙が立体的にめくれ上がりながら真ん中へたたまれる ---
+        if (foldingPage != null)
+        {
+            float tiltDir = isNext ? -1f : 1f;
+
+            while (elapsed < halfDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / halfDuration;
+
+                // 横幅の縮小
+                float scaleX = Mathf.Lerp(1.0f, 0.0f, t);
+                // 紙が上に弓なりにしなる動き（縦が少し伸びる）
+                float scaleY = Mathf.Lerp(1.0f, 1.08f, t);
+                // 角が持ち上がる傾き（Z軸回転）
+                float angle = Mathf.Lerp(0f, paperTiltAngle * tiltDir, t);
+
+                foldingPage.localScale = new Vector3(scaleX, scaleY, 1f);
+                foldingPage.localEulerAngles = new Vector3(0, 0, angle);
+                yield return null;
+            }
+
+            foldingPage.localScale = new Vector3(0f, 1f, 1f);
+            foldingPage.localEulerAngles = Vector3.zero;
+        }
+
+        // --- 中間地点：真ん中を通過した瞬間にデータを差し替え！ ---
         if (isNext) currentPageIndex++;
         else currentPageIndex--;
         UpdatePageDisplayInstant();
 
+        // --- 後半：新しい紙が反対側からフワッと広がりながら収まる ---
         if (unfoldingPage != null)
         {
-            unfoldingPage.localScale = new Vector3(0f, 1f, 1f);
             elapsed = 0f;
+            float tiltDir = isNext ? 1f : -1f;
 
-            while (elapsed < duration)
+            while (elapsed < halfDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / duration;
+                float t = elapsed / halfDuration;
+
+                // 横幅の展開
                 float scaleX = Mathf.Lerp(0.0f, 1.0f, t);
-                unfoldingPage.localScale = new Vector3(scaleX, 1.0f, 1f);
+                // しなりが元に戻る
+                float scaleY = Mathf.Lerp(1.08f, 1.0f, t);
+                // 傾きが0に戻る
+                float angle = Mathf.Lerp(paperTiltAngle * tiltDir, 0f, t);
+
+                unfoldingPage.localScale = new Vector3(scaleX, scaleY, 1f);
+                unfoldingPage.localEulerAngles = new Vector3(0, 0, angle);
                 yield return null;
             }
+
             unfoldingPage.localScale = Vector3.one;
+            unfoldingPage.localEulerAngles = Vector3.zero;
         }
 
-        if (leftPageTransform != null) leftPageTransform.localScale = Vector3.one;
-        if (rightPageTransform != null) rightPageTransform.localScale = Vector3.one;
+        // 2. 本の背景を「通常の見開き」に戻す！
+        if (bookBackgroundImage != null && normalBookSprite != null)
+        {
+            bookBackgroundImage.sprite = normalBookSprite;
+        }
 
+        ResetPageTransforms();
         isFlipping = false;
     }
 
-    // 表示内容の更新
+    void ResetPageTransforms()
+    {
+        if (leftPageTransform != null)
+        {
+            leftPageTransform.localScale = Vector3.one;
+            leftPageTransform.localEulerAngles = Vector3.zero;
+        }
+        if (rightPageTransform != null)
+        {
+            rightPageTransform.localScale = Vector3.one;
+            rightPageTransform.localEulerAngles = Vector3.zero;
+        }
+    }
+
     void UpdatePageDisplayInstant()
     {
         if (pages == null || pages.Count == 0) return;
 
         AnimalPage page = pages[currentPageIndex];
 
-        // 1. 左ページ（絵）
         if (illustrationImage != null)
         {
             illustrationImage.sprite = page.illustration;
             illustrationImage.preserveAspect = true;
         }
 
-        // 2. 右ページ（名前）
         if (nameText != null) nameText.text = page.animalName;
 
-        // 3. ★3つの説明枠への流し込み（文字が空なら枠ごと隠す）
         SetBoxContent(frameBox1, descriptionText1, page.descriptionBox1);
         SetBoxContent(frameBox2, descriptionText2, page.descriptionBox2);
         SetBoxContent(frameBox3, descriptionText3, page.descriptionBox3);
 
-        // ページ番号
         if (pageNumberText != null)
         {
             pageNumberText.text = $"{currentPageIndex + 1} / {pages.Count}";
@@ -159,19 +217,11 @@ public class BookEncyclopediaUI : MonoBehaviour
         if (nextButton != null) nextButton.interactable = (currentPageIndex < pages.Count - 1);
     }
 
-    // 枠とテキストの表示制御
     void SetBoxContent(GameObject frame, TextMeshProUGUI textComp, string content)
     {
         bool hasContent = !string.IsNullOrEmpty(content);
-
-        // 枠自体の表示・非表示
         if (frame != null) frame.SetActive(hasContent);
-
-        // テキストの適用
-        if (textComp != null && hasContent)
-        {
-            textComp.text = content;
-        }
+        if (textComp != null && hasContent) textComp.text = content;
     }
 
     void PlayFlipSound()
