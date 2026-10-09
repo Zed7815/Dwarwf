@@ -10,39 +10,35 @@ public class InGameMenuController : MonoBehaviour
     public GameObject darkOverlayUI;
 
     [Header("2. アニメーション本（Sprite）")]
-    public GameObject animatedBookWorld; // 外のSprite
-    public Animator worldBookAnimator;   // そのAnimator
+    public GameObject animatedBookWorld;
+    public Animator worldBookAnimator;
     public string openTriggerName = "Open";
     public string closeTriggerName = "Close";
     public float openAnimDuration = 0.4f;
     public float closeAnimDuration = 0.3f;
-
-    [Header("落下・上昇の演出設定")]
-    [Tooltip("上から落ちてくる距離")]
     public float dropDistanceY = 12f;
     public float dropDuration = 0.35f;
     public float flyUpDuration = 0.25f;
 
     [Header("3. 本物のUI本（Canvas）")]
-    public RectTransform staticBookUI;   // UIの本（中央）
-    public GameObject menuModePanel;      // メニューボタン一覧の画面
-    public GameObject encyclopediaPanel;  // 図鑑の見開き画面
+    public RectTransform staticBookUI;
+    public GameObject menuModePanel;      // メニュー一覧（リセット、セレクト等のページ）
+    public GameObject encyclopediaPanel;  // 図鑑ページ（動物たちのページ）
+
+    [Header("位置の微調整")]
+    public Vector3 animationOffset = Vector3.zero;
 
     [Header("SE設定")]
     public AudioSource audioSource;
-    public AudioClip bookDropSE;    // ドサッ（着地音）
-    public AudioClip bookOpenSE;    // パサッ（開く音）
-    public AudioClip bookCloseSE;   // パタン（閉じる音）
-    public AudioClip bookFlyUpSE;   // ヒュン（飛び去る音）
+    public AudioClip bookDropSE;
+    public AudioClip bookOpenSE;
+    public AudioClip bookCloseSE;
+    public AudioClip bookFlyUpSE;
+    public AudioClip pageFlipSE;    // ★追加：メニュー ⇔ 図鑑をめくる音
     public AudioClip clickSE;
 
     [Header("演出参照")]
     public nextscene fadeOutScript;
-
-
-    [Header("位置の微調整（ズレがある場合）")]
-    [Tooltip("アニメ本とUI本の見た目のズレを調整する数値（XやYで微調整）")]
-    public Vector3 animationOffset = Vector3.zero;
 
     private float previousTimeScale = 1f;
     private bool isMenuOpen = false;
@@ -58,14 +54,22 @@ public class InGameMenuController : MonoBehaviour
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        // 全て初期非表示
+        // 1. 初回起動時から、位置をあらかじめ計算しておく
+        AlignWorldBookToUI();
+
+        // 2. ★初回バグ防止：画面に出す前に、最初から空の上（画面外）へ追放しておく！
+        if (animatedBookWorld != null)
+        {
+            animatedBookWorld.transform.position = bookCenterWorldPos + new Vector3(0, dropDistanceY, 0);
+            animatedBookWorld.SetActive(false);
+        }
+
         if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
-        if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
     }
 
-    // --- メニューを開く（上から落下 ➔ 開く ➔ UI表示） ---
+    // --- メニューを開く ---
     public void OpenMenu()
     {
         if (isMenuOpen || isAnimating) return;
@@ -82,28 +86,32 @@ public class InGameMenuController : MonoBehaviour
     {
         isAnimating = true;
 
-        // 1. 位置のミリ単位同期（UI本の画面位置にアニメ本を吸着させる）
+        // 1. 座標の再計算
         AlignWorldBookToUI();
 
-        // 2. 暗幕ON
-        if (darkOverlayUI != null) darkOverlayUI.SetActive(true);
+        // 2. UI本は確実に消しておく
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
+        if (darkOverlayUI != null) darkOverlayUI.SetActive(true);
 
-        // 3. 上から閉じた本が落ちてくる演出
+        // 3. 上から落ちてくる演出
         if (animatedBookWorld != null)
         {
-            animatedBookWorld.SetActive(true);
-
-            // 画面上部から中央へ
             Vector3 startPos = bookCenterWorldPos + new Vector3(0, dropDistanceY, 0);
             Vector3 endPos = bookCenterWorldPos;
+
+            // ★超重要：画面に表示（SetActive）する「前」に、空の上の座標へセットする！
+            // これで画面中央に1コマだけ映る現象が物理的に不可能になります
+            animatedBookWorld.transform.position = startPos;
+            animatedBookWorld.SetActive(true);
+
             float elapsed = 0f;
 
             while (elapsed < dropDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = elapsed / dropDuration;
-                // ドサッと落ちて少し弾むイージング
+
+                // ドサッと落ちるバウンスイージング
                 t = t - 1f;
                 float bounce = t * t * ((1.70158f + 1f) * t + 1.70158f) + 1f;
                 animatedBookWorld.transform.position = Vector3.LerpUnclamped(startPos, endPos, bounce);
@@ -113,14 +121,14 @@ public class InGameMenuController : MonoBehaviour
 
             if (audioSource != null && bookDropSE != null) audioSource.PlayOneShot(bookDropSE);
 
-            // 4. 着地後、本が開くアニメーション再生
+            // 4. 着地してから開く
             if (worldBookAnimator != null) worldBookAnimator.SetTrigger(openTriggerName);
             if (audioSource != null && bookOpenSE != null) audioSource.PlayOneShot(bookOpenSE);
 
             yield return new WaitForSecondsRealtime(openAnimDuration);
         }
 
-        // 5. すり替え！UI本を表示
+        // 5. 本物のUI本にすり替え
         if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(true);
         if (menuModePanel != null) menuModePanel.SetActive(true);
@@ -129,12 +137,28 @@ public class InGameMenuController : MonoBehaviour
         isAnimating = false;
     }
 
-    // --- 本を閉じて上へ飛び去る共通演出 ---
+    // --- ★【新機能】メニューページ ➔ 図鑑ページへめくる ---
+    public void SwitchToEncyclopedia()
+    {
+        if (audioSource != null && pageFlipSE != null) audioSource.PlayOneShot(pageFlipSE);
+
+        if (menuModePanel != null) menuModePanel.SetActive(false);
+        if (encyclopediaPanel != null) encyclopediaPanel.SetActive(true);
+    }
+
+    // --- ★【新機能】図鑑ページ ➔ メニューページへ戻る ---
+    public void SwitchToMenu()
+    {
+        if (audioSource != null && pageFlipSE != null) audioSource.PlayOneShot(pageFlipSE);
+
+        if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
+        if (menuModePanel != null) menuModePanel.SetActive(true);
+    }
+
+    // --- 本を閉じて上へ飛び去る演出 ---
     IEnumerator CloseAndFlyUpRoutine()
     {
         isAnimating = true;
-
-        // 1. UIを消して、アニメ本を表示
         AlignWorldBookToUI();
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
 
@@ -143,13 +167,11 @@ public class InGameMenuController : MonoBehaviour
             animatedBookWorld.SetActive(true);
             animatedBookWorld.transform.position = bookCenterWorldPos;
 
-            // 2. 本が閉じるアニメーション
             if (worldBookAnimator != null) worldBookAnimator.SetTrigger(closeTriggerName);
             if (audioSource != null && bookCloseSE != null) audioSource.PlayOneShot(bookCloseSE);
 
             yield return new WaitForSecondsRealtime(closeAnimDuration);
 
-            // 3. 上へシュッと飛んでいく
             if (audioSource != null && bookFlyUpSE != null) audioSource.PlayOneShot(bookFlyUpSE);
 
             Vector3 startPos = bookCenterWorldPos;
@@ -160,7 +182,6 @@ public class InGameMenuController : MonoBehaviour
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = elapsed / flyUpDuration;
-                // 加速しながら上に消える
                 animatedBookWorld.transform.position = Vector3.Lerp(startPos, endPos, t * t);
                 yield return null;
             }
@@ -168,14 +189,13 @@ public class InGameMenuController : MonoBehaviour
             animatedBookWorld.SetActive(false);
         }
 
-        // 暗幕も消す
         if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
 
         isAnimating = false;
         isMenuOpen = false;
     }
 
-    // --- ボタン1：閉じる ---
+    // --- 閉じるボタン ---
     public void OnCloseClicked()
     {
         if (isAnimating) return;
@@ -188,7 +208,7 @@ public class InGameMenuController : MonoBehaviour
         Time.timeScale = previousTimeScale; // 再開
     }
 
-    // --- ボタン2：最初からやり直す（全リセット） ---
+    // --- 最初からやり直すボタン ---
     public void OnFullResetClicked()
     {
         if (isAnimating) return;
@@ -199,46 +219,48 @@ public class InGameMenuController : MonoBehaviour
     IEnumerator FullResetAction()
     {
         yield return StartCoroutine(CloseAndFlyUpRoutine());
-
-        // 旗の記憶を消去
         if (CheckpointManager.instance != null) CheckpointManager.instance.ClearCheckpoint();
-
         Time.timeScale = previousTimeScale;
-
-        // 全リセット実行
         if (GameManager.instance != null) GameManager.instance.ResetGame();
     }
 
-    // --- ボタン3：ステージセレクトへ ---
+    // --- ★【修正】ステージセレクトへ戻るボタン ---
     public void OnReturnToStageSelectClicked()
     {
-        if (isAnimating) return;
+        Debug.Log("<color=yellow>【ステージセレクトへ戻る】ボタンが押されました</color>");
         PlayClickSE();
+
+        // ★最重要：フリーズを防ぐため、真っ先に時間を1.0に戻す！
+        Time.timeScale = 1.0f;
+        Time.fixedDeltaTime = 0.02f;
+
         StartCoroutine(StageSelectAction());
     }
 
     IEnumerator StageSelectAction()
     {
+        // 1. 本が閉じて上に飛んでいく
         yield return StartCoroutine(CloseAndFlyUpRoutine());
 
-        // その後に黒い板が降りてくる
-        if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
+        // 2. 黒い板が降りてくる（もし設定されていれば）
+        if (fadeOutScript != null)
+        {
+            yield return StartCoroutine(fadeOutScript.endKuro());
+        }
+
         yield return new WaitForSecondsRealtime(0.2f);
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("StageSelect");
+
+        // 3. セレクト画面へ遷移
+        Debug.Log("StageSelect シーンをロードします");
+        SceneLoader.Load("StageSelect", GimmickType.Generic);
     }
 
-    // --- ズレ防止：Canvasのモードを自動判別して完璧に吸着させる ---
     void AlignWorldBookToUI()
     {
         if (staticBookUI == null) return;
-
         Canvas parentCanvas = staticBookUI.GetComponentInParent<Canvas>();
-
-        // 1. Canvasのモードに合わせて正しいワールド座標を取得
         if (parentCanvas != null && parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
         {
-            // Overlayモードの場合：ピクセル座標なのでScreenToWorld変換が必要
             if (Camera.main != null)
             {
                 Vector3 screenPos = staticBookUI.position;
@@ -248,12 +270,8 @@ public class InGameMenuController : MonoBehaviour
         }
         else
         {
-            // ★Cameraモードの場合：staticBookUI.position は「すでにワールド座標」！
-            // 二重変換せず、そのままの座標を採用する
             bookCenterWorldPos = staticBookUI.position;
         }
-
-        // 2D平面（Z=0）に揃え、微調整オフセットを足す
         bookCenterWorldPos.z = 0f;
         bookCenterWorldPos += animationOffset;
     }
