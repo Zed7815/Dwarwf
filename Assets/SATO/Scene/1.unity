@@ -3059,6 +3059,7 @@ MonoBehaviour:
   startButton: {fileID: 1885802244}
   resetButton: {fileID: 60841603}
   blockManager: {fileID: 1901478529}
+  fadeInScript: {fileID: 0}
   stageNumber: 1
   hasCollectedStarInThisRun: 0
   audioSource: {fileID: 1416668722}
@@ -5438,6 +5439,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2295618398760039473, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 65.688
+      objectReference: {fileID: 0}
+    - target: {fileID: 2295618398760039473, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 1.8841
+      objectReference: {fileID: 0}
+    - target: {fileID: 3260778577377244595, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -5011341863855640708, guid: cd3a2add335d07349a1439d06b742d98, type: 3}
     - target: {fileID: 3616602320027201803, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 

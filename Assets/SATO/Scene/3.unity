@@ -670,6 +670,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2295618398760039473, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.6297858
+      objectReference: {fileID: 0}
+    - target: {fileID: 2295618398760039473, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -5.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3260778577377244595, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -5011341863855640708, guid: cd3a2add335d07349a1439d06b742d98, type: 3}
     - target: {fileID: 3616602320027201803, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -690,6 +702,10 @@ PrefabInstance:
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_IntArgument
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5423147762249539326, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -7596634200563360893, guid: 2aec97a4edd34f847a5a196b9bcef8ac, type: 3}
     - target: {fileID: 5930046575566184122, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -709,6 +725,14 @@ PrefabInstance:
     - target: {fileID: 7238301486078814378, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_Name
       value: Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 8226407011798636831, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.6975
+      objectReference: {fileID: 0}
+    - target: {fileID: 8226407011798636831, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -4.3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -2833,6 +2857,7 @@ MonoBehaviour:
   startButton: {fileID: 490506093}
   resetButton: {fileID: 490506091}
   blockManager: {fileID: 1901478529}
+  fadeInScript: {fileID: 0}
   stageNumber: 3
   hasCollectedStarInThisRun: 0
   audioSource: {fileID: 1416668722}

@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -4557246565864195755, guid: 8b2d62aeb43470443a63e0a7d7944946, type: 3}
+  m_Sprite: {fileID: 2094139770604036667, guid: 92936674c6b6f9b41973148f42e652a4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -109,10 +109,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BirdCarrier
   speed: 4
   waitTime: 0.5
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 0
   maxSearchDistance: 50
   heightOffset: 0.25
   grabOffsetY: -1.7
   landYOffset: 0.5
+  boxSize: {x: 0.5, y: 0.8}
   landableLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -163,7 +167,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2.4, y: 1.55}
+    oldSize: {x: 2.325, y: 1.5}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0

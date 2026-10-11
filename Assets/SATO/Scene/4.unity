@@ -363,8 +363,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4518407300923621207, guid: e188df06863f73c4485d30e4a8bb8259, type: 3}
-  m_Color: {r: 0.4528302, g: 0.4528302, b: 0.4528302, a: 1}
+  m_Sprite: {fileID: -8697746927695837077, guid: 3e7dec5f6ca3cca4896e1ce19a2daf59, type: 3}
+  m_Color: {r: 0.7075472, g: 0.7075472, b: 0.7075472, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -382,8 +382,8 @@ Transform:
   m_GameObject: {fileID: 128373729}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.17, y: -0.5040819, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.08, y: -0.63, z: 0}
+  m_LocalScale: {x: 1.026247, y: 1.026247, z: 1.026247}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2657,6 +2657,7 @@ MonoBehaviour:
   startButton: {fileID: 1584002756}
   resetButton: {fileID: 1999354151}
   blockManager: {fileID: 1901478529}
+  fadeInScript: {fileID: 0}
   stageNumber: 4
   hasCollectedStarInThisRun: 0
   audioSource: {fileID: 1416668722}
@@ -4817,6 +4818,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2295618398760039473, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.6847224
+      objectReference: {fileID: 0}
+    - target: {fileID: 2295618398760039473, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -4.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3260778577377244595, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -5011341863855640708, guid: cd3a2add335d07349a1439d06b742d98, type: 3}
     - target: {fileID: 3616602320027201803, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -4825,6 +4838,18 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: ResetGame
       objectReference: {fileID: 0}
+    - target: {fileID: 4082203783487694449, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.4740001
+      objectReference: {fileID: 0}
+    - target: {fileID: 4082203783487694449, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -10.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4166162878330974197, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -4333905977831156114, guid: 2e6c50c92409a6542be0ad965dc33bc1, type: 3}
     - target: {fileID: 4209481819904007127, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -4837,6 +4862,10 @@ PrefabInstance:
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_IntArgument
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5423147762249539326, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -7596634200563360893, guid: 2aec97a4edd34f847a5a196b9bcef8ac, type: 3}
     - target: {fileID: 5930046575566184122, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -4872,6 +4901,14 @@ PrefabInstance:
     - target: {fileID: 7737692782365626694, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_IntArgument
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8226407011798636831, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.5925001
+      objectReference: {fileID: 0}
+    - target: {fileID: 8226407011798636831, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -7.1
       objectReference: {fileID: 0}
     - target: {fileID: 8254449418162359064, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       propertyPath: m_text
