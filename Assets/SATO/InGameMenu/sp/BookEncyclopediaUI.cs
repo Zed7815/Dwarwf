@@ -57,6 +57,9 @@ public class BookEncyclopediaUI : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip pageFlipSE;
 
+    [Header("演出パーツ")]
+    public GameObject newBadgeObject;
+
     private int currentPageIndex = 0;
     private bool isFlipping = false;
 
@@ -173,21 +176,19 @@ public class BookEncyclopediaUI : MonoBehaviour
 
         AnimalPage page = pages[currentPageIndex];
 
-        // 現在プレイヤーが挑んでいるステージ番号を取得
         int currentStage = 1;
         if (StageInfo.instance != null) currentStage = StageInfo.instance.stageNumber;
         else if (GameManager.instance != null) currentStage = GameManager.instance.stageNumber;
 
-        // ★アンロック判定：今のステージが、解禁ステージ以上ならオープン
         bool isUnlocked = (currentStage >= page.unlockStageNumber);
 
         if (isUnlocked)
         {
-            // --- 【解禁済み】：カラーイラスト ＆ 通常の解説 ---
+            // カラー表示
             if (illustrationImage != null)
             {
                 illustrationImage.sprite = page.illustration;
-                illustrationImage.color = Color.white; // 通常カラー
+                illustrationImage.color = Color.white;
                 illustrationImage.preserveAspect = true;
             }
 
@@ -196,30 +197,45 @@ public class BookEncyclopediaUI : MonoBehaviour
             SetBoxContent(frameBox1, descriptionText1, page.descriptionBox1);
             SetBoxContent(frameBox2, descriptionText2, page.descriptionBox2);
             SetBoxContent(frameBox3, descriptionText3, page.descriptionBox3);
+
+            // ★追加：この動物をすでに見たことがあるかチェック！
+            // 0 = まだ見ていない(NEW!), 1 = 閲覧済み
+            bool hasViewed = PlayerPrefs.GetInt("ViewedAnimal_" + page.animalName, 0) == 1;
+
+            if (newBadgeObject != null)
+            {
+                // まだ見ていないなら「NEW!」を表示
+                newBadgeObject.SetActive(!hasViewed);
+            }
+
+            // 見たのでセーブして「閲覧済み」にする
+            if (!hasViewed)
+            {
+                PlayerPrefs.SetInt("ViewedAnimal_" + page.animalName, 1);
+                PlayerPrefs.Save();
+            }
         }
         else
         {
-            // --- 【未解禁（案C）】：シルエット ＆ 謎の手記 ---
+            // 未解禁（シルエット）
             if (illustrationImage != null)
             {
                 illustrationImage.sprite = page.illustration;
-                illustrationImage.color = Color.black; // ★自動で真っ黒（シルエット）にする！
+                illustrationImage.color = Color.black;
                 illustrationImage.preserveAspect = true;
             }
 
             if (nameText != null) nameText.text = "？？？？？";
 
-            // 案Cのメッセージを流し込む
             SetBoxContent(frameBox1, descriptionText1, "【未確認の生物】\nまだ出会ったことのない生物だ。この先のエリアに生息しているらしい……。");
-            SetBoxContent(frameBox2, descriptionText2, ""); // 枠2と枠3はスッキリ消す
-            SetBoxContent(frameBox3, descriptionText3, "");
+            SetBoxContent(frameBox2, descriptionText2, null);
+            SetBoxContent(frameBox3, descriptionText3, null);
+
+            // ★未解禁の時はNEWバッジも隠す
+            if (newBadgeObject != null) newBadgeObject.SetActive(false);
         }
 
-        if (pageNumberText != null)
-        {
-            pageNumberText.text = $"{currentPageIndex + 1} / {pages.Count}";
-        }
-
+        if (pageNumberText != null) pageNumberText.text = $"{currentPageIndex + 1} / {pages.Count}";
         if (prevButton != null) prevButton.interactable = (currentPageIndex > 0);
         if (nextButton != null) nextButton.interactable = (currentPageIndex < pages.Count - 1);
     }
@@ -227,8 +243,19 @@ public class BookEncyclopediaUI : MonoBehaviour
     void SetBoxContent(GameObject frame, TextMeshProUGUI textComp, string content)
     {
         bool hasContent = !string.IsNullOrEmpty(content);
-        if (frame != null) frame.SetActive(hasContent);
-        if (textComp != null && hasContent) textComp.text = content;
+
+        // 1. 枠画像の表示・非表示
+        if (frame != null)
+        {
+            frame.SetActive(hasContent);
+        }
+
+        // 2. テキスト本体の表示・非表示と文字の完全消去
+        if (textComp != null)
+        {
+            textComp.gameObject.SetActive(hasContent); // オブジェクト自体を消す！
+            textComp.text = hasContent ? content : "";  // 中身も空っぽにする
+        }
     }
 
     void PlayFlipSound()

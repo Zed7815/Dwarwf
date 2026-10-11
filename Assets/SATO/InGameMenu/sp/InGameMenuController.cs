@@ -1,8 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
+﻿using System.Collections;
 using TMPro;
-using System.Collections;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class InGameMenuController : MonoBehaviour
 {
@@ -76,6 +77,34 @@ public class InGameMenuController : MonoBehaviour
         if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (Keyboard.current == null) return;
+
+        // ★追加：Escキー（またはPキー）でメニューを開閉
+        if (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.pKey.wasPressedThisFrame)
+        {
+            if (isMenuOpen)
+            {
+                // もし図鑑を開いている最中なら、メニューのページに戻す
+                if (encyclopediaPanel != null && encyclopediaPanel.activeSelf)
+                {
+                    SwitchToMenu();
+                }
+                else
+                {
+                    // メニューページなら本を閉じる
+                    OnCloseClicked();
+                }
+            }
+            else
+            {
+                // 閉じていたら開く
+                OpenMenu();
+            }
+        }
     }
 
     public void OpenMenu()
@@ -278,17 +307,23 @@ public class InGameMenuController : MonoBehaviour
             CheckpointManager.instance.ClearCheckpoint();
         }
 
-        // 3. ゲーム時間を通常に戻す
+        // 3. ★最重要：配置した動物ブロックをすべて片付け、手持ちを満タンに戻す！
+        if (GameManager.instance != null && GameManager.instance.blockManager != null)
+        {
+            GameManager.instance.blockManager.ClearAllPlacedBlocks();
+        }
+
+        // 4. ゲーム時間を通常に戻す
         Time.timeScale = 1f;
 
-        // 4. ★GameManagerの完全リセットを実行
-        // （自機がスタート位置・右向きに戻り、配置動物が初期位置に戻り、星がステージ上に復活する）
+        // 5. ゲームの完全初期化を実行
+        // （自機がステージ本来のスタート地点・右向きに戻り、星もステージ上に完全復活）
         if (GameManager.instance != null)
         {
             GameManager.instance.ResetGame();
         }
 
-        Debug.Log("<color=yellow>【最初からやり直す】配置動物・星・自機を完全リセットしました！</color>");
+        Debug.Log("<color=yellow>【最初からやり直す】ステージに入った直後の真っ白な状態にリセットしました！</color>");
     }
 
     // --- ★3. ステージセレクトへ戻るボタン（SEを確実に鳴らす） ---

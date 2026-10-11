@@ -90,6 +90,37 @@ public class BlockManager : MonoBehaviour
         }
     }
 
+    // 配置したブロックをすべて消去し、手持ちの数を満タンに戻す（最初からやり直す専用）
+    public void ClearAllPlacedBlocks()
+    {
+        // 1. シーン内の配置済みブロック（PlacedBlock）をすべて削除
+        GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
+        foreach (GameObject b in placedBlocks)
+        {
+            Destroy(b);
+        }
+
+        // 2. 使用個数をすべて 0（手持ち満タン）に戻す
+        foreach (var type in blockTypes)
+        {
+            type.currentCount = 0;
+        }
+
+        // 3. ドロップ枠の大きさをリセット
+        DynamicDropFrame[] allFrames = FindObjectsByType<DynamicDropFrame>(FindObjectsSortMode.None);
+        foreach (DynamicDropFrame frame in allFrames)
+        {
+            if (frame != null) frame.ResetScale();
+        }
+
+        activeFrame = null;
+
+        // 4. UIの数字（残数）を満タンに更新
+        UpdateUI();
+
+        Debug.Log("<color=yellow>【ブロック回収】配置したすべての動物を回収し、手持ちを満タンに戻しました！</color>");
+    }
+
     void CancelDragging()
     {
         if (draggingBlock != null) Destroy(draggingBlock);
