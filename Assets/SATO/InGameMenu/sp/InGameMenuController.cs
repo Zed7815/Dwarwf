@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
+
 public class InGameMenuController : MonoBehaviour
 {
     public static InGameMenuController instance;
@@ -23,8 +24,8 @@ public class InGameMenuController : MonoBehaviour
 
     [Header("3. 本物のUI本（Canvas）")]
     public RectTransform staticBookUI;
-    public GameObject menuModePanel;      // メニュー一覧（リセット、セレクト等のページ）
-    public GameObject encyclopediaPanel;  // 図鑑ページ（動物たちのページ）
+    public GameObject menuModePanel;
+    public GameObject encyclopediaPanel;
 
     [Header("位置の微調整")]
     public Vector3 animationOffset = Vector3.zero;
@@ -35,19 +36,19 @@ public class InGameMenuController : MonoBehaviour
     public AudioClip bookOpenSE;
     public AudioClip bookCloseSE;
     public AudioClip bookFlyUpSE;
-    public AudioClip pageFlipSE;    // ★追加：メニュー ⇔ 図鑑をめくる音
-    public AudioClip clickSE;
+    public AudioClip pageFlipSE;
+    public AudioClip clickSE;       // ★各ボタン共通のクリック音
 
     [Header("演出参照")]
     public nextscene fadeOutScript;
 
     [Header("左ページ（ステージ情報・メモ）のUI参照")]
-    public TextMeshProUGUI stageTitleText;       // 例: STAGE 2 - クモの谷
-    public TextMeshProUGUI thisStageStarText;     // 例: ★ 獲得済み / ☆ 未獲得
-    public GameObject thisStageStarCheckIcon;    // 星を取った時に出るチェックマーク（任意）
-    public TextMeshProUGUI totalStarText;         // 例: ★ 5 / 20
-    public Image playerPortraitImage;            // 自機の小さな立ち絵
-    public TextMeshProUGUI hintMemoText;         // 手書き風ヒント文章
+    public TextMeshProUGUI stageTitleText;
+    public TextMeshProUGUI thisStageStarText;
+    public GameObject thisStageStarCheckIcon;
+    public TextMeshProUGUI totalStarText;
+    public Image playerPortraitImage;
+    public TextMeshProUGUI hintMemoText;
 
     private float previousTimeScale = 1f;
     private bool isMenuOpen = false;
@@ -62,11 +63,10 @@ public class InGameMenuController : MonoBehaviour
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
-        // 1. 初回起動時から、位置をあらかじめ計算しておく
         AlignWorldBookToUI();
 
-        // 2. ★初回バグ防止：画面に出す前に、最初から空の上（画面外）へ追放しておく！
         if (animatedBookWorld != null)
         {
             animatedBookWorld.transform.position = bookCenterWorldPos + new Vector3(0, dropDistanceY, 0);
@@ -78,7 +78,6 @@ public class InGameMenuController : MonoBehaviour
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
     }
 
-    // --- メニューを開く ---
     public void OpenMenu()
     {
         if (isMenuOpen || isAnimating) return;
@@ -87,7 +86,6 @@ public class InGameMenuController : MonoBehaviour
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
-        // メニューを開いた瞬間に、左ページの内容を最新に更新！
         UpdateLeftPageInfo();
 
         StopAllCoroutines();
@@ -96,7 +94,6 @@ public class InGameMenuController : MonoBehaviour
 
     void UpdateLeftPageInfo()
     {
-        // 1. ステージ情報の取得
         int currentStageNum = 1;
         string currentTitle = "STAGE";
 
@@ -105,7 +102,6 @@ public class InGameMenuController : MonoBehaviour
             currentStageNum = StageInfo.instance.stageNumber;
             currentTitle = $"STAGE {currentStageNum} - {StageInfo.instance.stageTitle}";
 
-            // 自機のイラストとヒント文
             if (playerPortraitImage != null && StageInfo.instance.playerPortrait != null)
             {
                 playerPortraitImage.sprite = StageInfo.instance.playerPortrait;
@@ -123,7 +119,6 @@ public class InGameMenuController : MonoBehaviour
 
         if (stageTitleText != null) stageTitleText.text = currentTitle;
 
-        // 2. このステージの星の獲得状況（過去にクリア済みか、今回のプレイで取ったか）
         bool hasStarAlready = PlayerPrefs.GetInt("StarCollected_Stage_" + currentStageNum, 0) == 1;
         bool gotStarNow = (GameManager.instance != null && GameManager.instance.hasCollectedStarInThisRun);
         bool hasStar = hasStarAlready || gotStarNow;
@@ -137,7 +132,6 @@ public class InGameMenuController : MonoBehaviour
             thisStageStarCheckIcon.SetActive(hasStar);
         }
 
-        // 3. 全ステージの総スター数
         int totalStars = 0;
         for (int i = 1; i <= 30; i++)
         {
@@ -149,25 +143,19 @@ public class InGameMenuController : MonoBehaviour
         }
     }
 
-IEnumerator OpenSequence()
+    IEnumerator OpenSequence()
     {
         isAnimating = true;
-
-        // 1. 座標の再計算
         AlignWorldBookToUI();
 
-        // 2. UI本は確実に消しておく
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
         if (darkOverlayUI != null) darkOverlayUI.SetActive(true);
 
-        // 3. 上から落ちてくる演出
         if (animatedBookWorld != null)
         {
             Vector3 startPos = bookCenterWorldPos + new Vector3(0, dropDistanceY, 0);
             Vector3 endPos = bookCenterWorldPos;
 
-            // ★超重要：画面に表示（SetActive）する「前」に、空の上の座標へセットする！
-            // これで画面中央に1コマだけ映る現象が物理的に不可能になります
             animatedBookWorld.transform.position = startPos;
             animatedBookWorld.SetActive(true);
 
@@ -177,8 +165,6 @@ IEnumerator OpenSequence()
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = elapsed / dropDuration;
-
-                // ドサッと落ちるバウンスイージング
                 t = t - 1f;
                 float bounce = t * t * ((1.70158f + 1f) * t + 1.70158f) + 1f;
                 animatedBookWorld.transform.position = Vector3.LerpUnclamped(startPos, endPos, bounce);
@@ -188,14 +174,12 @@ IEnumerator OpenSequence()
 
             if (audioSource != null && bookDropSE != null) audioSource.PlayOneShot(bookDropSE);
 
-            // 4. 着地してから開く
             if (worldBookAnimator != null) worldBookAnimator.SetTrigger(openTriggerName);
             if (audioSource != null && bookOpenSE != null) audioSource.PlayOneShot(bookOpenSE);
 
             yield return new WaitForSecondsRealtime(openAnimDuration);
         }
 
-        // 5. 本物のUI本にすり替え
         if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(true);
         if (menuModePanel != null) menuModePanel.SetActive(true);
@@ -204,25 +188,24 @@ IEnumerator OpenSequence()
         isAnimating = false;
     }
 
-    // --- ★【新機能】メニューページ ➔ 図鑑ページへめくる ---
     public void SwitchToEncyclopedia()
     {
+        PlayClickSE();
         if (audioSource != null && pageFlipSE != null) audioSource.PlayOneShot(pageFlipSE);
 
         if (menuModePanel != null) menuModePanel.SetActive(false);
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(true);
     }
 
-    // --- ★【新機能】図鑑ページ ➔ メニューページへ戻る ---
     public void SwitchToMenu()
     {
+        PlayClickSE();
         if (audioSource != null && pageFlipSE != null) audioSource.PlayOneShot(pageFlipSE);
 
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
         if (menuModePanel != null) menuModePanel.SetActive(true);
     }
 
-    // --- 本を閉じて上へ飛び去る演出 ---
     IEnumerator CloseAndFlyUpRoutine()
     {
         isAnimating = true;
@@ -262,42 +245,58 @@ IEnumerator OpenSequence()
         isMenuOpen = false;
     }
 
-    // --- 閉じるボタン ---
+    // --- ★1. 閉じるボタン（SEを追加！） ---
     public void OnCloseClicked()
     {
         if (isAnimating) return;
+        PlayClickSE(); // ★SE再生を追加！
         StartCoroutine(CloseMenuAction());
     }
 
     IEnumerator CloseMenuAction()
     {
         yield return StartCoroutine(CloseAndFlyUpRoutine());
-        Time.timeScale = previousTimeScale; // 再開
+        Time.timeScale = previousTimeScale;
     }
 
-    // --- 最初からやり直すボタン ---
+    // --- ★2. 最初からやり直すボタン（SEと完全リセットを保証） ---
     public void OnFullResetClicked()
     {
         if (isAnimating) return;
-        PlayClickSE();
+        PlayClickSE(); // ★SE再生
         StartCoroutine(FullResetAction());
     }
 
     IEnumerator FullResetAction()
     {
+        // 1. 本が閉じて空へ飛んでいく演出
         yield return StartCoroutine(CloseAndFlyUpRoutine());
-        if (CheckpointManager.instance != null) CheckpointManager.instance.ClearCheckpoint();
-        Time.timeScale = previousTimeScale;
-        if (GameManager.instance != null) GameManager.instance.ResetGame();
+
+        // 2. チェックポイント旗の記憶をすべて消去（旗を未通過色に戻す）
+        if (CheckpointManager.instance != null)
+        {
+            CheckpointManager.instance.ClearCheckpoint();
+        }
+
+        // 3. ゲーム時間を通常に戻す
+        Time.timeScale = 1f;
+
+        // 4. ★GameManagerの完全リセットを実行
+        // （自機がスタート位置・右向きに戻り、配置動物が初期位置に戻り、星がステージ上に復活する）
+        if (GameManager.instance != null)
+        {
+            GameManager.instance.ResetGame();
+        }
+
+        Debug.Log("<color=yellow>【最初からやり直す】配置動物・星・自機を完全リセットしました！</color>");
     }
 
-    // --- ★【修正】ステージセレクトへ戻るボタン ---
+    // --- ★3. ステージセレクトへ戻るボタン（SEを確実に鳴らす） ---
     public void OnReturnToStageSelectClicked()
     {
-        Debug.Log("<color=yellow>【ステージセレクトへ戻る】ボタンが押されました</color>");
-        PlayClickSE();
+        if (isAnimating) return;
+        PlayClickSE(); // ★SE再生
 
-        // ★最重要：フリーズを防ぐため、真っ先に時間を1.0に戻す！
         Time.timeScale = 1.0f;
         Time.fixedDeltaTime = 0.02f;
 
@@ -306,19 +305,14 @@ IEnumerator OpenSequence()
 
     IEnumerator StageSelectAction()
     {
-        // 1. 本が閉じて上に飛んでいく
         yield return StartCoroutine(CloseAndFlyUpRoutine());
 
-        // 2. 黒い板が降りてくる（もし設定されていれば）
         if (fadeOutScript != null)
         {
             yield return StartCoroutine(fadeOutScript.endKuro());
         }
 
         yield return new WaitForSecondsRealtime(0.2f);
-
-        // 3. セレクト画面へ遷移
-        Debug.Log("StageSelect シーンをロードします");
         SceneLoader.Load("StageSelect", GimmickType.Generic);
     }
 
@@ -343,8 +337,13 @@ IEnumerator OpenSequence()
         bookCenterWorldPos += animationOffset;
     }
 
+    // SE再生（共通）
     void PlayClickSE()
     {
-        if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
+        if (clickSE != null)
+        {
+            if (audioSource == null) audioSource = GetComponent<AudioSource>();
+            if (audioSource != null) audioSource.PlayOneShot(clickSE);
+        }
     }
 }

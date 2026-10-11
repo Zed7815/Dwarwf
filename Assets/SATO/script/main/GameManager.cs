@@ -16,37 +16,27 @@ public class GameManager : MonoBehaviour
     public GameObject resetButton;
     public BlockManager blockManager;
 
+    [Header("演出設定")]
+    public nextscene fadeInScript;
+
     [Header("ステージ番号設定")]
-    public int stageNumber; // このステージの番号 (1, 2, 3...) を入れる
-    public bool hasCollectedStarInThisRun = false; // 今回のプレイで星を取ったか
+    public int stageNumber; // このステージの番号 (1, 2, 3...)
+    public bool hasCollectedStarInThisRun = false;
 
     [Header("SE設定")]
     public AudioSource audioSource;
     public AudioClip startGameSE;
     public AudioClip resetGameSE;
-    public AudioClip startDeniedSE; // 配置不足の時に鳴らす音
+    public AudioClip startDeniedSE;
 
     public int totalItemCount = 0;
     public TextMeshProUGUI itemCountText;
     private List<GameObject> allItems = new List<GameObject>();
 
     [Header("早送り設定")]
-    public GameObject fastForwardButton; // インスペクターで早送りボタンをアタッチ
-    public FastForwardUI ffScript;// インスペクターでボタンのスクリプトをアタッチ
-    private int playCount = 0; // 実行回数を数える
-
-    void Update()
-    {
-        // デバッグ用：Lキーを押すと無理やり全ブロック配置済みのフラグを立てて開始する
-        if (Keyboard.current.lKey.wasPressedThisFrame && currentState == GameState.Edit)
-        {
-            Debug.Log("Debug: Force Start");
-            currentState = GameState.Play;
-            player.StartMove();
-            if (editUIController != null) editUIController.HideEditUI();
-            SetUI();
-        }
-    }
+    public GameObject fastForwardButton;
+    public FastForwardUI ffScript;
+    private int playCount = 0;
 
     void Awake()
     {
@@ -56,19 +46,74 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
         GameObject[] items = GameObject.FindGameObjectsWithTag("Item");
+        allItems.Clear();
         allItems.AddRange(items);
         UpdateItemUI();
-        SetUI();
+
+        if (fadeInScript != null)
+        {
+            StartCoroutine(fadeInScript.startKuro());
+        }
 
         if (ffScript != null)
         {
-            fastForwardButton.SetActive(true); // オブジェクトは出したまま
-            if (ffScript != null) ffScript.SetUIState("Hidden");
-            SetUI();
+            ffScript.SetUIState("Hidden");
         }
 
         SetUI();
+    }
+
+    void Update()
+    {
+        if (Keyboard.current == null) return;
+
+        // ★修正：Lキーで強制開始（未定義の関数を消して直接動かすように修正）
+        if (Keyboard.current.lKey.wasPressedThisFrame && currentState == GameState.Edit)
+        {
+            Debug.Log("Debug: Force Start");
+            currentState = GameState.Play;
+            player.StartMove();
+            if (editUIController != null) editUIController.HideEditUI();
+            SetUI();
+        }
+
+        // デバッグ用：Rキーでリセット
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            ResetGame();
+        }
+
+        // ★デバッグ用：O（オー）キーでこのステージの星データを消去＆即座に復活！
+        if (Keyboard.current.oKey.wasPressedThisFrame)
+        {
+            ResetStarSaveDataForDebug();
+        }
+    }
+
+    // デバッグ用星復活関数
+    public void ResetStarSaveDataForDebug()
+    {
+        // 1. このステージの星セーブデータを消去
+        PlayerPrefs.DeleteKey("StarCollected_Stage_" + stageNumber);
+        PlayerPrefs.Save();
+
+        // 2. 状態変数をリセット
+        hasCollectedStarInThisRun = false;
+        totalItemCount = 0;
+        UpdateItemUI();
+
+        // 3. シーン内のすべての星を強制的に新品状態で復活！
+        Item[] allStageItems = FindObjectsByType<Item>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var item in allStageItems)
+        {
+            item.gameObject.SetActive(true);
+            // public/privateに関係なく呼べる安全なSendMessageを使用
+            item.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+        }
+
+        Debug.Log($"<color=yellow>【デバッグ】ステージ {stageNumber} の星セーブデータを削除し、星を完全復活させました！</color>");
     }
 
     public void AddItem()
@@ -80,16 +125,10 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        // すべてのブロックが置かれていない場合
+        // ブロック配置チェック
         if (blockManager != null && !blockManager.IsAllBlocksPlaced())
         {
-            PlaySE(startDeniedSE); // 警告音を鳴らす
-
-            int remaining = 0;
-            foreach (var b in blockManager.blockTypes)
-            {
-                remaining += (b.maxCount - b.currentCount);
-            }
+            PlaySE(startDeniedSE);
 
             if (TutorialMessageUI.instance != null)
             {
@@ -100,9 +139,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        playCount++; // 実行回数をカウント
-
-        PlaySE(startGameSE); // 正常な開始音
+        playCount++;
+        PlaySE(startGameSE);
         currentState = GameState.Play;
         player.StartMove();
         if (editUIController != null) editUIController.HideEditUI();
@@ -110,46 +148,37 @@ public class GameManager : MonoBehaviour
         // 2回目以降のスタートなら早送りボタンを表示
         if (ffScript != null)
         {
-            if (playCount >= 2)
-            {
-                ffScript.SetUIState("Active"); // 2回目以降：有効
-            }
-            else
-            {
-                ffScript.SetUIState("Locked"); // 1回目：半透明ロック
-            }
+            if (playCount >= 2) ffScript.SetUIState("Active");
+            else ffScript.SetUIState("Locked");
+
             ffScript.ResetToNormal();
         }
-
 
         SetUI();
     }
 
-    // GameManager.cs の ResetGame() 内
-
     public void ResetGame()
     {
+        if (GameSpeedManager.instance != null) GameSpeedManager.instance.ResetToBaseSpeed();
+        else Time.timeScale = 1.0f;
+
         if (ffScript != null)
         {
-            ffScript.ResetToNormal();      // 速度を1.0に戻す
-            ffScript.SetUIState("Hidden"); // ボタンを完全に隠す(SetActive(false))
-        }
-        else
-        {
-            Time.timeScale = 1.0f; // 万が一スクリプトがなくても時間を戻す
+            ffScript.ResetToNormal();
+            ffScript.SetUIState("Hidden");
         }
 
         PlaySE(resetGameSE);
         currentState = GameState.Edit;
         hasCollectedStarInThisRun = false;
 
-        // 1. マップに最初から置いてあるギミックのリセット
+        // 1. GimmickResetter
         foreach (var res in GimmickResetter.allResetters)
         {
             if (res != null) res.ResetGimmick();
         }
 
-        // 2. プレイヤーが配置したブロックを含む全オブジェクトへのリセット通知
+        // 2. 全オブジェクトへのリセット通知
         MonoBehaviour[] allScripts = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
         foreach (var script in allScripts)
         {
@@ -160,23 +189,34 @@ public class GameManager : MonoBehaviour
         player.ResetPosition();
         if (editUIController != null) editUIController.ShowEditUI();
 
-        // 4. ★最重要：ブロックの状態と個数カウントの完全リセット
-        blockManager.ResetAllBlocks();
+        // 4. ブロックの状態とカウントのリセット
+        if (blockManager != null) blockManager.ResetAllBlocks();
 
-        // 星アイテムなどの復活
+        // 5. アイテムの初期化
         totalItemCount = 0;
-        UpdateItemUI();
-        foreach (GameObject item in allItems) { if (item != null) item.SetActive(true); }
+        foreach (GameObject item in allItems)
+        {
+            if (item != null)
+            {
+                item.SetActive(true);
+                item.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+            }
+        }
 
+        // 6. チェックポイントのスナップショット復元
         if (CheckpointManager.instance != null && CheckpointManager.instance.HasActiveCheckpoint)
         {
             CheckpointManager.instance.RestoreSnapshot();
+        }
+        else
+        {
+            UpdateItemUI();
         }
 
         SetUI();
     }
 
-    void UpdateItemUI()
+    public void UpdateItemUI()
     {
         if (itemCountText != null) itemCountText.text = "Star: " + totalItemCount;
     }
@@ -185,7 +225,7 @@ public class GameManager : MonoBehaviour
 
     void SetUI()
     {
-        if (currentState == GameState.Edit) { startButton.SetActive(true); resetButton.SetActive(false); }
-        else { startButton.SetActive(false); resetButton.SetActive(true); }
+        if (startButton != null) startButton.SetActive(currentState == GameState.Edit);
+        if (resetButton != null) resetButton.SetActive(currentState == GameState.Play);
     }
 }
