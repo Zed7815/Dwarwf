@@ -154,7 +154,7 @@ public class InGameMenuController : MonoBehaviour
 
         if (thisStageStarText != null)
         {
-            thisStageStarText.text = hasStar ? "獲得済み！" : "未獲得！";
+            thisStageStarText.text = hasStar ? "獲得済み！" : "星未獲得！";
         }
         if (thisStageStarCheckIcon != null)
         {

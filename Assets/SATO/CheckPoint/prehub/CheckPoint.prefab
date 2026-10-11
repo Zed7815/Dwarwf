@@ -151,9 +151,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87618671ae19c954fab069f02b0982e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointFlag
-  flagRenderer: {fileID: 0}
+  flagRenderer: {fileID: 8114101823993642083}
   inactiveColor: {r: 1, g: 1, b: 1, a: 1}
-  activeColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  activeColor: {r: 0.007843138, g: 1, b: 0, a: 1}
+  inactiveSprite: {fileID: 0}
+  activeSprite: {fileID: 0}
   activateSE: {fileID: 0}
   respawnOffset: {x: 0, y: 0, z: 0}
   isActive: 0

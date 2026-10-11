@@ -93,14 +93,19 @@ public class BlockManager : MonoBehaviour
     // 配置したブロックをすべて消去し、手持ちの数を満タンに戻す（最初からやり直す専用）
     public void ClearAllPlacedBlocks()
     {
-        // 1. シーン内の配置済みブロック（PlacedBlock）をすべて削除
+        // 1. シーン内の配置済みブロックをすべて取得
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
         foreach (GameObject b in placedBlocks)
         {
+            // ★超重要：Destroyされるのを待たずに、その瞬間にタグを剥がして非アクティブにする！
+            // これにより、同じフレーム内で数え直されても絶対に「0個」と認識されます
+            b.tag = "Untagged";
+            b.SetActive(false);
+
             Destroy(b);
         }
 
-        // 2. 使用個数をすべて 0（手持ち満タン）に戻す
+        // 2. カウントを確実に 0 にリセット
         foreach (var type in blockTypes)
         {
             type.currentCount = 0;
@@ -115,10 +120,10 @@ public class BlockManager : MonoBehaviour
 
         activeFrame = null;
 
-        // 4. UIの数字（残数）を満タンに更新
+        // 4. UIの数字（0 / 2 など）を更新
         UpdateUI();
 
-        Debug.Log("<color=yellow>【ブロック回収】配置したすべての動物を回収し、手持ちを満タンに戻しました！</color>");
+        Debug.Log("<color=yellow>【完全回収】タグを即時剥奪し、配置数を0個にリセットしました！</color>");
     }
 
     void CancelDragging()
