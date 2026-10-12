@@ -50,6 +50,26 @@ public class FastForwardUI : MonoBehaviour
         }
     }
 
+    // 倍速ボタンを押した瞬間の処理
+    public void SetFastSpeed(bool isFast)
+    {
+        if (isFast)
+        {
+            Time.timeScale = 3.0f; // 3倍速
+
+            // ★最重要：物理演算の間隔を広げて、通常時と同じ計算負荷（1秒に50回）に抑える！
+            Time.fixedDeltaTime = 0.02f * Time.timeScale;
+
+            // ★最重要：計算遅れが発生しても、最大0.1秒分で打ち切る（デススパイラルの防止）
+            Time.maximumDeltaTime = 0.1f;
+        }
+        else
+        {
+            Time.timeScale = 1.0f;
+            Time.fixedDeltaTime = 0.02f;
+            Time.maximumDeltaTime = 0.333f;
+        }
+    }
     public void SetUIState(string state)
     {
         switch (state)
@@ -107,6 +127,11 @@ public class FastForwardUI : MonoBehaviour
     public void ResetToNormal()
     {
         isFastForwarding = false;
+
+        Time.timeScale = 1.0f;
+        Time.fixedDeltaTime = 0.02f;
+        Time.maximumDeltaTime = 0.333f;
+
         Time.timeScale = 1.0f; // 速度を戻す
                                // アニメーターをあきらめたので、アニメ関連のコードは消してもOKです
     }

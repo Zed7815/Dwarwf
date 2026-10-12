@@ -146,7 +146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7a925eba45e0cd469baecd84cb73a17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FastForwardUI
-  fastForwardSpeed: 1.5
+  fastForwardSpeed: 1.25
   buttonImage: {fileID: 4632723219311587461}
   button: {fileID: 2164042416343746102}
   animator: {fileID: 0}
