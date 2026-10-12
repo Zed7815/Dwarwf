@@ -31,9 +31,16 @@ public class BlockManager : MonoBehaviour
     public AudioClip dragSE;
     public AudioClip dropSE;
     public AudioClip deleteSE;
+    public AudioClip startDeniedSE; // ★追加：これが入っていなかったためエラーになっていました！
 
     [Header("エフェクト設定")]
-    public GameObject poofEffectPrefab; // 配置・入れ替え時の煙エフェクト
+    public GameObject poofEffectPrefab;
+
+    [Header("南京錠プレハブ（任意）")]
+    public GameObject padlockPrefab;
+
+    [Tooltip("動物の中心から南京錠をどれくらいずらして配置するか（Yを増やすと高くなります）")]
+    public Vector3 padlockOffset = new Vector3(0, 0.8f, 0);
 
     private GameObject draggingBlock;
     private SpriteRenderer previewSR;
@@ -41,7 +48,6 @@ public class BlockManager : MonoBehaviour
     private int activeTypeIndex;
     private DynamicDropFrame activeFrame;
 
-    // 現在プレビューで重なっている「消える予定のブロック」
     private GameObject highlightedOldBlock;
 
     void Update()
@@ -53,11 +59,9 @@ public class BlockManager : MonoBehaviour
             return;
         }
 
-
         // 右クリック
         if (Mouse.current.rightButton.wasPressedThisFrame)
         {
-            // ★修正：ドラッグ中に右クリックしたら、配置せずにキャンセル（破棄）する
             if (draggingBlock != null)
             {
                 CancelDragging();
@@ -71,7 +75,6 @@ public class BlockManager : MonoBehaviour
         // 左クリック押し込み
         if (Mouse.current.leftButton.wasPressedThisFrame && draggingBlock == null)
         {
-            // UIの上でなければ掴む
             if (EventSystem.current != null && !EventSystem.current.IsPointerOverGameObject())
             {
                 TryGrabPlacedBlock();
@@ -90,28 +93,21 @@ public class BlockManager : MonoBehaviour
         }
     }
 
-    // 配置したブロックをすべて消去し、手持ちの数を満タンに戻す（最初からやり直す専用）
     public void ClearAllPlacedBlocks()
     {
-        // 1. シーン内の配置済みブロックをすべて取得
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
         foreach (GameObject b in placedBlocks)
         {
-            // ★超重要：Destroyされるのを待たずに、その瞬間にタグを剥がして非アクティブにする！
-            // これにより、同じフレーム内で数え直されても絶対に「0個」と認識されます
             b.tag = "Untagged";
             b.SetActive(false);
-
             Destroy(b);
         }
 
-        // 2. カウントを確実に 0 にリセット
         foreach (var type in blockTypes)
         {
             type.currentCount = 0;
         }
 
-        // 3. ドロップ枠の大きさをリセット
         DynamicDropFrame[] allFrames = FindObjectsByType<DynamicDropFrame>(FindObjectsSortMode.None);
         foreach (DynamicDropFrame frame in allFrames)
         {
@@ -119,8 +115,6 @@ public class BlockManager : MonoBehaviour
         }
 
         activeFrame = null;
-
-        // 4. UIの数字（0 / 2 など）を更新
         UpdateUI();
 
         Debug.Log("<color=yellow>【完全回収】タグを即時剥奪し、配置数を0個にリセットしました！</color>");
@@ -139,7 +133,6 @@ public class BlockManager : MonoBehaviour
         activeFrame = null;
     }
 
-    // 設置済みブロックを掴む機能
     void TryGrabPlacedBlock()
     {
         Vector3 mousePos = GetMouseWorldPosition();
@@ -147,14 +140,21 @@ public class BlockManager : MonoBehaviour
 
         if (hit != null)
         {
+            // ロックされているブロックは掴めない！
+            PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
+            if (marker != null && marker.isLocked)
+            {
+                PlaySE(startDeniedSE);
+                Debug.Log("<color=yellow>このブロックはチェックポイントで使用されたため固定されています！</color>");
+                return;
+            }
+
             BlockInfo info = hit.GetComponent<BlockInfo>();
             if (info != null)
             {
-                // 枠のスケールを戻す
                 Collider2D frameHit = GetColliderAtPos(hit.transform.position, "DropFrame");
                 if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
 
-                // 掴んだので、実体を消してドラッグを開始する
                 int index = info.typeIndex;
                 blockTypes[index].currentCount--;
                 Destroy(hit.gameObject);
@@ -167,7 +167,6 @@ public class BlockManager : MonoBehaviour
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
-        // 個数制限に達していたら、一番古い同じブロックを消してワープさせる
         if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount)
         {
             RemoveOldestBlockOfType(typeIndex);
@@ -194,11 +193,9 @@ public class BlockManager : MonoBehaviour
             BlockInfo info = b.GetComponent<BlockInfo>();
             if (info != null && info.typeIndex == typeIndex)
             {
-                // 最初に見つかった（＝シーンにある）ものを消す
                 InstantiatePoof(b.transform.position);
                 PlaySE(deleteSE);
 
-                // 枠をリセット
                 Collider2D frameHit = GetColliderAtPos(b.transform.position, "DropFrame");
                 if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
 
@@ -230,20 +227,17 @@ public class BlockManager : MonoBehaviour
                 activeFrame.Expand(blockTypes[activeTypeIndex].targetFrameScale);
             }
 
-            // 入れ替え予告の演出
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
             if (blockHit != null)
             {
-                // 違うブロック、または同じ場所のブロックがある時
                 previewSR.color = new Color(1f, 1f, 1f, 0.7f);
 
-                // 重なっているブロックを半透明にする演出
                 if (highlightedOldBlock != blockHit.gameObject)
                 {
                     ResetOldBlockHighlight();
                     highlightedOldBlock = blockHit.gameObject;
                     var sr = highlightedOldBlock.GetComponent<SpriteRenderer>();
-                    if (sr) sr.color = new Color(1f, 0.5f, 0.5f, 0.5f); // 赤っぽく半透明に
+                    if (sr) sr.color = new Color(1f, 0.5f, 0.5f, 0.5f);
                 }
             }
             else
@@ -284,18 +278,28 @@ public class BlockManager : MonoBehaviour
             Vector3 snapPos = frameHit.transform.position;
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
 
-            // すでに何かあったら消去する
+            // すでに置いてあるブロックがロックされていたら上書き不可
             if (blockHit != null)
             {
+                PlacedBlockMarker existingMarker = blockHit.GetComponent<PlacedBlockMarker>();
+                if (existingMarker != null && existingMarker.isLocked)
+                {
+                    PlaySE(startDeniedSE);
+                    Destroy(draggingBlock);
+                    draggingBlock = null;
+                    if (previewBlock != null) Destroy(previewBlock);
+                    if (activeFrame != null) { activeFrame.ResetScale(); activeFrame = null; }
+                    ResetOldBlockHighlight();
+                    return;
+                }
+
                 DeleteBlockAt(blockHit.gameObject);
                 InstantiatePoof(snapPos);
             }
 
-            // 配置成功
             PlaySE(dropSE);
             draggingBlock.transform.position = new Vector3(snapPos.x, snapPos.y, 0);
             draggingBlock.GetComponent<Collider2D>().enabled = true;
-          //  draggingBlock.GetComponent<SpriteRenderer>().color = Color.white;
             draggingBlock.tag = "PlacedBlock";
 
             BlockInfo info = draggingBlock.AddComponent<BlockInfo>();
@@ -303,6 +307,8 @@ public class BlockManager : MonoBehaviour
 
             PlacedBlockMarker marker = draggingBlock.AddComponent<PlacedBlockMarker>();
             marker.SavePlacedState();
+
+            SetupLockIconForMarker(marker);
 
             blockTypes[activeTypeIndex].currentCount++;
             draggingBlock = null;
@@ -320,7 +326,6 @@ public class BlockManager : MonoBehaviour
         UpdateUI();
     }
 
-    // 特定のオブジェクトを指定して消去
     void DeleteBlockAt(GameObject target)
     {
         BlockInfo info = target.GetComponent<BlockInfo>();
@@ -331,7 +336,6 @@ public class BlockManager : MonoBehaviour
         Destroy(target);
     }
 
-    // マウス位置のブロックを右クリック削除
     void DeleteBlockAtMouse()
     {
         Vector3 mousePos = GetMouseWorldPosition();
@@ -339,10 +343,17 @@ public class BlockManager : MonoBehaviour
 
         if (hit != null)
         {
+            // ロックされているブロックは削除不可
+            PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
+            if (marker != null && marker.isLocked)
+            {
+                PlaySE(startDeniedSE);
+                return;
+            }
+
             InstantiatePoof(hit.transform.position);
             PlaySE(deleteSE);
 
-            // 枠のリセット
             Collider2D frameHit = GetColliderAtPos(hit.transform.position, "DropFrame");
             if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
 
@@ -357,6 +368,7 @@ public class BlockManager : MonoBehaviour
     }
 
     void PlaySE(AudioClip clip) { if (audioSource != null && clip != null) audioSource.PlayOneShot(clip); }
+
     Collider2D GetColliderAtPos(Vector3 pos, string tag)
     {
         Collider2D[] hits = Physics2D.OverlapPointAll(pos);
@@ -364,14 +376,25 @@ public class BlockManager : MonoBehaviour
         return null;
     }
 
+    void SetupLockIconForMarker(PlacedBlockMarker marker)
+    {
+        if (padlockPrefab != null)
+        {
+            GameObject lockObj = Instantiate(padlockPrefab, marker.transform);
+
+            lockObj.transform.localPosition = padlockOffset;
+
+            lockObj.SetActive(false);
+            marker.lockIconObject = lockObj;
+        }
+    }
+
     Vector3 GetMouseWorldPosition()
     {
-        // 1. カメラが存在しない、または無効な時は計算しない
         if (Camera.main == null || !Camera.main.enabled) return Vector3.zero;
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
 
-        // 2. 画面の範囲外にマウスがある時は計算しない
         if (mousePos.x < 0 || mousePos.x > Screen.width || mousePos.y < 0 || mousePos.y > Screen.height)
         {
             return Vector3.zero;
@@ -379,11 +402,9 @@ public class BlockManager : MonoBehaviour
 
         try
         {
-            // 3. 奥行き(Z)を0ではなく、ニアクリップ面より少し先に設定する
             float safeZ = Camera.main.nearClipPlane + 0.001f;
             Vector3 screenPos = new Vector3(mousePos.x, mousePos.y, safeZ);
 
-            // 4. ビューポート変換（0〜1の範囲内か）を確認してエラーを未然に防ぐ
             Vector3 viewportPos = Camera.main.ScreenToViewportPoint(screenPos);
             if (viewportPos.x < -0.05f || viewportPos.x > 1.05f || viewportPos.y < -0.05f || viewportPos.y > 1.05f)
             {
@@ -402,27 +423,21 @@ public class BlockManager : MonoBehaviour
 
     public void ResetAllBlocks()
     {
-        // 配置済みブロックを「削除」するのではなく「初期化」する
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
         foreach (GameObject b in placedBlocks)
         {
-            // もしブロック自体にアニメーションや消滅処理があるなら、
-            // そのスクリプトの OnGimmickReset() を呼ぶだけにする
             b.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
-        // currentCount はリセットしない（配置したままなので）
         RecalculateAllCounts();
     }
 
     public void RecalculateAllCounts()
     {
-        // 一旦全てのカウントを0にする
         foreach (var type in blockTypes)
         {
             type.currentCount = 0;
         }
 
-        // シーン内の PlacedBlock をすべて探し、typeIndex を元にカウントし直す
         GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
         foreach (GameObject b in placedBlocks)
         {
@@ -433,7 +448,7 @@ public class BlockManager : MonoBehaviour
             }
         }
 
-        UpdateUI(); // UIに反映
+        UpdateUI();
     }
 
     void UpdateUI()

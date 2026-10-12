@@ -22,6 +22,8 @@ public class CheckpointManager : MonoBehaviour
     private Vector3 stageDefaultSpawnPos;
     private int stageDefaultDirection = 1;
 
+    private List<PlacedBlockMarker> snapshotLockedBlocks = new List<PlacedBlockMarker>();
+
     public bool HasActiveCheckpoint => currentActiveCheckpoint != null;
 
     void Awake()
@@ -112,6 +114,19 @@ public class CheckpointManager : MonoBehaviour
         {
             snapshotSpiderLiftPositions[sl] = sl.transform.position;
         }
+
+        PlacedBlockMarker[] allMarkers = FindObjectsByType<PlacedBlockMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var marker in allMarkers)
+        {
+            if (marker.isUsedInThisRun || marker.isLocked)
+            {
+                marker.LockBlock(); // 南京錠をONにしてロック！
+                if (!snapshotLockedBlocks.Contains(marker))
+                {
+                    snapshotLockedBlocks.Add(marker);
+                }
+            }
+        }
     }
 
     // ★リセット時に呼ばれる：リフトの位置も旗を踏んだ瞬間の高さへ復元！
@@ -197,6 +212,20 @@ public class CheckpointManager : MonoBehaviour
         }
 
         Debug.Log($"<color=cyan>【「{currentActiveCheckpoint.gameObject.name}」の状態へリフトも含めて復元完了】</color>");
+
+
+        PlacedBlockMarker[] allMarkers = FindObjectsByType<PlacedBlockMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var marker in allMarkers)
+        {
+            if (snapshotLockedBlocks.Contains(marker))
+            {
+                marker.LockBlock(); // 旗の手前で使ったものはロック維持
+            }
+            else
+            {
+                marker.UnlockBlock(); // 旗の後に置いた/触ったものはロック解除
+            }
+        }
     }
 
     public Vector3 GetRespawnPosition()
@@ -224,5 +253,12 @@ public class CheckpointManager : MonoBehaviour
         snapshotLiftPositions.Clear();
         snapshotSpiderLiftPositions.Clear();
         snapshotStarCount = 0;
+
+        PlacedBlockMarker[] allMarkers = FindObjectsByType<PlacedBlockMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var marker in allMarkers)
+        {
+            marker.UnlockBlock();
+        }
+        snapshotLockedBlocks.Clear();
     }
 }

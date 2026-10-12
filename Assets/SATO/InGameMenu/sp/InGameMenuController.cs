@@ -74,9 +74,36 @@ public class InGameMenuController : MonoBehaviour
             animatedBookWorld.SetActive(false);
         }
 
+        // ★追加：暗幕をクリックしたら自動で閉じるようにする安全処理
+        SetupDarkOverlayClick();
+
         if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
+    }
+
+    // ★暗幕クリックの自動セットアップ
+    void SetupDarkOverlayClick()
+    {
+        if (darkOverlayUI == null) return;
+
+        // 1. 暗幕の画像が確実にクリックを吸えるようにする
+        Image img = darkOverlayUI.GetComponent<Image>();
+        if (img != null)
+        {
+            img.raycastTarget = true; // クリックを検知可能にする
+        }
+
+        // 2. ボタンコンポーネントを自動追加して OnCloseClicked を登録
+        Button btn = darkOverlayUI.GetComponent<Button>();
+        if (btn == null) btn = darkOverlayUI.AddComponent<Button>();
+
+        btn.transition = Selectable.Transition.None; // 色変化はなし
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(() => {
+            Debug.Log("<color=cyan>【暗幕クリック検知】外側がクリックされたため本を閉じます</color>");
+            OnCloseClicked();
+        });
     }
 
     void Update()
