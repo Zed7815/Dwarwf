@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections; // ★追加：これが入っていないと IEnumerator でエラーになります！
 
 public class PlacedBlockMarker : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class PlacedBlockMarker : MonoBehaviour
 
     [Header("南京錠アイコン（自動生成または指定）")]
     public GameObject lockIconObject;      // 頭上に表示する南京錠
+
+    private Coroutine shakeRoutine;
 
     void Start()
     {
@@ -33,6 +36,34 @@ public class PlacedBlockMarker : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         CheckPlayerContact(collision);
+    }
+
+    public void PlayLockDeniedEffect()
+    {
+        if (shakeRoutine != null) StopCoroutine(shakeRoutine);
+        shakeRoutine = StartCoroutine(ShakeRoutine());
+    }
+
+    IEnumerator ShakeRoutine()
+    {
+        float duration = 0.25f; // 震える時間（0.25秒）
+        float elapsed = 0f;
+        float magnitude = 0.08f; // 震えの強さ
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float percent = 1f - (elapsed / duration); // 徐々に収まる
+
+            // サイン波で高速に左右にブルブルッと揺らす
+            float offsetX = Mathf.Sin(elapsed * 60f) * magnitude * percent;
+            transform.position = placedPosition + new Vector3(offsetX, 0, 0);
+            yield return null;
+        }
+
+        // 最後に確実に元の位置にピタッと戻す（ズレ防止）
+        transform.position = placedPosition;
+        shakeRoutine = null;
     }
 
     void CheckPlayerContact(Collider2D col)

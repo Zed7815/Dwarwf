@@ -52,9 +52,16 @@ public class GoalPoint : MonoBehaviour
             PlayerPrefs.SetInt("StageCleared", thisStageNumber);
         }
 
-        if (GameManager.instance != null && GameManager.instance.hasCollectedStarInThisRun)
+        bool hasStar = false;
+        if (GameManager.instance != null)
+        {
+            hasStar = GameManager.instance.hasCollectedStarInThisRun || GameManager.instance.totalItemCount > 0;
+        }
+
+        if (hasStar)
         {
             PlayerPrefs.SetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 1);
+            Debug.Log($"<color=yellow>【ゴール】ステージ {GameManager.instance.stageNumber} の星を正常に保存しました！</color>");
         }
 
         // データを確実に書き込む

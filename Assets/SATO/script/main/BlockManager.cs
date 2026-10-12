@@ -31,7 +31,8 @@ public class BlockManager : MonoBehaviour
     public AudioClip dragSE;
     public AudioClip dropSE;
     public AudioClip deleteSE;
-    public AudioClip startDeniedSE; // ★追加：これが入っていなかったためエラーになっていました！
+    public AudioClip startDeniedSE;
+    public AudioClip lockDeniedSE;
 
     [Header("エフェクト設定")]
     public GameObject poofEffectPrefab;
@@ -144,8 +145,8 @@ public class BlockManager : MonoBehaviour
             PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
             if (marker != null && marker.isLocked)
             {
-                PlaySE(startDeniedSE);
-                Debug.Log("<color=yellow>このブロックはチェックポイントで使用されたため固定されています！</color>");
+                marker.PlayLockDeniedEffect();
+                PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
                 return;
             }
 
@@ -169,7 +170,16 @@ public class BlockManager : MonoBehaviour
 
         if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount)
         {
-            RemoveOldestBlockOfType(typeIndex);
+           
+            bool removed = RemoveOldestUnlockedBlockOfType(typeIndex);
+
+            // もしすべてロックされていて、消せるブロックが1つもないなら配置を拒否！
+            if (!removed)
+            {
+                PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
+                Debug.Log("<color=yellow>この動物はすべてチェックポイントで固定されているため、これ以上配置できません！</color>");
+                return; // ドラッグを開始させない！
+            }
         }
 
         activeTypeIndex = typeIndex;
@@ -183,6 +193,40 @@ public class BlockManager : MonoBehaviour
         previewSR = previewBlock.GetComponent<SpriteRenderer>();
         previewBlock.GetComponent<Collider2D>().enabled = false;
         previewBlock.transform.position += new Vector3(0, 0, 0.1f);
+    }
+
+    bool RemoveOldestUnlockedBlockOfType(int typeIndex)
+    {
+        GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
+        foreach (GameObject b in placedBlocks)
+        {
+            BlockInfo info = b.GetComponent<BlockInfo>();
+            if (info != null && info.typeIndex == typeIndex)
+            {
+                // ★最重要：ロックされているブロックなら絶対に消さない！スキップ！
+                PlacedBlockMarker marker = b.GetComponent<PlacedBlockMarker>();
+                if (marker != null && marker.isLocked)
+                {
+                    continue; // 次のブロックを探す
+                }
+
+                // ロックされていないブロックを見つけたら、それを消去して枠を空ける
+                InstantiatePoof(b.transform.position);
+                PlaySE(deleteSE);
+
+                Collider2D frameHit = GetColliderAtPos(b.transform.position, "DropFrame");
+                if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
+
+                b.tag = "Untagged"; // 即座にタグを外す
+                b.SetActive(false);
+                Destroy(b);
+                blockTypes[typeIndex].currentCount--;
+                return true; // 1つ消去成功
+            }
+        }
+
+        // 消せるブロック（未ロックのもの）が1つも無かった
+        return false;
     }
 
     void RemoveOldestBlockOfType(int typeIndex)
@@ -284,7 +328,9 @@ public class BlockManager : MonoBehaviour
                 PlacedBlockMarker existingMarker = blockHit.GetComponent<PlacedBlockMarker>();
                 if (existingMarker != null && existingMarker.isLocked)
                 {
-                    PlaySE(startDeniedSE);
+                    existingMarker.PlayLockDeniedEffect();
+                    PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
+
                     Destroy(draggingBlock);
                     draggingBlock = null;
                     if (previewBlock != null) Destroy(previewBlock);
@@ -347,7 +393,9 @@ public class BlockManager : MonoBehaviour
             PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
             if (marker != null && marker.isLocked)
             {
-                PlaySE(startDeniedSE);
+                // ★震えて拒否SEを鳴らす！
+                marker.PlayLockDeniedEffect();
+                PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
                 return;
             }
 

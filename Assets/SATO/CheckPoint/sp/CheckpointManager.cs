@@ -151,6 +151,11 @@ public class CheckpointManager : MonoBehaviour
         if (GameManager.instance != null)
         {
             GameManager.instance.totalItemCount = snapshotStarCount;
+
+            if (snapshotStarCount > 0)
+            {
+                GameManager.instance.hasCollectedStarInThisRun = true;
+            }
             GameManager.instance.SendMessage("UpdateItemUI", SendMessageOptions.DontRequireReceiver);
         }
 
