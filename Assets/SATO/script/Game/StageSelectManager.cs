@@ -57,6 +57,28 @@ public class StageSelectManager : MonoBehaviour
 
         UpdateStarCountUI();
         RefreshStageButtons();
+
+        // ★追加：ステージ1をクリアして戻ってきた時、かつまだこのチュートリアルを見ていない場合
+        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
+        bool hasSeenBookTutorial = PlayerPrefs.GetInt("Tutorial_Seen_SelectBook", 0) == 1;
+
+        if (clearedStage >= 1 && !hasSeenBookTutorial)
+        {
+            PlayerPrefs.SetInt("Tutorial_Seen_SelectBook", 1);
+            PlayerPrefs.Save();
+
+            // 少し遅れてメッセージを表示（画面がフェードインし終わるのを待つ）
+            StartCoroutine(ShowBookTutorialDelay());
+        }
+    }
+
+    IEnumerator ShowBookTutorialDelay()
+    {
+        yield return new WaitForSeconds(1.5f);
+        if (TutorialMessageUI.instance != null)
+        {
+            TutorialMessageUI.instance.ShowMessage("画面左上の「本（図鑑）」から\nいつでも動物のヒントが見られるよ！");
+        }
     }
 
     void Update()

@@ -52,6 +52,21 @@ public class CheckpointManager : MonoBehaviour
         savedPlayerDirection = playerDirection;
         currentActiveCheckpoint.SetVisualState(true);
 
+        // ★追加：初めて旗に触れた時だけメッセージを出す
+        bool hasSeenCheckTutorial = PlayerPrefs.GetInt("Tutorial_Seen_Checkpoint", 0) == 1;
+        if (!hasSeenCheckTutorial)
+        {
+            PlayerPrefs.SetInt("Tutorial_Seen_Checkpoint", 1);
+            PlayerPrefs.Save();
+
+            Time.timeScale = 0f; // 一時停止してじっくり読ませる
+            if (TutorialMessageUI.instance != null)
+            {
+                TutorialMessageUI.instance.ShowMessage("チェックポイント通過！\nリセットしても、ここからやり直せるよ！\n(クリックで再開)");
+            }
+            // ※メッセージを閉じた時に時間を戻す処理が必要であればここで制御
+        }
+
         CaptureSnapshot();
 
         Debug.Log($"<color=green>【旗セーブ】「{newFlag.gameObject.name}」通過！世界のセーブ完了</color>");
