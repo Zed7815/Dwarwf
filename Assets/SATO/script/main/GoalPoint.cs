@@ -14,7 +14,6 @@ public class GoalPoint : MonoBehaviour
     public string endingSceneName = "Ending";
 
     [Header("クリア後のロード設定")]
-    [Tooltip("クリアしてセレクト画面に戻る時に表示する説明の種類")]
     public GimmickType returnGimmickType = GimmickType.Generic;
 
     [Header("SE設定")]
@@ -33,7 +32,47 @@ public class GoalPoint : MonoBehaviour
         if (collision.CompareTag("Player") && !isGoalReached)
         {
             isGoalReached = true;
+
+            Player_walk pWalk = collision.GetComponent<Player_walk>();
+            if (pWalk == null) pWalk = collision.GetComponentInParent<Player_walk>();
+
+            if (pWalk != null)
+            {
+                // ★修正：空中にいる（着地していない）場合は、すぐに止めずに
+                // 「地面に降りるまで少し待つ（または落下させる）」処理を挟む！
+                StartCoroutine(StopPlayerWhenGrounded(pWalk));
+            }
+
             StartCoroutine(GoalSequence());
+        }
+    }
+
+    IEnumerator StopPlayerWhenGrounded(Player_walk pWalk)
+    {
+        Rigidbody2D rb = pWalk.GetComponent<Rigidbody2D>();
+
+        // プレイヤーが地面（Grounded）に触れるまで、あるいは0.5秒経つまで待つ
+        float timeout = 0.5f;
+        while (timeout > 0)
+        {
+            // Player_walkの中にある地面判定がtrueになったら終了
+            // ※もしPlayer_walkのisGroundedがprivateなら、Rigidbodyの縦速度がほぼ0になったらでもOKです
+            if (rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.05f)
+            {
+                break;
+            }
+            timeout -= Time.deltaTime;
+            yield return null;
+        }
+
+        // 1. すべてのコルーチンを完全停止
+        pWalk.ForceStopAbilities();
+
+        // 2. 物理演算をフリーズさせてピタッと止める
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
         }
     }
 
@@ -52,6 +91,7 @@ public class GoalPoint : MonoBehaviour
             PlayerPrefs.SetInt("StageCleared", thisStageNumber);
         }
 
+        // 星の獲得セーブ（二重ガード）
         bool hasStar = false;
         if (GameManager.instance != null)
         {
@@ -64,23 +104,18 @@ public class GoalPoint : MonoBehaviour
             Debug.Log($"<color=yellow>【ゴール】ステージ {GameManager.instance.stageNumber} の星を正常に保存しました！</color>");
         }
 
-        // データを確実に書き込む
         PlayerPrefs.Save();
-
-        // プレイヤーの動きを停止
-        Player_walk pWalk = FindObjectOfType<Player_walk>();
-        if (pWalk != null) pWalk.StateChange(0);
 
         yield return new WaitForSecondsRealtime(0.5f);
 
-        // クリア画面がある場合は、それを開いてコルーチンを即座に「終了」する！
+        // 3. クリア画面のポップアップ表示
         if (StageClearPopup.instance != null)
         {
             StageClearPopup.instance.ShowClearPopup();
-            yield break; // ★ここで完全に処理を止める！（下の自動移動を実行させない）
+            yield break; // ★ここで完全に停止し、ボタン操作を待つ！
         }
 
-        // --- 以下は万が一ポップアップが無い場合だけの予備動作 ---
+        // --- 以下、万が一ポップアップが無い場合のフォールバック ---
         if (nextSceneScript != null)
         {
             yield return StartCoroutine(nextSceneScript.endKuro());
