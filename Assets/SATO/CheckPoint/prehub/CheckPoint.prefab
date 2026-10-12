@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -5137430815027898935, guid: 80fa1adbe093c28458bc0d03fafb83cf, type: 3}
+  m_Sprite: {fileID: -6353640364173173124, guid: c656016b7fbca174a952575f04d9fff8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointFlag
   flagRenderer: {fileID: 8114101823993642083}
   inactiveColor: {r: 1, g: 1, b: 1, a: 1}
-  activeColor: {r: 0.007843138, g: 1, b: 0, a: 1}
+  activeColor: {r: 1, g: 0.2598224, b: 0.19339621, a: 1}
   inactiveSprite: {fileID: 0}
   activeSprite: {fileID: 0}
   activateSE: {fileID: 0}

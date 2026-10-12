@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4682332055422506250}
-  - component: {fileID: 8264959367510903047}
   - component: {fileID: 6343944226427053031}
   - component: {fileID: 6993183416753550355}
-  - component: {fileID: 1549730107975776798}
+  - component: {fileID: 4319654133325846315}
+  - component: {fileID: -3084784789533453587}
   m_Layer: 0
   m_Name: StageInfo&Menu&ClearManager
   m_TagString: Untagged
@@ -35,32 +35,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8264959367510903047
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4777868140916178903}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf3a03be2d927b448feee212f0a7689, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StageClearPopup
-  clearPanel: {fileID: 0}
-  popupWindow: {fileID: 0}
-  nextStageButton: {fileID: 0}
-  returnToSelectButton: {fileID: 0}
-  nextStageSceneName: 3
-  nextStageGimmick: 3
-  isFinalStage: 0
-  endingSceneName: Ending
-  starAchievedIcon: {fileID: 0}
-  fadeOutScript: {fileID: 0}
-  audioSource: {fileID: 6343944226427053031}
-  popInSE: {fileID: 0}
-  hoverSE: {fileID: 8300000, guid: 65abd319e3f9cb24bb5b0bd6111d608f, type: 3}
-  buttonClickSE: {fileID: 8300000, guid: 8ce44180aafd2294abf5ae9bdd421b7a, type: 3}
 --- !u!82 &6343944226427053031
 AudioSource:
   m_ObjectHideFlags: 0
@@ -198,7 +172,33 @@ MonoBehaviour:
   totalStarText: {fileID: 0}
   playerPortraitImage: {fileID: 0}
   hintMemoText: {fileID: 0}
---- !u!114 &1549730107975776798
+--- !u!114 &4319654133325846315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4777868140916178903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bf3a03be2d927b448feee212f0a7689, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StageClearPopup
+  clearPanel: {fileID: 0}
+  popupWindow: {fileID: 0}
+  nextStageButton: {fileID: 0}
+  returnToSelectButton: {fileID: 0}
+  nextStageSceneName: 2
+  nextStageGimmick: 0
+  isFinalStage: 0
+  endingSceneName: Ending
+  starAchievedIcon: {fileID: 0}
+  fadeOutScript: {fileID: 0}
+  audioSource: {fileID: 6343944226427053031}
+  popInSE: {fileID: 0}
+  hoverSE: {fileID: 8300000, guid: 65abd319e3f9cb24bb5b0bd6111d608f, type: 3}
+  buttonClickSE: {fileID: 8300000, guid: 8ce44180aafd2294abf5ae9bdd421b7a, type: 3}
+--- !u!114 &-3084784789533453587
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -211,6 +211,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageInfo
   stageNumber: 2
-  stageTitle: "\u86C7\u306E\u5DE3\u7A9F"
+  stageTitle: "\u3078\u3073\u306E\u5DE3\u7A9F"
   playerPortrait: {fileID: 7027652000831386041, guid: d9f35671a99469b41adc36589a0863be, type: 3}
-  hintMemo: "\u86C7\u306B\u89E6\u308C\u308B\u3068\u9032\u3093\u3067\u3044\u308B\u5411\u304D\u304C\u9006\u306B\u306A\u308B\u305E\uFF01"
+  hintMemo: "\u307E\u305A\u306F\u30B8\u30E3\u30F3\u30D7\u53F0\u3092\u7F6E\u3044\u3066\u307F\u3088\u3046\uFF01"

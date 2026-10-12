@@ -365,6 +365,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hintMemo
+      value: "\u89E6\u308C\u308B\u3068\u4E0A\u3078\u904B\u3093\u3067\u304F\u308C\u308B\uFF01"
+      objectReference: {fileID: 0}
+    - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: stageTitle
+      value: "\u304F\u3082\u306E\u5DE3\u7A9F"
+      objectReference: {fileID: 0}
+    - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: stageNumber
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 1549730107975776798, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemo
       value: "\u304F\u3082\u306E\u7CF8\u306B\u8F09\u308B\u3053\u3068\u3067\u4E0A\u3078\u9023\u308C\u3066\u884C\u3063\u3066\u304F\u308C\u308B\uFF01"
@@ -377,6 +389,30 @@ PrefabInstance:
       propertyPath: stageNumber
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: clearPanel
+      value: 
+      objectReference: {fileID: 1630561814}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: fadeOutScript
+      value: 
+      objectReference: {fileID: 546275531}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: nextStageButton
+      value: 
+      objectReference: {fileID: 1630561812}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: nextStageGimmick
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: nextStageSceneName
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: returnToSelectButton
+      value: 
+      objectReference: {fileID: 1630561813}
     - target: {fileID: 4682332055422506250, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1333.3651
@@ -518,6 +554,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+--- !u!114 &365601289 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+  m_PrefabInstance: {fileID: 365601288}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bf3a03be2d927b448feee212f0a7689, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StageClearPopup
 --- !u!1001 &370703888
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -914,13 +961,13 @@ PrefabInstance:
       addedObject: {fileID: 1451139988}
     - targetCorrespondingSourceObject: {fileID: 2084933784270307989, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1625957852}
+    - targetCorrespondingSourceObject: {fileID: 2084933784270307989, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 546275530}
     - targetCorrespondingSourceObject: {fileID: 2084933784270307989, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1644904626}
-    - targetCorrespondingSourceObject: {fileID: 2084933784270307989, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1625957852}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
 --- !u!1 &490506091 stripped
@@ -4572,7 +4619,7 @@ PrefabInstance:
     - target: {fileID: 6623490774010707499, guid: 024bf0432b6765e43b318b1753b147a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1805144982}
+      objectReference: {fileID: 365601289}
     - target: {fileID: 6623490774010707499, guid: 024bf0432b6765e43b318b1753b147a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OnReturnToSelectClicked
@@ -4580,7 +4627,7 @@ PrefabInstance:
     - target: {fileID: 6664563829603765227, guid: 024bf0432b6765e43b318b1753b147a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1805144982}
+      objectReference: {fileID: 365601289}
     - target: {fileID: 6664563829603765227, guid: 024bf0432b6765e43b318b1753b147a1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OnNextStageClicked
@@ -5919,17 +5966,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 843e0911e2d0f244f98305c4ce648a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGameMenuController
---- !u!114 &1805144982 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8264959367510903047, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
-  m_PrefabInstance: {fileID: 365601288}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf3a03be2d927b448feee212f0a7689, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StageClearPopup
 --- !u!1001 &1817393156
 PrefabInstance:
   m_ObjectHideFlags: 0
