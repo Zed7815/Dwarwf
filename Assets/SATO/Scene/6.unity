@@ -885,11 +885,11 @@ PrefabInstance:
       objectReference: {fileID: 162108426}
     - target: {fileID: 479459635021972411, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
       propertyPath: m_Size.y
-      value: 0.38847598
+      value: 0.36234888
       objectReference: {fileID: 0}
     - target: {fileID: 479459635021972411, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
       propertyPath: m_Offset.y
-      value: 0.2383195
+      value: 0.2513831
       objectReference: {fileID: 0}
     - target: {fileID: 4204384712348317985, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
       propertyPath: ceilingCheckOffset

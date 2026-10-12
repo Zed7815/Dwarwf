@@ -13,7 +13,7 @@ public class BookEncyclopediaUI : MonoBehaviour
         public Sprite illustration;
 
         [Header("アンロック条件")]
-        [Tooltip("このステージ番号以降で図鑑が公開されます（例: ステージ3なら3）")]
+        [Tooltip("このステージ番号をクリアしたら図鑑がカラー解放されます")]
         public int unlockStageNumber = 1;
 
         [Header("説明文（3枠）")]
@@ -24,6 +24,9 @@ public class BookEncyclopediaUI : MonoBehaviour
 
     [Header("図鑑データ集")]
     public List<AnimalPage> pages;
+
+    [Header("NEW!マークの演出オブジェクト")]
+    public GameObject newBadgeObject; // ★「NEW!」と書かれた画像オブジェクト
 
     [Header("本の背景画像差し替え設定")]
     public Image bookBackgroundImage;
@@ -56,9 +59,6 @@ public class BookEncyclopediaUI : MonoBehaviour
     [Header("SE")]
     public AudioSource audioSource;
     public AudioClip pageFlipSE;
-
-    [Header("演出パーツ")]
-    public GameObject newBadgeObject;
 
     private int currentPageIndex = 0;
     private bool isFlipping = false;
@@ -169,26 +169,44 @@ public class BookEncyclopediaUI : MonoBehaviour
         }
     }
 
-    // ★【重要】表示内容の更新（案Cのアンロック判定を適用）
+    // ★表示内容の更新（カラー判定 ＆ NEW!の管理）
     void UpdatePageDisplayInstant()
     {
         if (pages == null || pages.Count == 0) return;
 
         AnimalPage page = pages[currentPageIndex];
 
-        int currentStage = 1;
-        if (StageInfo.instance != null) currentStage = StageInfo.instance.stageNumber;
-        else if (GameManager.instance != null) currentStage = GameManager.instance.stageNumber;
+        // セーブデータからクリアステージ数を取得
+        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
+        bool isUnlocked = false;
 
-        bool isUnlocked = (currentStage >= page.unlockStageNumber);
+        // --- ★【完全解決】アンロック判定 ---
+        // 1. もし必要面が「1面」なら、図鑑が開けている時点で1面クリア後なので【絶対にカラー解放】！
+        if (page.unlockStageNumber <= 1)
+        {
+            isUnlocked = true;
+        }
+        // 2. ゲーム本編をプレイ中の場合：そのステージの動物まで解放
+        else if (StageInfo.instance != null && StageInfo.instance.stageNumber >= page.unlockStageNumber)
+        {
+            isUnlocked = true;
+        }
+        // 3. セレクト画面の場合：そのステージをクリア済みなら解放！
+        else if (clearedStage >= page.unlockStageNumber)
+        {
+            isUnlocked = true;
+        }
+
+        // ★コンソールに判定理由をわかりやすく表示
+        Debug.Log($"<color=cyan>【図鑑】「{page.animalName}」| 必要面: {page.unlockStageNumber} | クリア数: {clearedStage} | カラー判定: {isUnlocked}</color>");
 
         if (isUnlocked)
         {
-            // カラー表示
+            // --- 【解禁済み】：カラーイラスト ＆ 通常の解説 ---
             if (illustrationImage != null)
             {
                 illustrationImage.sprite = page.illustration;
-                illustrationImage.color = Color.white;
+                illustrationImage.color = new Color(1f, 1f, 1f, 1f); // ★RGBとAlphaを確実に1.0（通常カラー）にする！
                 illustrationImage.preserveAspect = true;
             }
 
@@ -198,30 +216,24 @@ public class BookEncyclopediaUI : MonoBehaviour
             SetBoxContent(frameBox2, descriptionText2, page.descriptionBox2);
             SetBoxContent(frameBox3, descriptionText3, page.descriptionBox3);
 
-            // ★追加：この動物をすでに見たことがあるかチェック！
-            // 0 = まだ見ていない(NEW!), 1 = 閲覧済み
-            bool hasViewed = PlayerPrefs.GetInt("ViewedAnimal_" + page.animalName, 0) == 1;
+            // NEW!マークの管理
+            string viewKey = "ViewedAnimal_" + page.animalName;
+            bool hasViewed = PlayerPrefs.GetInt(viewKey, 0) == 1;
+            if (newBadgeObject != null) newBadgeObject.SetActive(!hasViewed);
 
-            if (newBadgeObject != null)
-            {
-                // まだ見ていないなら「NEW!」を表示
-                newBadgeObject.SetActive(!hasViewed);
-            }
-
-            // 見たのでセーブして「閲覧済み」にする
             if (!hasViewed)
             {
-                PlayerPrefs.SetInt("ViewedAnimal_" + page.animalName, 1);
+                PlayerPrefs.SetInt(viewKey, 1);
                 PlayerPrefs.Save();
             }
         }
         else
         {
-            // 未解禁（シルエット）
+            // --- 【未解禁】：シルエット ---
             if (illustrationImage != null)
             {
                 illustrationImage.sprite = page.illustration;
-                illustrationImage.color = Color.black;
+                illustrationImage.color = new Color(0f, 0f, 0f, 1f); // ★真っ黒
                 illustrationImage.preserveAspect = true;
             }
 
@@ -231,11 +243,14 @@ public class BookEncyclopediaUI : MonoBehaviour
             SetBoxContent(frameBox2, descriptionText2, null);
             SetBoxContent(frameBox3, descriptionText3, null);
 
-            // ★未解禁の時はNEWバッジも隠す
             if (newBadgeObject != null) newBadgeObject.SetActive(false);
         }
 
-        if (pageNumberText != null) pageNumberText.text = $"{currentPageIndex + 1} / {pages.Count}";
+        if (pageNumberText != null)
+        {
+            pageNumberText.text = $"{currentPageIndex + 1} / {pages.Count}";
+        }
+
         if (prevButton != null) prevButton.interactable = (currentPageIndex > 0);
         if (nextButton != null) nextButton.interactable = (currentPageIndex < pages.Count - 1);
     }
@@ -243,18 +258,11 @@ public class BookEncyclopediaUI : MonoBehaviour
     void SetBoxContent(GameObject frame, TextMeshProUGUI textComp, string content)
     {
         bool hasContent = !string.IsNullOrEmpty(content);
-
-        // 1. 枠画像の表示・非表示
-        if (frame != null)
-        {
-            frame.SetActive(hasContent);
-        }
-
-        // 2. テキスト本体の表示・非表示と文字の完全消去
+        if (frame != null) frame.SetActive(hasContent);
         if (textComp != null)
         {
-            textComp.gameObject.SetActive(hasContent); // オブジェクト自体を消す！
-            textComp.text = hasContent ? content : "";  // 中身も空っぽにする
+            textComp.gameObject.SetActive(hasContent);
+            textComp.text = hasContent ? content : "";
         }
     }
 

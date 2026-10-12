@@ -1,13 +1,20 @@
-﻿using System.Collections;
-using TMPro;
-using UnityEngine;
-using UnityEngine.InputSystem;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 
 public class InGameMenuController : MonoBehaviour
 {
     public static InGameMenuController instance;
+
+    [Header("ステージセレクト画面専用設定")]
+    [Tooltip("ステージセレクト画面で使う場合はここにチェックを入れる！")]
+    public bool isStageSelectMode = false;
+    [Tooltip("セレクト画面に置く『図鑑を開く本ボタン』")]
+    public GameObject openBookButtonInSelect;
+    [Tooltip("何面クリアしたら本ボタンを解放するか（1 = ステージ1クリア後）")]
+    public int requiredClearToUnlock = 1;
 
     [Header("1. 暗幕")]
     public GameObject darkOverlayUI;
@@ -38,7 +45,7 @@ public class InGameMenuController : MonoBehaviour
     public AudioClip bookCloseSE;
     public AudioClip bookFlyUpSE;
     public AudioClip pageFlipSE;
-    public AudioClip clickSE;       // ★各ボタン共通のクリック音
+    public AudioClip clickSE;
 
     [Header("演出参照")]
     public nextscene fadeOutScript;
@@ -64,7 +71,6 @@ public class InGameMenuController : MonoBehaviour
     void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
         AlignWorldBookToUI();
 
@@ -74,64 +80,41 @@ public class InGameMenuController : MonoBehaviour
             animatedBookWorld.SetActive(false);
         }
 
-        // ★追加：暗幕をクリックしたら自動で閉じるようにする安全処理
         SetupDarkOverlayClick();
 
         if (darkOverlayUI != null) darkOverlayUI.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(false);
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
-    }
 
-    // ★暗幕クリックの自動セットアップ
-    void SetupDarkOverlayClick()
-    {
-        if (darkOverlayUI == null) return;
-
-        // 1. 暗幕の画像が確実にクリックを吸えるようにする
-        Image img = darkOverlayUI.GetComponent<Image>();
-        if (img != null)
+        // ★ステージセレクト画面専用の初期化
+        if (isStageSelectMode)
         {
-            img.raycastTarget = true; // クリックを検知可能にする
-        }
+            int cleared = PlayerPrefs.GetInt("StageCleared", 0);
+            bool isUnlocked = (cleared >= requiredClearToUnlock);
 
-        // 2. ボタンコンポーネントを自動追加して OnCloseClicked を登録
-        Button btn = darkOverlayUI.GetComponent<Button>();
-        if (btn == null) btn = darkOverlayUI.AddComponent<Button>();
-
-        btn.transition = Selectable.Transition.None; // 色変化はなし
-        btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(() => {
-            Debug.Log("<color=cyan>【暗幕クリック検知】外側がクリックされたため本を閉じます</color>");
-            OnCloseClicked();
-        });
-    }
-
-    void Update()
-    {
-        if (Keyboard.current == null) return;
-
-        // ★追加：Escキー（またはPキー）でメニューを開閉
-        if (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.pKey.wasPressedThisFrame)
-        {
-            if (isMenuOpen)
+            // 未クリアなら確実にボタンを非表示にする！
+            if (openBookButtonInSelect != null)
             {
-                // もし図鑑を開いている最中なら、メニューのページに戻す
-                if (encyclopediaPanel != null && encyclopediaPanel.activeSelf)
-                {
-                    SwitchToMenu();
-                }
-                else
-                {
-                    // メニューページなら本を閉じる
-                    OnCloseClicked();
-                }
+                openBookButtonInSelect.SetActive(isUnlocked);
+                Debug.Log($"<color=yellow>【セレクト画面】図鑑ボタンの表示状態: {isUnlocked} (クリア数: {cleared})</color>");
             }
             else
             {
-                // 閉じていたら開く
-                OpenMenu();
+                Debug.LogWarning("【注意】Open Book Button In Select にボタンが登録されていません！");
             }
         }
+    }
+
+    void SetupDarkOverlayClick()
+    {
+        if (darkOverlayUI == null) return;
+        Image img = darkOverlayUI.GetComponent<Image>();
+        if (img != null) img.raycastTarget = true;
+
+        Button btn = darkOverlayUI.GetComponent<Button>() ?? darkOverlayUI.AddComponent<Button>();
+        btn.transition = Selectable.Transition.None;
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(OnCloseClicked);
     }
 
     public void OpenMenu()
@@ -142,61 +125,14 @@ public class InGameMenuController : MonoBehaviour
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
-        UpdateLeftPageInfo();
+        // 本編ステージの場合のみ左ページを更新
+        if (!isStageSelectMode)
+        {
+            UpdateLeftPageInfo();
+        }
 
         StopAllCoroutines();
         StartCoroutine(OpenSequence());
-    }
-
-    void UpdateLeftPageInfo()
-    {
-        int currentStageNum = 1;
-        string currentTitle = "STAGE";
-
-        if (StageInfo.instance != null)
-        {
-            currentStageNum = StageInfo.instance.stageNumber;
-            currentTitle = $"STAGE {currentStageNum} - {StageInfo.instance.stageTitle}";
-
-            if (playerPortraitImage != null && StageInfo.instance.playerPortrait != null)
-            {
-                playerPortraitImage.sprite = StageInfo.instance.playerPortrait;
-            }
-            if (hintMemoText != null)
-            {
-                hintMemoText.text = StageInfo.instance.hintMemo;
-            }
-        }
-        else if (GameManager.instance != null)
-        {
-            currentStageNum = GameManager.instance.stageNumber;
-            currentTitle = $"STAGE {currentStageNum}";
-        }
-
-        if (stageTitleText != null) stageTitleText.text = currentTitle;
-
-        bool hasStarAlready = PlayerPrefs.GetInt("StarCollected_Stage_" + currentStageNum, 0) == 1;
-        bool gotStarNow = (GameManager.instance != null && GameManager.instance.hasCollectedStarInThisRun);
-        bool hasStar = hasStarAlready || gotStarNow;
-
-        if (thisStageStarText != null)
-        {
-            thisStageStarText.text = hasStar ? "獲得済み！" : "星未獲得！";
-        }
-        if (thisStageStarCheckIcon != null)
-        {
-            thisStageStarCheckIcon.SetActive(hasStar);
-        }
-
-        int totalStars = 0;
-        for (int i = 1; i <= 30; i++)
-        {
-            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) totalStars++;
-        }
-        if (totalStarText != null)
-        {
-            totalStarText.text = $"あつめた星 : {totalStars} / 6";
-        }
     }
 
     IEnumerator OpenSequence()
@@ -229,7 +165,6 @@ public class InGameMenuController : MonoBehaviour
             animatedBookWorld.transform.position = endPos;
 
             if (audioSource != null && bookDropSE != null) audioSource.PlayOneShot(bookDropSE);
-
             if (worldBookAnimator != null) worldBookAnimator.SetTrigger(openTriggerName);
             if (audioSource != null && bookOpenSE != null) audioSource.PlayOneShot(bookOpenSE);
 
@@ -238,8 +173,20 @@ public class InGameMenuController : MonoBehaviour
 
         if (animatedBookWorld != null) animatedBookWorld.SetActive(false);
         if (staticBookUI != null) staticBookUI.gameObject.SetActive(true);
-        if (menuModePanel != null) menuModePanel.SetActive(true);
-        if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
+
+        // ★すり替え時の分岐：
+        if (isStageSelectMode)
+        {
+            // ステージセレクトではメニューを飛ばして最初から「図鑑」を開く！
+            if (menuModePanel != null) menuModePanel.SetActive(false);
+            if (encyclopediaPanel != null) encyclopediaPanel.SetActive(true);
+        }
+        else
+        {
+            // ゲーム本編では通常通りメニュー画面を開く
+            if (menuModePanel != null) menuModePanel.SetActive(true);
+            if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
+        }
 
         isAnimating = false;
     }
@@ -248,7 +195,6 @@ public class InGameMenuController : MonoBehaviour
     {
         PlayClickSE();
         if (audioSource != null && pageFlipSE != null) audioSource.PlayOneShot(pageFlipSE);
-
         if (menuModePanel != null) menuModePanel.SetActive(false);
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(true);
     }
@@ -257,7 +203,6 @@ public class InGameMenuController : MonoBehaviour
     {
         PlayClickSE();
         if (audioSource != null && pageFlipSE != null) audioSource.PlayOneShot(pageFlipSE);
-
         if (encyclopediaPanel != null) encyclopediaPanel.SetActive(false);
         if (menuModePanel != null) menuModePanel.SetActive(true);
     }
@@ -301,81 +246,88 @@ public class InGameMenuController : MonoBehaviour
         isMenuOpen = false;
     }
 
-    // --- ★1. 閉じるボタン（SEを追加！） ---
     public void OnCloseClicked()
     {
         if (isAnimating) return;
-        PlayClickSE(); // ★SE再生を追加！
+        PlayClickSE();
         StartCoroutine(CloseMenuAction());
     }
 
     IEnumerator CloseMenuAction()
     {
         yield return StartCoroutine(CloseAndFlyUpRoutine());
-        Time.timeScale = previousTimeScale;
+        Time.timeScale = isStageSelectMode ? 1f : previousTimeScale;
     }
 
-    // --- ★2. 最初からやり直すボタン（SEと完全リセットを保証） ---
     public void OnFullResetClicked()
     {
         if (isAnimating) return;
-        PlayClickSE(); // ★SE再生
+        PlayClickSE();
         StartCoroutine(FullResetAction());
     }
 
     IEnumerator FullResetAction()
     {
-        // 1. 本が閉じて空へ飛んでいく演出
         yield return StartCoroutine(CloseAndFlyUpRoutine());
-
-        // 2. チェックポイント旗の記憶をすべて消去（旗を未通過色に戻す）
-        if (CheckpointManager.instance != null)
-        {
-            CheckpointManager.instance.ClearCheckpoint();
-        }
-
-        // 3. ★最重要：配置した動物ブロックをすべて片付け、手持ちを満タンに戻す！
+        if (CheckpointManager.instance != null) CheckpointManager.instance.ClearCheckpoint();
         if (GameManager.instance != null && GameManager.instance.blockManager != null)
         {
             GameManager.instance.blockManager.ClearAllPlacedBlocks();
         }
-
-        // 4. ゲーム時間を通常に戻す
         Time.timeScale = 1f;
-
-        // 5. ゲームの完全初期化を実行
-        // （自機がステージ本来のスタート地点・右向きに戻り、星もステージ上に完全復活）
-        if (GameManager.instance != null)
-        {
-            GameManager.instance.ResetGame();
-        }
-
-        Debug.Log("<color=yellow>【最初からやり直す】ステージに入った直後の真っ白な状態にリセットしました！</color>");
+        if (GameManager.instance != null) GameManager.instance.ResetGame();
     }
 
-    // --- ★3. ステージセレクトへ戻るボタン（SEを確実に鳴らす） ---
     public void OnReturnToStageSelectClicked()
     {
         if (isAnimating) return;
-        PlayClickSE(); // ★SE再生
-
+        PlayClickSE();
         Time.timeScale = 1.0f;
         Time.fixedDeltaTime = 0.02f;
-
         StartCoroutine(StageSelectAction());
     }
 
     IEnumerator StageSelectAction()
     {
         yield return StartCoroutine(CloseAndFlyUpRoutine());
-
-        if (fadeOutScript != null)
-        {
-            yield return StartCoroutine(fadeOutScript.endKuro());
-        }
-
+        if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
         yield return new WaitForSecondsRealtime(0.2f);
         SceneLoader.Load("StageSelect", GimmickType.Generic);
+    }
+
+    void UpdateLeftPageInfo()
+    {
+        int currentStageNum = 1;
+        string currentTitle = "STAGE";
+
+        if (StageInfo.instance != null)
+        {
+            currentStageNum = StageInfo.instance.stageNumber;
+            currentTitle = $"STAGE {currentStageNum} - {StageInfo.instance.stageTitle}";
+            if (playerPortraitImage != null && StageInfo.instance.playerPortrait != null) playerPortraitImage.sprite = StageInfo.instance.playerPortrait;
+            if (hintMemoText != null) hintMemoText.text = StageInfo.instance.hintMemo;
+        }
+        else if (GameManager.instance != null)
+        {
+            currentStageNum = GameManager.instance.stageNumber;
+            currentTitle = $"STAGE {currentStageNum}";
+        }
+
+        if (stageTitleText != null) stageTitleText.text = currentTitle;
+
+        bool hasStarAlready = PlayerPrefs.GetInt("StarCollected_Stage_" + currentStageNum, 0) == 1;
+        bool gotStarNow = (GameManager.instance != null && GameManager.instance.hasCollectedStarInThisRun);
+        bool hasStar = hasStarAlready || gotStarNow;
+
+        if (thisStageStarText != null) thisStageStarText.text = hasStar ? "獲得済み！" : "未獲得！";
+        if (thisStageStarCheckIcon != null) thisStageStarCheckIcon.SetActive(hasStar);
+
+        int totalStars = 0;
+        for (int i = 1; i <= 30; i++)
+        {
+            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) totalStars++;
+        }
+        if (totalStarText != null) totalStarText.text = $"あつめた星 : {totalStars} / 6";
     }
 
     void AlignWorldBookToUI()
@@ -399,7 +351,6 @@ public class InGameMenuController : MonoBehaviour
         bookCenterWorldPos += animationOffset;
     }
 
-    // SE再生（共通）
     void PlayClickSE()
     {
         if (clickSE != null)

@@ -1760,6 +1760,22 @@ PrefabInstance:
       propertyPath: playerAnimator
       value: 
       objectReference: {fileID: 1408958659}
+    - target: {fileID: 479459635021972411, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: m_Size.x
+      value: 0.20539114
+      objectReference: {fileID: 0}
+    - target: {fileID: 479459635021972411, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: m_Size.y
+      value: 0.39302334
+      objectReference: {fileID: 0}
+    - target: {fileID: 479459635021972411, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: m_Offset.x
+      value: -0.0151195675
+      objectReference: {fileID: 0}
+    - target: {fileID: 479459635021972411, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
+      propertyPath: m_Offset.y
+      value: 0.23604582
+      objectReference: {fileID: 0}
     - target: {fileID: 8598960151255025368, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
       propertyPath: m_Name
       value: PLAYER
