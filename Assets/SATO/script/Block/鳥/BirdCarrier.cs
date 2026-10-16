@@ -194,10 +194,13 @@ public class BirdCarrier : MonoBehaviour
             yield return null;
         }
 
+        // --- 水平飛行フェーズ終了後 ---
         if (audioSource != null) audioSource.Stop();
+
+        // --- 着陸（降下）フェーズ ---
         Vector3 landStartBird = transform.position;
-        Vector3 landEndBird = targetPos;
-        float landDuration = 0.6f;
+        Vector3 landEndBird = targetPos; // 鳥の最終目的地
+        float landDuration = 0.5f;
         float landElapsed = 0f;
         bool isReleased = false;
 
@@ -206,20 +209,39 @@ public class BirdCarrier : MonoBehaviour
             landElapsed += Time.deltaTime;
             float t = landElapsed / landDuration;
             float easedT = Mathf.SmoothStep(0, 1, t);
+
+            // 鳥を降下させる
             transform.position = Vector3.Lerp(landStartBird, landEndBird, easedT);
 
-            if (!isReleased && t > 0.3f)
+            // ★空中解放：降下の途中でプレイヤーをそっと放す（例: 40%進んだあたり）
+            if (!isReleased && t > 0.4f)
             {
                 isReleased = true;
+
+                // プレイヤーを落下状態にする
                 pWalk.StateChange(3);
+
+                // 物理演算を Dynamic に戻す
                 Rigidbody2D pRb = pWalk.GetComponent<Rigidbody2D>();
-                if (pRb != null) pRb.bodyType = RigidbodyType2D.Dynamic;
+                if (pRb != null)
+                {
+                    pRb.bodyType = RigidbodyType2D.Dynamic;
+                    // 自然に落とすための下向き初速
+                    pRb.linearVelocity = new Vector2(0, -1.0f);
+                }
             }
-            if (!isReleased) pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
+
+            // 離すまでは鳥の足元に固定
+            if (!isReleased)
+            {
+                pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
+            }
+
             yield return null;
         }
 
         if (animator != null) animator.SetBool(flyBoolParam, false);
+
         yield return new WaitForSeconds(waitTime);
         SetBirdFacing(-moveDir);
         isMoving = false;
