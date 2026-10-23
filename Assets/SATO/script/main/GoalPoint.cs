@@ -31,6 +31,12 @@ public class GoalPoint : MonoBehaviour
     {
         if (collision.CompareTag("Player") && !isGoalReached)
         {
+
+            if (WarpEntrance.isAnyWarping)
+            {
+                return;
+            }
+
             isGoalReached = true;
 
             Player_walk pWalk = collision.GetComponent<Player_walk>();

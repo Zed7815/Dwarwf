@@ -34,6 +34,8 @@ public class WarpEntrance : MonoBehaviour
     private bool isWarping = false;
     private float cooldownTimer = 0f;
 
+    public static bool isAnyWarping = false;
+
     private void Start()
     {
         SetupReferences();
@@ -73,17 +75,20 @@ public class WarpEntrance : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (isWarping || Time.time < cooldownTimer) return;
         TryStartWarp(collision);
     }
 
     private void OnTriggerStay2D(Collider2D collision)
     {
+        if (isWarping || Time.time < cooldownTimer) return;
         TryStartWarp(collision);
     }
 
     private void TryStartWarp(Collider2D collision)
     {
         if (GameManager.instance != null && GameManager.instance.currentState != GameManager.GameState.Play) return;
+
         if (collision.CompareTag("Player") && !isWarping && Time.time > cooldownTimer)
         {
             Player_walk pWalk = collision.GetComponent<Player_walk>();
@@ -94,6 +99,11 @@ public class WarpEntrance : MonoBehaviour
     IEnumerator WarpRoutine(Player_walk pWalk)
     {
         isWarping = true;
+        isAnyWarping = true;
+
+        // 入口の当たり判定をOFF
+        Collider2D myCollider = GetComponent<Collider2D>();
+        if (myCollider != null) myCollider.enabled = false;
 
         if (exitPoint == null) SetupReferences();
 
@@ -101,6 +111,10 @@ public class WarpEntrance : MonoBehaviour
         Rigidbody2D rb = pWalk.GetComponent<Rigidbody2D>();
         Animator pAnim = pWalk.GetComponent<Animator>();
         SpriteRenderer playerSR = pWalk.GetComponent<SpriteRenderer>();
+
+        // プレイヤーの当たり判定（コライダー）を取得
+        Collider2D playerCol = pWalk.GetComponent<Collider2D>();
+        if (playerCol != null) playerCol.enabled = false; // 完全に消す
 
         if (playerSR != null) playerSR.enabled = true;
 
@@ -138,6 +152,7 @@ public class WarpEntrance : MonoBehaviour
 
         yield return new WaitForSeconds(hideDuration);
 
+        // ★出口へワープ！
         if (exitPoint != null)
         {
             pWalk.transform.position = new Vector3(exitPoint.position.x, exitPoint.position.y + exitYOffset, pWalk.transform.position.z);
@@ -167,6 +182,14 @@ public class WarpEntrance : MonoBehaviour
             if (HasParameter(exitAnimator, exitBoolName)) exitAnimator.SetBool(exitBoolName, false);
         }
 
+      
+        yield return new WaitForSeconds(0.2f);
+
+        isAnyWarping = false;
+
+        // ここで初めてプレイヤーの当たり判定を復活させる
+        if (playerCol != null) playerCol.enabled = true;
+
         if (rb != null) rb.bodyType = RigidbodyType2D.Dynamic;
 
         if (pAnim != null)
@@ -176,23 +199,31 @@ public class WarpEntrance : MonoBehaviour
         }
 
         pWalk.StateChange(1);
-        cooldownTimer = Time.time + 0.1f;
+        cooldownTimer = Time.time + 0.5f;
+
+        if (myCollider != null) myCollider.enabled = true;
+
         isWarping = false;
     }
 
-    // ★追加：リセットボタンが押された時に呼ばれる
     void OnGimmickReset()
     {
-        // 実行中のワープコルーチンを強制停止
         StopAllCoroutines();
-
-        // フラグを初期化
         isWarping = false;
+        isAnyWarping = false;
 
-        // 音が鳴っていたら止める
+        Collider2D myCollider = GetComponent<Collider2D>();
+        if (myCollider != null) myCollider.enabled = true;
+
+        Player_walk pWalk = FindObjectOfType<Player_walk>();
+        if (pWalk != null)
+        {
+            Collider2D pCol = pWalk.GetComponent<Collider2D>();
+            if (pCol != null) pCol.enabled = true;
+        }
+
         if (audioSource != null) audioSource.Stop();
 
-        // アニメーションの状態もリセット（必要に応じて）
         if (entranceAnimator != null && HasParameter(entranceAnimator, entranceBoolName))
             entranceAnimator.SetBool(entranceBoolName, false);
     }
