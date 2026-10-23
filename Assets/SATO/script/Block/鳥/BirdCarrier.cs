@@ -193,7 +193,6 @@ public class BirdCarrier : MonoBehaviour
             pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
             yield return null;
         }
-
         // --- 水平飛行フェーズ終了後 ---
         if (audioSource != null) audioSource.Stop();
 
@@ -213,21 +212,23 @@ public class BirdCarrier : MonoBehaviour
             // 鳥を降下させる
             transform.position = Vector3.Lerp(landStartBird, landEndBird, easedT);
 
-            // ★空中解放：降下の途中でプレイヤーをそっと放す（例: 40%進んだあたり）
+            // 降下の途中（例：40%）でプレイヤーを離す
             if (!isReleased && t > 0.4f)
             {
                 isReleased = true;
 
-                // プレイヤーを落下状態にする
-                pWalk.StateChange(3);
+                // ★【超重要】離した瞬間に、プレイヤーの足を「着地地点の正確なY座標（targetPos.y）」にピタッと置く！
+                // （grabOffsetYを引くことで、足元が確実に床の上に立つように計算します）
+                pWalk.transform.position = new Vector3(targetPos.x, targetPos.y - grabOffsetY, targetPos.z);
+                Physics2D.SyncTransforms();
 
-                // 物理演算を Dynamic に戻す
+                // プレイヤーを落下状態（重力有効）にしつつ、速度をゼロにする
+                pWalk.StateChange(3);
                 Rigidbody2D pRb = pWalk.GetComponent<Rigidbody2D>();
                 if (pRb != null)
                 {
                     pRb.bodyType = RigidbodyType2D.Dynamic;
-                    // 自然に落とすための下向き初速
-                    pRb.linearVelocity = new Vector2(0, -1.0f);
+                    pRb.linearVelocity = Vector2.zero;
                 }
             }
 
@@ -239,6 +240,11 @@ public class BirdCarrier : MonoBehaviour
 
             yield return null;
         }
+
+        // 鳥の最終位置とプレイヤーの位置を完全に同期させる
+        transform.position = landEndBird;
+        pWalk.transform.position = landEndBird + new Vector3(0, -grabOffsetY, 0);
+        Physics2D.SyncTransforms();
 
         if (animator != null) animator.SetBool(flyBoolParam, false);
 
