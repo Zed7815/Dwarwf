@@ -132,7 +132,10 @@ public class BlockManager : MonoBehaviour
         draggingBlock = null;
         previewBlock = null;
         activeFrame = null;
+
+        RecalculateAllCounts();
     }
+
 
     void TryGrabPlacedBlock()
     {
