@@ -115,7 +115,7 @@ MonoBehaviour:
   maxSearchDistance: 50
   heightOffset: 0.25
   grabOffsetY: -1.7
-  landYOffset: 0.5
+  landYOffset: 0.6
   boxSize: {x: 0.5, y: 0.8}
   landableLayer:
     serializedVersion: 2
@@ -123,6 +123,8 @@ MonoBehaviour:
   blockingLayer:
     serializedVersion: 2
     m_Bits: 256
+  releaseTiming: 0
+  releaseHeightOffset: -0.5
   birdSprite: {fileID: 0}
   animator: {fileID: 3125531859124568823}
   flyBoolParam: isFlying

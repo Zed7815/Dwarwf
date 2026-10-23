@@ -21,6 +21,14 @@ public class BirdCarrier : MonoBehaviour
     public LayerMask landableLayer; // 地面（白くなる対象）
     public LayerMask blockingLayer; // 壁（赤くなる対象）
 
+    [Header("着地・解放の調整")]
+    [Tooltip("着地モーションのどのタイミングでプレイヤーを離すか（0.0=着地開始時, 1.0=完全着地時）")]
+    [Range(0.0f, 1.0f)]
+    public float releaseTiming = 0.4f;
+
+    [Tooltip("プレイヤーが放された時の高さの微調整（埋まる場合はプラスに、上に飛ぶ場合はマイナスに）")]
+    public float releaseHeightOffset = 0.0f;
+
     [Header("ビジュアル・演出設定")]
     public SpriteRenderer birdSprite;
     public Animator animator;
@@ -33,6 +41,7 @@ public class BirdCarrier : MonoBehaviour
 
     private Vector3 targetPos;
     private bool isMoving = false;
+    private float actualLandSurfaceY = 0f;
 
     void Start()
     {
@@ -119,7 +128,11 @@ public class BirdCarrier : MonoBehaviour
             if (((1 << hit.collider.gameObject.layer) & landableLayer) != 0)
             {
                 float targetX = hit.point.x + (dir * 0.8f);
-                float targetY = pWalk.transform.position.y + landYOffset;
+
+                // ★修正：プレイヤーの高さではなく、ヒュッと当たった「地面の表面(hit.point.y)」を基準にする！
+                actualLandSurfaceY = hit.point.y;
+                float targetY = actualLandSurfaceY + landYOffset;
+
                 targetPos = new Vector3(targetX, targetY, transform.position.z);
                 return true;
             }
@@ -198,7 +211,7 @@ public class BirdCarrier : MonoBehaviour
 
         // --- 着陸（降下）フェーズ ---
         Vector3 landStartBird = transform.position;
-        Vector3 landEndBird = targetPos; // 鳥の最終目的地
+        Vector3 landEndBird = targetPos;
         float landDuration = 0.5f;
         float landElapsed = 0f;
         bool isReleased = false;
@@ -212,39 +225,33 @@ public class BirdCarrier : MonoBehaviour
             // 鳥を降下させる
             transform.position = Vector3.Lerp(landStartBird, landEndBird, easedT);
 
-            // 降下の途中（例：40%）でプレイヤーを離す
-            if (!isReleased && t > 0.4f)
-            {
-                isReleased = true;
-
-                // ★【超重要】離した瞬間に、プレイヤーの足を「着地地点の正確なY座標（targetPos.y）」にピタッと置く！
-                // （grabOffsetYを引くことで、足元が確実に床の上に立つように計算します）
-                pWalk.transform.position = new Vector3(targetPos.x, targetPos.y - grabOffsetY, targetPos.z);
-                Physics2D.SyncTransforms();
-
-                // プレイヤーを落下状態（重力有効）にしつつ、速度をゼロにする
-                pWalk.StateChange(3);
-                Rigidbody2D pRb = pWalk.GetComponent<Rigidbody2D>();
-                if (pRb != null)
-                {
-                    pRb.bodyType = RigidbodyType2D.Dynamic;
-                    pRb.linearVelocity = Vector2.zero;
-                }
-            }
-
-            // 離すまでは鳥の足元に固定
+            // プレイヤーを鳥の足元に固定
             if (!isReleased)
             {
                 pWalk.transform.position = transform.position + new Vector3(0, grabOffsetY, 0);
             }
 
+            // ★指定したタイミング（高さ）に達したら、自然に物理へ切り替える
+            if (!isReleased && t > releaseTiming)
+            {
+                isReleased = true;
+
+                // ★修正：急にワープさせず、その瞬間の位置からわずかにオフセット（高さ）だけ調整して物理をONにする
+                pWalk.transform.position += new Vector3(0, releaseHeightOffset, 0);
+                Physics2D.SyncTransforms();
+
+                pWalk.StateChange(3);
+                Rigidbody2D pRb = pWalk.GetComponent<Rigidbody2D>();
+                if (pRb != null)
+                {
+                    pRb.bodyType = RigidbodyType2D.Dynamic;
+                    // 上に弾かれないよう、初速をゼロ（または微小な下向き）にする
+                    pRb.linearVelocity = new Vector2(0, 0f);
+                }
+            }
+
             yield return null;
         }
-
-        // 鳥の最終位置とプレイヤーの位置を完全に同期させる
-        transform.position = landEndBird;
-        pWalk.transform.position = landEndBird + new Vector3(0, -grabOffsetY, 0);
-        Physics2D.SyncTransforms();
 
         if (animator != null) animator.SetBool(flyBoolParam, false);
 
