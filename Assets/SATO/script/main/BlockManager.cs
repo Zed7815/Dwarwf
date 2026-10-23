@@ -209,6 +209,16 @@ public class BlockManager : MonoBehaviour
         previewSR = previewBlock.GetComponent<SpriteRenderer>();
         previewBlock.GetComponent<Collider2D>().enabled = false;
         previewBlock.transform.position += new Vector3(0, 0, 0.1f);
+
+        previewBlock.tag = "Untagged"; // タグを外す
+
+        // 鳥のスクリプトなど、プレビュー上の全スクリプトをOFFにする
+        MonoBehaviour[] scripts = previewBlock.GetComponentsInChildren<MonoBehaviour>();
+        foreach (var s in scripts) s.enabled = false;
+
+        // アニメーションによる色の強制上書きをOFFにする
+        Animator anim = previewBlock.GetComponentInChildren<Animator>();
+        if (anim != null) anim.enabled = false;
     }
 
     bool RemoveOldestUnlockedBlockOfType(int typeIndex)
@@ -288,6 +298,9 @@ public class BlockManager : MonoBehaviour
             }
 
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
+
+            SpriteRenderer[] allPreviewSRs = previewBlock.GetComponentsInChildren<SpriteRenderer>();
+
             if (blockHit != null)
             {
                 previewSR.color = new Color(1f, 1f, 1f, 0.7f);

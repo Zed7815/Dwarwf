@@ -52,6 +52,8 @@ public class BirdCarrier : MonoBehaviour
 
     private void Update()
     {
+        if (!CompareTag("PlacedBlock")) return;
+
         // --- 1. 色検知ロジック (BoxCast を使用) ---
         if (GameManager.instance != null && GameManager.instance.currentState == GameManager.GameState.Edit)
         {
