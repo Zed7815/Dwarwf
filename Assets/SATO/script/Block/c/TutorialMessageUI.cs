@@ -86,11 +86,11 @@ public class TutorialMessageUI : MonoBehaviour
         canvasGroup.alpha = 0;
         gameObject.SetActive(false);
 
-        // 4. ★復元：倍速中だったなら確実に倍速を適用、そうでなければ通常に戻す
+        // 4. 復元：倍速中だったなら確実に倍速を適用、そうでなければ通常に戻す
         if (wasFastForwarding)
         {
             // 倍速ボタンが存在すれば、その設定スピードを取得（なければ3.0f）
-            float fastSpeed = 3.0f;
+            float fastSpeed = 1.0f;
             FastForwardUI ff = FindObjectOfType<FastForwardUI>();
             if (ff != null) fastSpeed = ff.fastForwardSpeed;
 

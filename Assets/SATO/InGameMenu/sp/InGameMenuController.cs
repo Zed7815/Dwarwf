@@ -58,6 +58,10 @@ public class InGameMenuController : MonoBehaviour
     public Image playerPortraitImage;
     public TextMeshProUGUI hintMemoText;
 
+    [Header("別Canvasの遮断設定")]
+    [Tooltip("スタートボタンや倍速ボタンが入っている別のCanvas")]
+    public Canvas hudCanvas; // スタートボタン側のCanvas
+
     private float previousTimeScale = 1f;
     private bool isMenuOpen = false;
     private bool isAnimating = false;

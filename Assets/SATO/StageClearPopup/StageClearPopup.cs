@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems; // ホバー検知のために追加
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class StageClearPopup : MonoBehaviour
@@ -10,18 +10,21 @@ public class StageClearPopup : MonoBehaviour
 
     [Header("ポップアップ本体")]
     public GameObject clearPanel;
-    [Tooltip("ポヨンと動かすウィンドウ枠")]
     public RectTransform popupWindow;
-
-    [Header("ボタン参照（ホバー音用）")]
-    public Button nextStageButton;     // 「つぎへ」ボタン
-    public Button returnToSelectButton; // 「セレクトへ」ボタン
 
     [Header("次ステージ設定")]
     public string nextStageSceneName;
     public GimmickType nextStageGimmick = GimmickType.Generic;
     public bool isFinalStage = false;
     public string endingSceneName = "Ending";
+
+    // ★【新機能】最終ステージへの門番設定
+    [Header("★最終ステージ前の制限設定")]
+    [Tooltip("次のステージが『最終ステージ』ならチェックを入れる！")]
+    public bool isNextStageFinal = false;
+    [Tooltip("最終ステージに挑むために必要な星の合計数")]
+    public int requiredStarsForNextStage = 5;
+    public Button nextStageButton; // 「つぎへ」ボタン
 
     [Header("星の獲得演出（任意）")]
     public GameObject starAchievedIcon;
@@ -31,9 +34,10 @@ public class StageClearPopup : MonoBehaviour
 
     [Header("SE設定")]
     public AudioSource audioSource;
-    public AudioClip popInSE;       // 出現音
-    public AudioClip hoverSE;       // ★追加：カーソルを合わせた時の音
-    public AudioClip buttonClickSE; // クリック音
+    public AudioClip popInSE;
+    public AudioClip hoverSE;
+    public AudioClip buttonClickSE;
+    public AudioClip deniedSE; // ★追加：星が足りない時の警告音
 
     private bool isTransitioning = false;
 
@@ -48,21 +52,26 @@ public class StageClearPopup : MonoBehaviour
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
         if (popupWindow == null && clearPanel != null) popupWindow = clearPanel.GetComponent<RectTransform>();
 
-        // ★ボタンに自動でホバー音を登録
-        RegisterHoverSound(nextStageButton);
-        RegisterHoverSound(returnToSelectButton);
+        RegisterAllButtonsHover();
     }
 
-    // ホバー音（カーソルが乗った時の音）の自動登録
-    void RegisterHoverSound(Button btn)
+    void RegisterAllButtonsHover()
     {
-        if (btn == null) return;
-        EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>() ?? btn.gameObject.AddComponent<EventTrigger>();
-        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-        entry.callback.AddListener((data) => {
-            if (audioSource != null && hoverSE != null) audioSource.PlayOneShot(hoverSE);
-        });
-        trigger.triggers.Add(entry);
+        if (clearPanel == null) return;
+        Button[] allButtons = clearPanel.GetComponentsInChildren<Button>(true);
+        foreach (Button btn in allButtons)
+        {
+            EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>() ?? btn.gameObject.AddComponent<EventTrigger>();
+            trigger.triggers.RemoveAll(entry => entry.eventID == EventTriggerType.PointerEnter);
+            EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            entry.callback.AddListener((data) => { PlayHoverSound(btn.gameObject.name); });
+            trigger.triggers.Add(entry);
+        }
+    }
+
+    void PlayHoverSound(string btnName)
+    {
+        if (audioSource != null && hoverSE != null) audioSource.PlayOneShot(hoverSE);
     }
 
     public void ShowClearPopup()
@@ -75,19 +84,18 @@ public class StageClearPopup : MonoBehaviour
             starAchievedIcon.SetActive(GameManager.instance.hasCollectedStarInThisRun);
         }
 
+        RegisterAllButtonsHover();
+
         StopAllCoroutines();
         StartCoroutine(PopInRoutine());
     }
 
-    // --- 「ポヨン」と出現する演出 ---
     IEnumerator PopInRoutine()
     {
         if (popupWindow == null) yield break;
-
         if (audioSource != null && popInSE != null) audioSource.PlayOneShot(popInSE);
 
         popupWindow.localScale = Vector3.zero;
-
         float duration = 0.3f;
         float elapsed = 0f;
 
@@ -95,11 +103,8 @@ public class StageClearPopup : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
             float t = elapsed / duration;
-
-            // BackOutイージング（弾む演出）
             t = t - 1f;
             float scale = t * t * ((1.70158f + 1f) * t + 1.70158f) + 1f;
-
             popupWindow.localScale = Vector3.one * Mathf.Clamp(scale, 0f, 1.15f);
             yield return null;
         }
@@ -107,7 +112,6 @@ public class StageClearPopup : MonoBehaviour
         popupWindow.localScale = Vector3.one;
     }
 
-    // ★【改良】押した瞬間に「シュッ！」と吸い込まれるように自然に消える演出（0.08秒の超速ポップアウト）
     IEnumerator SnappyPopOutRoutine()
     {
         if (popupWindow == null)
@@ -116,42 +120,58 @@ public class StageClearPopup : MonoBehaviour
             yield break;
         }
 
-        float duration = 0.08f; // プレイヤーが「待たされた」と感じない瞬速
+        float duration = 0.08f;
         float elapsed = 0f;
-        Vector3 startScale = popupWindow.localScale;
-
-        // 一瞬だけ少し縦に伸びてから（予備動作）、キュッと0に縮む自然な消え方
         while (elapsed < duration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = elapsed / duration;
-
-            // 加速しながら縮小
             float currentScale = Mathf.Lerp(1.0f, 0f, t * t);
             popupWindow.localScale = new Vector3(currentScale * 1.05f, currentScale * 0.9f, 1f);
             yield return null;
         }
 
         popupWindow.localScale = Vector3.zero;
-        if (clearPanel != null) clearPanel.SetActive(false); // 即座に非表示！
+        if (clearPanel != null) clearPanel.SetActive(false);
     }
 
     // --- ボタン1：次のステージへ進む ---
     public void OnNextStageClicked()
     {
         if (isTransitioning) return;
-        isTransitioning = true;
 
+        // ★【最重要ガード！】次が最終ステージなのに、星の数が足りない場合
+        if (isNextStageFinal)
+        {
+            int currentTotalStars = GetCurrentTotalStars();
+
+            if (currentTotalStars < requiredStarsForNextStage)
+            {
+                // 警告音を鳴らす
+                if (audioSource != null && deniedSE != null) audioSource.PlayOneShot(deniedSE);
+
+                int remaining = requiredStarsForNextStage - currentTotalStars;
+
+                // メッセージを画面に出して進ませない！
+                if (TutorialMessageUI.instance != null)
+                {
+                    TutorialMessageUI.instance.ShowMessage($"最終ステージの解放には\n星があと {remaining} 個必要だよ！\nセレクト画面に戻って集めよう！");
+                }
+
+                Debug.Log($"<color=red>【入場拒否】星が足りません！ 現在: {currentTotalStars}個 / 必要: {requiredStarsForNextStage}個</color>");
+                return; // ★ここで完全に阻止！
+            }
+        }
+
+        isTransitioning = true;
         PlayClickSE();
         StartCoroutine(NextStageSequence());
     }
 
     IEnumerator NextStageSequence()
     {
-        // 押した瞬間にシュッと自然に消える
         yield return StartCoroutine(SnappyPopOutRoutine());
 
-        // ウィンドウが消えた後、黒い板が降りてくる
         if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
         yield return new WaitForSecondsRealtime(0.2f);
 
@@ -171,13 +191,23 @@ public class StageClearPopup : MonoBehaviour
 
     IEnumerator ReturnToSelectSequence()
     {
-        // 押した瞬間にシュッと自然に消える
         yield return StartCoroutine(SnappyPopOutRoutine());
 
         if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
         yield return new WaitForSecondsRealtime(0.2f);
 
         SceneLoader.Load("StageSelect", GimmickType.Generic);
+    }
+
+    // 現在の合計スター数を正確に計算
+    int GetCurrentTotalStars()
+    {
+        int count = 0;
+        for (int i = 1; i <= 30; i++)
+        {
+            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) count++;
+        }
+        return count;
     }
 
     void PlayClickSE()

@@ -728,6 +728,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 380594403}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: isNextStageFinal
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: nextStageGimmick
       value: 4
       objectReference: {fileID: 0}
@@ -7604,6 +7608,10 @@ PrefabInstance:
     - target: {fileID: 346155439250664270, guid: 431713acf6b901349a9de024e98fd7d9, type: 3}
       propertyPath: m_Name
       value: TutorialMessageTextUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 1942175985792381425, guid: 431713acf6b901349a9de024e98fd7d9, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -270
       objectReference: {fileID: 0}
     - target: {fileID: 2282877620335852565, guid: 431713acf6b901349a9de024e98fd7d9, type: 3}
       propertyPath: m_Pivot.x
