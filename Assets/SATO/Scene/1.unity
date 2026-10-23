@@ -2365,17 +2365,6 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 2947781058251339558, guid: 5402e58cc5eb8a8418592fb1a710dda4, type: 3}
   m_PrefabInstance: {fileID: 840008531}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &867931196 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1898569117585916414, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
-  m_PrefabInstance: {fileID: 8742164150187058607}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &890470852
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4266,7 +4255,7 @@ TilemapRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
-  m_ChunkCullingBounds: {x: 0.012499988, y: 0.008581519, z: 0}
+  m_ChunkCullingBounds: {x: 0.021186411, y: 0.017201543, z: 0}
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 0
@@ -4930,7 +4919,7 @@ MonoBehaviour:
     prefab: {fileID: 7864217175585364333, guid: ed4cd00eb773c1e4ebd3881a7af579c6, type: 3}
     maxCount: 2
     currentCount: 0
-    individualCountText: {fileID: 867931196}
+    individualCountText: {fileID: 0}
     targetFrameScale: {x: 1.5, y: 1.5, z: 1}
   audioSource: {fileID: 1901478531}
   dragSE: {fileID: 8300000, guid: db445125bcb9bd143a2650260c53d7da, type: 3}
@@ -5628,6 +5617,7 @@ PrefabInstance:
     - {fileID: 7510568773760549973, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
     - {fileID: 5295358379104645057, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
     - {fileID: 1035183083694332143, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+    - {fileID: 382365742054739960, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2084933784270307989, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
       insertIndex: -1

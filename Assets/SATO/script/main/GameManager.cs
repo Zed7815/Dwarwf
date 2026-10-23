@@ -125,22 +125,12 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        // ブロック配置チェック
-        if (blockManager != null && !blockManager.IsAllBlocksPlaced())
-        {
-            PlaySE(startDeniedSE);
+        // ★修正：「すべて置き切らないとスタートできない」ガードを完全に削除！
+        // 0個でも、1個でも、何個置いていても即座にスタートします。
 
-            if (TutorialMessageUI.instance != null)
-            {
-                TutorialMessageUI.instance.ShowMessage("すべて置き切らないとスタートできないよ！");
-            }
+        playCount++; // 実行回数をカウント
 
-            Debug.Log("まだすべてのブロックを配置していません");
-            return;
-        }
-
-        playCount++;
-        PlaySE(startGameSE);
+        PlaySE(startGameSE); // 正常な開始音
         currentState = GameState.Play;
         player.StartMove();
         if (editUIController != null) editUIController.HideEditUI();

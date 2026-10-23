@@ -187,19 +187,8 @@ public class BlockManager : MonoBehaviour
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
-        if (blockTypes[typeIndex].currentCount >= blockTypes[typeIndex].maxCount)
-        {
-           
-            bool removed = RemoveOldestUnlockedBlockOfType(typeIndex);
-
-            // もしすべてロックされていて、消せるブロックが1つもないなら配置を拒否！
-            if (!removed)
-            {
-                PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
-                Debug.Log("<color=yellow>この動物はすべてチェックポイントで固定されているため、これ以上配置できません！</color>");
-                return; // ドラッグを開始させない！
-            }
-        }
+        // ★修正：個数制限チェックと古いブロックの削除を完全に撤廃！
+        // 何個でも好きなだけ新しい動物を取り出して配置できます。
 
         activeTypeIndex = typeIndex;
         PlaySE(dragSE);
@@ -213,13 +202,10 @@ public class BlockManager : MonoBehaviour
         previewBlock.GetComponent<Collider2D>().enabled = false;
         previewBlock.transform.position += new Vector3(0, 0, 0.1f);
 
-        previewBlock.tag = "Untagged"; // タグを外す
-
-        // 鳥のスクリプトなど、プレビュー上の全スクリプトをOFFにする
+        // プレビューの無力化（半透明用）
+        previewBlock.tag = "Untagged";
         MonoBehaviour[] scripts = previewBlock.GetComponentsInChildren<MonoBehaviour>();
         foreach (var s in scripts) s.enabled = false;
-
-        // アニメーションによる色の強制上書きをOFFにする
         Animator anim = previewBlock.GetComponentInChildren<Animator>();
         if (anim != null) anim.enabled = false;
     }
@@ -552,15 +538,15 @@ public class BlockManager : MonoBehaviour
         {
             if (type.individualCountText != null)
             {
-                int remaining = type.maxCount - type.currentCount;
-                type.individualCountText.text = remaining + " / " + type.maxCount;
+                // 無限に置けるので、「今何個置いているか（例: × 3）」を表示
+                // ※「∞」とだけ表示したい場合は "∞" に書き換えてください
+                type.individualCountText.text = "× " + type.currentCount;
             }
         }
     }
 
     public bool IsAllBlocksPlaced()
     {
-        foreach (var type in blockTypes) { if (type.currentCount < type.maxCount) return false; }
         return true;
     }
 }
