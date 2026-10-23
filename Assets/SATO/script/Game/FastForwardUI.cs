@@ -21,7 +21,7 @@ public class FastForwardUI : MonoBehaviour
     public float pulseSpeed = 10f;
     public float pulseAmount = 0.1f;
 
-    private bool isFastForwarding = false;
+    public bool isFastForwarding = false;
     private Vector3 initialScale;
 
     void Start()

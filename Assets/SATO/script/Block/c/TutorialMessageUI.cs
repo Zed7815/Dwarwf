@@ -10,7 +10,7 @@ public class TutorialMessageUI : MonoBehaviour
     public CanvasGroup canvasGroup;
 
     private bool isWaitingForClick = false;
-    private bool wasFastForwarding = false; // ★追加：倍速中だったかを記憶するフラグ
+    private bool wasFastForwarding = false; // 倍速中フラグ
 
     void Awake()
     {
@@ -21,7 +21,7 @@ public class TutorialMessageUI : MonoBehaviour
     void Start()
     {
         if (canvasGroup != null) canvasGroup.alpha = 0;
-        gameObject.SetActive(false); // 最初は非表示
+        gameObject.SetActive(false);
     }
 
     public void ShowMessage(string text)
@@ -33,13 +33,12 @@ public class TutorialMessageUI : MonoBehaviour
 
     IEnumerator MessageRoutine(string text)
     {
-        // ★追加：メッセージを表示する「直前」に、今倍速中かどうかを記録！
-        // （Time.timeScaleが1.0より大きい、またはFastForwardUIが倍速中ならtrue）
-        wasFastForwarding = (Time.timeScale > 1.05f);
+        // ★【確実な判定】Time.timeScaleではなく、倍速ボタン・マネージャーがONか直接確認する！
+        wasFastForwarding = CheckIsFastForwarding();
 
         messageText.text = text;
 
-        // 1. ふわっと表示（一時停止中でも動くように unscaledDeltaTime を使用）
+        // 1. ふわっと表示
         float t = 0;
         while (t < 0.3f)
         {
@@ -49,7 +48,7 @@ public class TutorialMessageUI : MonoBehaviour
         }
         canvasGroup.alpha = 1;
 
-        // 2. プレイヤーのクリック（タップ）を待つ猶予
+        // 2. プレイヤーのクリック待ち
         yield return null;
         isWaitingForClick = true;
 
@@ -87,20 +86,37 @@ public class TutorialMessageUI : MonoBehaviour
         canvasGroup.alpha = 0;
         gameObject.SetActive(false);
 
-        // ★修正：メッセージが閉じた後、元の速度に合わせて復元する！
+        // 4. ★復元：倍速中だったなら確実に倍速を適用、そうでなければ通常に戻す
         if (wasFastForwarding)
         {
-            // 倍速中だった場合：3倍速（および安定した物理時間）を復元
-            Time.timeScale = 3.0f;
+            // 倍速ボタンが存在すれば、その設定スピードを取得（なければ3.0f）
+            float fastSpeed = 3.0f;
+            FastForwardUI ff = FindObjectOfType<FastForwardUI>();
+            if (ff != null) fastSpeed = ff.fastForwardSpeed;
+
+            Time.timeScale = fastSpeed;
             Time.fixedDeltaTime = 0.02f * Time.timeScale;
-            Debug.Log("<color=cyan>【チュートリアル終了】倍速状態（3.0倍）を復元しました</color>");
+            Debug.Log($"<color=cyan>【チュートリアル終了】倍速（{fastSpeed}倍）を確実に復元しました！</color>");
         }
         else
         {
-            // 倍速中ではなかった場合：通常通り等倍（1.0）に戻す
             Time.timeScale = 1.0f;
             Time.fixedDeltaTime = 0.02f;
             Debug.Log("<color=green>【チュートリアル終了】通常速度（1.0倍）に戻しました</color>");
         }
+    }
+
+    // ★倍速中かどうかを複数の方法で確実に調べる関数
+    bool CheckIsFastForwarding()
+    {
+        if (Time.timeScale > 1.05f) return true;
+
+        FastForwardUI ff = FindObjectOfType<FastForwardUI>();
+        if (ff != null && ff.isFastForwarding)
+        {
+            return true; // ボタンがONになっていれば倍速中と判定！
+        }
+
+        return false;
     }
 }
