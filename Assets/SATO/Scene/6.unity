@@ -2007,6 +2007,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8843720062047860569, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
   m_PrefabInstance: {fileID: 490506090}
   m_PrefabAsset: {fileID: 0}
+--- !u!223 &490506094 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 1137543652283074823, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+  m_PrefabInstance: {fileID: 490506090}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &490506095 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1898569117585916414, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
@@ -10456,6 +10461,10 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 490506094}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: clearPanel
       value: 
       objectReference: {fileID: 1365835686}
@@ -10523,6 +10532,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StageInfo&Menu&ClearManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 490506094}
     - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemoText
       value: 

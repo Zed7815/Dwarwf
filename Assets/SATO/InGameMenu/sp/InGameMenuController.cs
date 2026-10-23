@@ -126,18 +126,22 @@ public class InGameMenuController : MonoBehaviour
         if (isMenuOpen || isAnimating) return;
         isMenuOpen = true;
 
+        // ★追加：スタートボタン側のCanvasのクリック判定を強制OFF！
+        if (hudCanvas != null)
+        {
+            var raycaster = hudCanvas.GetComponent<GraphicRaycaster>();
+            if (raycaster != null) raycaster.enabled = false;
+        }
+
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
-        // 本編ステージの場合のみ左ページを更新
-        if (!isStageSelectMode)
-        {
-            UpdateLeftPageInfo();
-        }
+        if (!isStageSelectMode) UpdateLeftPageInfo();
 
         StopAllCoroutines();
         StartCoroutine(OpenSequence());
     }
+
 
     IEnumerator OpenSequence()
     {
@@ -240,8 +244,14 @@ public class InGameMenuController : MonoBehaviour
                 animatedBookWorld.transform.position = Vector3.Lerp(startPos, endPos, t * t);
                 yield return null;
             }
-
             animatedBookWorld.SetActive(false);
+        }
+
+
+        if (hudCanvas != null)
+        {
+            var raycaster = hudCanvas.GetComponent<GraphicRaycaster>();
+            if (raycaster != null) raycaster.enabled = true;
         }
 
         if (darkOverlayUI != null) darkOverlayUI.SetActive(false);

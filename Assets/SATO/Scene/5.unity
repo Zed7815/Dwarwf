@@ -716,6 +716,10 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 753419940}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: clearPanel
       value: 
       objectReference: {fileID: 380594404}
@@ -787,6 +791,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StageInfo&Menu&ClearManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 753419940}
     - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemoText
       value: 
@@ -2016,6 +2024,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d873aff6f0dda584db2e6a70585c22b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GimmickResetter
+--- !u!223 &753419940 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 1137543652283074823, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+  m_PrefabInstance: {fileID: 490506090}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &779844180
 GameObject:
   m_ObjectHideFlags: 0

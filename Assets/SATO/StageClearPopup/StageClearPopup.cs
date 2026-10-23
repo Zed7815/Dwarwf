@@ -39,6 +39,9 @@ public class StageClearPopup : MonoBehaviour
     public AudioClip buttonClickSE;
     public AudioClip deniedSE; // ★追加：星が足りない時の警告音
 
+    [Header("別Canvasの遮断設定")]
+    public Canvas hudCanvas; // スタートボタン側のCanvas
+
     private bool isTransitioning = false;
 
     void Awake()
@@ -78,6 +81,12 @@ public class StageClearPopup : MonoBehaviour
     {
         isTransitioning = false;
         if (clearPanel != null) clearPanel.SetActive(true);
+
+        if (hudCanvas != null)
+        {
+            var raycaster = hudCanvas.GetComponent<GraphicRaycaster>();
+            if (raycaster != null) raycaster.enabled = false;
+        }
 
         if (starAchievedIcon != null && GameManager.instance != null)
         {
@@ -133,6 +142,12 @@ public class StageClearPopup : MonoBehaviour
 
         popupWindow.localScale = Vector3.zero;
         if (clearPanel != null) clearPanel.SetActive(false);
+
+        if (hudCanvas != null)
+        {
+            var raycaster = hudCanvas.GetComponent<GraphicRaycaster>();
+            if (raycaster != null) raycaster.enabled = true;
+        }
     }
 
     // --- ボタン1：次のステージへ進む ---

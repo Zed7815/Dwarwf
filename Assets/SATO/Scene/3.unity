@@ -390,6 +390,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 867776958}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: clearPanel
       value: 
       objectReference: {fileID: 1630561814}
@@ -457,6 +461,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StageInfo&Menu&ClearManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 867776958}
     - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: bookDropSE
       value: 
@@ -2823,6 +2831,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+--- !u!223 &867776958 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 1137543652283074823, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+  m_PrefabInstance: {fileID: 490506090}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &962895593
 GameObject:
   m_ObjectHideFlags: 0

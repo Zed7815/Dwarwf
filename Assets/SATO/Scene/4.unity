@@ -573,6 +573,10 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 1936573682}
+    - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: clearPanel
       value: 
       objectReference: {fileID: 653220762}
@@ -640,6 +644,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StageInfo&Menu&ClearManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
+      propertyPath: hudCanvas
+      value: 
+      objectReference: {fileID: 1936573682}
     - target: {fileID: 6993183416753550355, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemoText
       value: 
@@ -5932,6 +5940,11 @@ PrefabInstance:
 --- !u!224 &1936573681 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2084933784270307989, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
+  m_PrefabInstance: {fileID: 1936573680}
+  m_PrefabAsset: {fileID: 0}
+--- !u!223 &1936573682 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 1137543652283074823, guid: 7ad4d5bcc6e0a524893cec480bad28a1, type: 3}
   m_PrefabInstance: {fileID: 1936573680}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1982521583 stripped

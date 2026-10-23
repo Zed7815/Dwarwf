@@ -9,6 +9,9 @@ using TMPro;
 
 public class StageSelectManager : MonoBehaviour
 {
+    [Header("左上の図鑑ボタン（シーン移動時に消す用）")]
+    public GameObject openBookButton; // ★追加：左上の本ボタンをドラッグ＆ドロップ
+
     // 各ステージの設定をまとめるクラス
     [System.Serializable]
     public class StageSetting
@@ -184,9 +187,28 @@ public class StageSelectManager : MonoBehaviour
     {
         if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
         if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
-        if (fadeOutScript != null) yield return StartCoroutine(fadeOutScript.endKuro());
+
+        // ★【ここが解決のキモ！】
+        // 黒い板が降りてくる「前」に、左上の本ボタンを即座に消す！
+        if (openBookButton != null)
+        {
+            openBookButton.SetActive(false);
+        }
+        // InGameMenuController側で管理しているボタンも念のため即座に消す
+        if (InGameMenuController.instance != null && InGameMenuController.instance.openBookButtonInSelect != null)
+        {
+            InGameMenuController.instance.openBookButtonInSelect.SetActive(false);
+        }
+
+        // ボタンが綺麗に消えた画面の上に、黒い板がスッと降りてくる
+        if (fadeOutScript != null)
+        {
+            yield return StartCoroutine(fadeOutScript.endKuro());
+        }
+
         yield return new WaitForSecondsRealtime(0.5f);
 
+        // ステージを読み込む
         SceneLoader.Load(sceneName, gimmick);
     }
 }
