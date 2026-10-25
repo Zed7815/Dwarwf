@@ -468,6 +468,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (27)
@@ -606,6 +614,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: birdFlightDistance
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (24)
@@ -836,6 +856,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (26)
@@ -968,6 +996,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (14)
@@ -1072,6 +1108,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: birdFlightDistance
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (21)
@@ -1267,6 +1315,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (11)
@@ -2624,6 +2680,71 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &731308289
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -28.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -3.59
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1843872938442826715, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2216680997743713963, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: hoverDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2216680997743713963, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: snakePlayerYOffset
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8037907860191682146, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
+      propertyPath: m_Name
+      value: GimmickGhostPreviewManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c8e48234e3f6ab3448fce8b5994bb041, type: 3}
 --- !u!1001 &753045855
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2842,6 +2963,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: birdFlightDistance
+      value: 16
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (13)
@@ -5590,6 +5719,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: birdFlightDistance
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (3)
@@ -5795,6 +5932,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (5)
@@ -6150,6 +6291,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (12)
@@ -6282,6 +6427,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (4)
@@ -6776,6 +6925,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (7)
@@ -7055,6 +7212,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: birdFlightDistance
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (15)
@@ -7962,6 +8127,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (8)
@@ -9460,6 +9629,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: birdFlightDistance
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (16)
@@ -9619,6 +9792,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (22)
@@ -9934,6 +10111,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (10)
@@ -10405,6 +10590,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: previewDirection
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (23)
@@ -10462,6 +10655,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5121022472524463353, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
+      propertyPath: enableBirdFlight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5147770036743013007, guid: 5c0b0088ab4a2c340b6bb032fc6a46b6, type: 3}
       propertyPath: m_Name
       value: DropFrame (9)
@@ -10525,17 +10722,17 @@ SceneRoots:
   - {fileID: 490506090}
   - {fileID: 162108425}
   - {fileID: 443231581}
-  - {fileID: 928063630}
   - {fileID: 1621468796}
   - {fileID: 464187281}
   - {fileID: 146616003}
   - {fileID: 726008752}
   - {fileID: 519683672}
+  - {fileID: 1660899576}
+  - {fileID: 928063630}
   - {fileID: 1206908131}
   - {fileID: 962112908}
   - {fileID: 1407272411}
   - {fileID: 1647546195}
-  - {fileID: 1660899576}
   - {fileID: 2135010641}
   - {fileID: 1899135296}
   - {fileID: 1988689259}
@@ -10543,7 +10740,6 @@ SceneRoots:
   - {fileID: 1126945040}
   - {fileID: 813115109}
   - {fileID: 364484353}
-  - {fileID: 77526565}
   - {fileID: 1521773506}
   - {fileID: 2119430514}
   - {fileID: 1784072956}
@@ -10551,6 +10747,7 @@ SceneRoots:
   - {fileID: 398759009}
   - {fileID: 174341508}
   - {fileID: 156559126}
+  - {fileID: 77526565}
   - {fileID: 1721699733}
   - {fileID: 1392699817}
   - {fileID: 1262300513}
@@ -10566,3 +10763,4 @@ SceneRoots:
   - {fileID: 633542037}
   - {fileID: 1992915073}
   - {fileID: 26800500}
+  - {fileID: 731308289}

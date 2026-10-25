@@ -237,6 +237,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: 1
+  enableBirdFlight: 0
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!114 &402337639 stripped
 MonoBehaviour:
@@ -554,6 +557,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: 1
+  enableBirdFlight: 0
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!114 &576893657 stripped
 MonoBehaviour:
@@ -849,6 +855,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: -1
+  enableBirdFlight: 0
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!1 &755015878
 GameObject:
@@ -1298,6 +1307,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: -1
+  enableBirdFlight: 1
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!1 &1168924253
 GameObject:
@@ -1870,6 +1882,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: 1
+  enableBirdFlight: 1
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!1001 &1408958658
 PrefabInstance:
@@ -2232,6 +2247,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: 1
+  enableBirdFlight: 1
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!1 &1652346508 stripped
 GameObject:
@@ -3415,6 +3433,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
+  previewDirection: 1
+  enableBirdFlight: 0
+  birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!4 &2101996865 stripped
 Transform:

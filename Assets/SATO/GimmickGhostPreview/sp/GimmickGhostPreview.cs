@@ -17,9 +17,18 @@ public class GimmickGhostPreview : MonoBehaviour
     public float ghostAlpha = 0.5f;
     public Vector3 customGhostScale = Vector3.zero;
 
+    [Header("ホバー演出の遅延設定")]
+    [Tooltip("マウスを乗せてからゴーストが出るまでの待ち時間（秒）")]
+    public float hoverDelay = 0.2f;
+
+    [Header("ヘビ実演時の高さ微調整")]
+    [Tooltip("ヘビ実演時の自機の高さ。少し下げたい場合は -0.2 や -0.3 などを設定")]
+    public float snakePlayerYOffset = -0.25f; // ★復活させました！
+
     private DynamicDropFrame currentHoveredFrame = null;
     private GameObject currentActiveBlock = null;
     private Coroutine currentDemoRoutine = null;
+    private Coroutine hoverDelayRoutine = null;
     private Camera mainCam;
     private Player_walk playerWalkRef;
     private Rigidbody2D playerRbRef;
@@ -82,6 +91,7 @@ public class GimmickGhostPreview : MonoBehaviour
         CheckFrameHover();
     }
 
+    // ★修正：枠（DropFrame）の判定を広げ、マウスが少しカスっただけでも確実に検知する
     void CheckFrameHover()
     {
         if (mainCam == null) mainCam = Camera.main;
@@ -91,12 +101,14 @@ public class GimmickGhostPreview : MonoBehaviour
         Vector3 mouseWorld = mainCam.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, -mainCam.transform.position.z));
         mouseWorld.z = 0f;
 
+        // マウス位置にあるコライダーをすべて取得
         Collider2D[] hits = Physics2D.OverlapPointAll(mouseWorld);
         DynamicDropFrame foundFrame = null;
 
         foreach (var hit in hits)
         {
-            DynamicDropFrame frame = hit.GetComponent<DynamicDropFrame>();
+            // DropFrame自体か、あるいはその親・子からDynamicDropFrameを探す
+            DynamicDropFrame frame = hit.GetComponent<DynamicDropFrame>() ?? hit.GetComponentInParent<DynamicDropFrame>();
             if (frame != null)
             {
                 foundFrame = frame;
@@ -110,10 +122,12 @@ public class GimmickGhostPreview : MonoBehaviour
             {
                 StopPreview();
                 currentHoveredFrame = foundFrame;
+
                 GameObject blockOnFrame = GetBlockOnPosition(foundFrame.transform.position);
                 if (blockOnFrame != null)
                 {
-                    StartPreview(blockOnFrame, foundFrame);
+                    if (hoverDelayRoutine != null) StopCoroutine(hoverDelayRoutine);
+                    hoverDelayRoutine = StartCoroutine(StartHoverDelayRoutine(blockOnFrame, foundFrame));
                 }
             }
         }
@@ -126,9 +140,20 @@ public class GimmickGhostPreview : MonoBehaviour
         }
     }
 
+    IEnumerator StartHoverDelayRoutine(GameObject block, DynamicDropFrame frame)
+    {
+        yield return new WaitForSecondsRealtime(hoverDelay);
+
+        if (currentHoveredFrame == frame)
+        {
+            StartPreview(block, frame);
+        }
+    }
+
     GameObject GetBlockOnPosition(Vector3 pos)
     {
-        Collider2D[] hits = Physics2D.OverlapPointAll(pos);
+        // わずかな座標のズレを吸収するため、OverlapCircleで周辺のブロックも確実に拾う
+        Collider2D[] hits = Physics2D.OverlapCircleAll(pos, 0.2f);
         foreach (var hit in hits)
         {
             if (hit.CompareTag("PlacedBlock") || hit.GetComponentInParent<BlockInfo>() != null || hit.GetComponentInParent<PlacedBlockMarker>() != null)
@@ -146,10 +171,10 @@ public class GimmickGhostPreview : MonoBehaviour
         if (ghostPlayer == null || block == null || frame == null) return;
 
         if (currentDemoRoutine != null) StopCoroutine(currentDemoRoutine);
-        ghostPlayer.SetActive(true);
         currentActiveBlock = block;
 
         int dir = (int)frame.previewDirection;
+        float birdDist = frame.birdFlightDistance;
 
         currentAnimalRenderer = block.GetComponentInChildren<SpriteRenderer>();
         if (currentAnimalRenderer != null)
@@ -163,29 +188,42 @@ public class GimmickGhostPreview : MonoBehaviour
 
         if (block.GetComponentInChildren<PlayerJumpBlock>() != null)
         {
+            ghostPlayer.SetActive(true);
             currentDemoRoutine = StartCoroutine(DemoJumpRoutine(block.GetComponentInChildren<PlayerJumpBlock>(), dir));
         }
         else if (block.GetComponentInChildren<ReverseGimmick>() != null)
         {
+            ghostPlayer.SetActive(true);
             currentDemoRoutine = StartCoroutine(DemoReverseRoutine(block.transform, dir));
         }
         else if (block.GetComponentInChildren<BirdCarrier>() != null)
         {
-            // ★鳥の場合：ON/OFFスイッチと、設定された距離を渡す
-            currentDemoRoutine = StartCoroutine(DemoBirdRoutine(block.GetComponentInChildren<BirdCarrier>(), dir, frame.enableBirdFlight, frame.birdFlightDistance));
+            // 鳥の場合：スイッチ（enableFlight）がONなら自機を表示、OFFなら自機は隠す！
+            if (frame.enableBirdFlight) ghostPlayer.SetActive(true);
+            else ghostPlayer.SetActive(false);
+
+            currentDemoRoutine = StartCoroutine(DemoBirdRoutine(block.GetComponentInChildren<BirdCarrier>(), dir, frame.enableBirdFlight, birdDist));
         }
         else if (block.GetComponentInChildren<LiftBlock>() != null)
         {
+            ghostPlayer.SetActive(true);
             currentDemoRoutine = StartCoroutine(DemoLiftRoutine(block.GetComponentInChildren<LiftBlock>()));
         }
         else if (block.GetComponentInChildren<VanishingBlock>() != null)
         {
+            ghostPlayer.SetActive(true);
             currentDemoRoutine = StartCoroutine(DemoVanishRoutine(block.GetComponentInChildren<VanishingBlock>()));
         }
     }
 
     void StopPreview()
     {
+        if (hoverDelayRoutine != null)
+        {
+            StopCoroutine(hoverDelayRoutine);
+            hoverDelayRoutine = null;
+        }
+
         currentHoveredFrame = null;
 
         if (currentAnimalRenderer != null)
@@ -225,6 +263,7 @@ public class GimmickGhostPreview : MonoBehaviour
         }
     }
 
+    // --- ① ネズミ ---
     IEnumerator DemoJumpRoutine(PlayerJumpBlock jumpBlock, int dir)
     {
         while (true)
@@ -232,8 +271,9 @@ public class GimmickGhostPreview : MonoBehaviour
             if (jumpBlock == null) { StopPreview(); yield break; }
             Transform blockT = jumpBlock.transform;
             Vector3 startPos = blockT.position + Vector3.up * 0.5f;
+
             float vx = (playerWalkRef != null ? playerWalkRef.playerJumpForwardPower : 3.6f) * dir;
-            float vy = playerWalkRef != null ? playerWalkRef.playerJumpPower : 11.5f;
+            float vy = (playerWalkRef != null ? playerWalkRef.playerJumpPower : 11.5f);
             float gravity = playerRbRef != null ? Physics2D.gravity.y * playerRbRef.gravityScale : -9.81f * 3f;
 
             ghostPlayer.transform.position = startPos;
@@ -284,6 +324,7 @@ public class GimmickGhostPreview : MonoBehaviour
         }
     }
 
+    // --- ② ヘビ（高さ調整対応） ---
     IEnumerator DemoReverseRoutine(Transform block, int approachDir)
     {
         while (true)
@@ -292,6 +333,10 @@ public class GimmickGhostPreview : MonoBehaviour
             LayerMask groundMask = playerWalkRef != null ? playerWalkRef.groundLayer : LayerMask.GetMask("Ground");
             RaycastHit2D groundHit = Physics2D.Raycast(block.position + Vector3.down * 0.5f, Vector2.down, 4.0f, groundMask);
             float groundY = groundHit.collider != null ? groundHit.point.y + 0.35f : block.position.y;
+
+            // ★インスペクターで設定できるオフセットを適用
+            groundY += snakePlayerYOffset;
+
             Vector3 centerPos = new Vector3(block.position.x, groundY, block.position.z);
 
             float speed = playerWalkRef != null ? playerWalkRef.PlayerSpeed : 5.0f;
@@ -330,7 +375,7 @@ public class GimmickGhostPreview : MonoBehaviour
         }
     }
 
-    // --- ③ 鳥（ON/OFFスイッチ ＆ 距離指定対応） ---
+    // --- ③ 鳥（ON/OFFスイッチ連動） ---
     IEnumerator DemoBirdRoutine(BirdCarrier bird, int dir, bool enableFlight, float flightDist)
     {
         while (true)
@@ -341,8 +386,14 @@ public class GimmickGhostPreview : MonoBehaviour
             Vector3 startPlayerPos = birdOrigin + new Vector3(0, bird.grabOffsetY, 0);
 
             bird.transform.position = birdOrigin;
-            ghostPlayer.transform.position = startPlayerPos;
-            ghostPlayer.transform.localScale = new Vector3(baseScale.x * dir, baseScale.y, baseScale.z);
+
+            // スイッチOFFなら自機を隠す、ONなら表示
+            ghostPlayer.SetActive(enableFlight);
+            if (enableFlight)
+            {
+                ghostPlayer.transform.position = startPlayerPos;
+                ghostPlayer.transform.localScale = new Vector3(baseScale.x * dir, baseScale.y, baseScale.z);
+            }
 
             Vector3 birdScale = bird.transform.localScale;
             bird.transform.localScale = new Vector3(Mathf.Abs(birdScale.x) * dir, birdScale.y, birdScale.z);
@@ -350,7 +401,7 @@ public class GimmickGhostPreview : MonoBehaviour
             ResetGhostAnim();
             if (ghostAnimator != null) ghostAnimator.SetBool("isFalling", true);
 
-            // ★もしスイッチがOFFなら、飛ばずにその場で羽ばたき実演だけする
+            // スイッチOFFなら「鳥がその場で羽ばたくだけ」
             if (!enableFlight)
             {
                 if (bird.animator != null) bird.animator.SetBool(bird.flyBoolParam, true);
@@ -360,38 +411,64 @@ public class GimmickGhostPreview : MonoBehaviour
                 continue;
             }
 
-            // スイッチがONなら設定された距離だけ飛ぶ！
+            // スイッチONなら飛ぶ！
             Vector3 destPos = startPlayerPos + new Vector3(dir * flightDist, 0, 0);
-            yield return new WaitForSecondsRealtime(0.3f);
+            LayerMask groundMask = playerWalkRef != null ? playerWalkRef.groundLayer : LayerMask.GetMask("Ground");
+            RaycastHit2D groundHit = Physics2D.Raycast(destPos + Vector3.up * 2f, Vector2.down, 10f, groundMask);
+            if (groundHit.collider != null)
+            {
+                destPos = new Vector3(destPos.x, groundHit.point.y, 0);
+            }
 
+            yield return new WaitForSecondsRealtime(0.3f);
             if (bird.animator != null) bird.animator.SetBool(bird.flyBoolParam, true);
 
             float elapsed = 0f;
-            float dur = flightDist / bird.speed;
-            while (elapsed < dur)
+            while (elapsed < 0.5f)
             {
                 if (bird == null) { StopPreview(); yield break; }
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / dur;
+                float t = elapsed / 0.5f;
+                bird.transform.position = Vector3.Lerp(birdOrigin, birdOrigin + new Vector3(0, bird.heightOffset, 0), t);
+                if (enableFlight) ghostPlayer.transform.position = bird.transform.position + new Vector3(0, bird.grabOffsetY, 0);
+                yield return null;
+            }
 
-                Vector3 currentP = Vector3.Lerp(startPlayerPos, destPos, t);
-                ghostPlayer.transform.position = currentP;
-                bird.transform.position = currentP - new Vector3(0, bird.grabOffsetY, 0);
+            Vector3 flyStart = bird.transform.position;
+            Vector3 flyEnd = destPos + new Vector3(0, bird.heightOffset - bird.grabOffsetY, 0);
+            elapsed = 0f;
+            float flyDur = Vector3.Distance(flyStart, flyEnd) / bird.speed;
+            while (elapsed < flyDur)
+            {
+                if (bird == null) { StopPreview(); yield break; }
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / flyDur;
+                bird.transform.position = Vector3.Lerp(flyStart, flyEnd, t);
+                if (enableFlight) ghostPlayer.transform.position = bird.transform.position + new Vector3(0, bird.grabOffsetY, 0);
+                yield return null;
+            }
+
+            if (ghostAnimator != null) ghostAnimator.SetBool("isFalling", false);
+            elapsed = 0f;
+            while (elapsed < 0.5f)
+            {
+                if (bird == null) { StopPreview(); yield break; }
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / 0.5f;
+                bird.transform.position = Vector3.Lerp(flyEnd, destPos, t);
+                if (enableFlight) ghostPlayer.transform.position = Vector3.Lerp(ghostPlayer.transform.position, destPos, t);
                 yield return null;
             }
 
             if (bird.animator != null) bird.animator.SetBool(bird.flyBoolParam, false);
-            if (ghostAnimator != null)
-            {
-                ghostAnimator.SetBool("isFalling", false);
-                ghostAnimator.SetBool("isLanding", true);
-            }
-            yield return new WaitForSecondsRealtime(0.4f);
+            if (ghostAnimator != null) ghostAnimator.SetBool("isLanding", true);
+            yield return new WaitForSecondsRealtime(0.5f);
 
             bird.transform.position = birdOrigin;
         }
     }
 
+    // --- ④ クモ ---
     IEnumerator DemoLiftRoutine(LiftBlock lift)
     {
         while (true)
@@ -440,6 +517,7 @@ public class GimmickGhostPreview : MonoBehaviour
         }
     }
 
+    // --- ⑤ 綿 ---
     IEnumerator DemoVanishRoutine(VanishingBlock vanish)
     {
         while (true)
