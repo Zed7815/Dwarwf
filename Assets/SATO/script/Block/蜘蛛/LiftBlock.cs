@@ -189,7 +189,7 @@ public class LiftBlock : MonoBehaviour
         }
     }
 
-    bool FindNextDestination(float lockX, out Vector3 foundTarget)
+    public bool FindNextDestination(float lockX, out Vector3 foundTarget)
     {
         foundTarget = Vector3.zero;
         Collider2D myCol = GetComponent<Collider2D>();

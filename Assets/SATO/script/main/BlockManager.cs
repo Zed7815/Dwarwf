@@ -142,6 +142,16 @@ public class BlockManager : MonoBehaviour
         Vector3 mousePos = GetMouseWorldPosition();
         Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
 
+        // ★追加：ブロック本体に当たっていなくても、同じ位置の枠(DropFrame)をクリックしていれば中のブロックを回収する！
+        if (hit == null)
+        {
+            Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
+            if (frameHit != null)
+            {
+                hit = GetColliderAtPos(frameHit.transform.position, "PlacedBlock");
+            }
+        }
+
         if (hit != null)
         {
             PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
@@ -149,23 +159,7 @@ public class BlockManager : MonoBehaviour
             {
                 marker.PlayLockDeniedEffect();
                 PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
-
-                // 初めてロックされた動物を触った時
-                bool hasSeenLockTutorial = PlayerPrefs.GetInt("Tutorial_Seen_Lock", 0) == 1;
-                if (!hasSeenLockTutorial)
-                {
-                    PlayerPrefs.SetInt("Tutorial_Seen_Lock", 1);
-                    PlayerPrefs.Save();
-
-                    // ★【重要】ゲームを一時停止して連打を防ぐ！
-                    Time.timeScale = 0f;
-
-                    if (TutorialMessageUI.instance != null)
-                    {
-                        TutorialMessageUI.instance.ShowMessage("チェックポイントで使った動物は\n固定されてもう動かせないよ！\n右上の本からやり直しが可能！\n(クリックで再開)");
-                    }
-                }
-
+                Debug.Log("<color=yellow>このブロックは固定されています！</color>");
                 return;
             }
 
@@ -407,30 +401,23 @@ public class BlockManager : MonoBehaviour
         Vector3 mousePos = GetMouseWorldPosition();
         Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
 
+        // ★追加：枠を右クリックした場合も同様に中のブロックを検知
+        if (hit == null)
+        {
+            Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
+            if (frameHit != null)
+            {
+                hit = GetColliderAtPos(frameHit.transform.position, "PlacedBlock");
+            }
+        }
+
         if (hit != null)
         {
-            // ロックされているブロックは削除不可
             PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
-              if (marker != null && marker.isLocked)
+            if (marker != null && marker.isLocked)
             {
                 marker.PlayLockDeniedEffect();
                 PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
-
-                bool hasSeenLockTutorial = PlayerPrefs.GetInt("Tutorial_Seen_Lock", 0) == 1;
-                if (!hasSeenLockTutorial)
-                {
-                    PlayerPrefs.SetInt("Tutorial_Seen_Lock", 1);
-                    PlayerPrefs.Save();
-
-                    // ★ゲームを一時停止
-                    Time.timeScale = 0f; 
-
-                    if (TutorialMessageUI.instance != null)
-                    {
-                        TutorialMessageUI.instance.ShowMessage("チェックポイントで使った動物は\n固定されてもう動かせないよ！\n右上の本からやり直しが可能！\n(クリックで再開)");
-                    }
-                }
-
                 return;
             }
 
