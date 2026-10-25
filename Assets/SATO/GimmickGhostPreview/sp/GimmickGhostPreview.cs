@@ -1,23 +1,35 @@
-using UnityEngine;
+ï»¿using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GimmickGhostPreview : MonoBehaviour
 {
     public static GimmickGhostPreview instance;
 
-    [Header("ƒS[ƒXƒg©‹@‚ÌQÆ")]
-    [Tooltip("”¼“§–¾‚É‚µ‚½©‹@‚ÌƒIƒuƒWƒFƒNƒgiSpriteRenderer + Animatorj")]
+    [Header("ã‚´ãƒ¼ã‚¹ãƒˆè‡ªæ©Ÿã®å‚ç…§")]
     public GameObject ghostPlayer;
     public SpriteRenderer ghostSpriteRenderer;
     public Animator ghostAnimator;
 
-    [Header("“§–¾“xİ’è")]
+    [Header("é€æ˜åº¦ãƒ»ã‚µã‚¤ã‚ºè¨­å®š")]
     [Range(0.1f, 1f)]
-    public float ghostAlpha = 0.5f; // ”¼“§–¾‚Ì”Z‚³
+    public float ghostAlpha = 0.5f;
 
-    private GameObject currentHoveredBlock = null;
+    [Tooltip("ã‚´ãƒ¼ã‚¹ãƒˆè‡ªæ©Ÿã®ã‚¹ã‚±ãƒ¼ãƒ«ï¼ˆç©ºæ¬„ãªã‚‰æœ¬ç‰©ã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã¨åŒã˜å¤§ãã•ã«è‡ªå‹•èª¿æ•´ã•ã‚Œã¾ã™ï¼‰")]
+    public Vector3 customGhostScale = Vector3.zero;
+
+    private DynamicDropFrame currentHoveredFrame = null;
+    private GameObject currentActiveBlock = null;
     private Coroutine currentDemoRoutine = null;
     private Camera mainCam;
+    private Player_walk playerWalkRef;
+    private Rigidbody2D playerRbRef;
+    private Vector3 baseScale = Vector3.one;
+
+    private SpriteRenderer currentAnimalRenderer = null;
+    private Color originalAnimalColor = Color.white;
+    private Vector3 originalAnimalPos = Vector3.zero;
 
     void Awake()
     {
@@ -28,7 +40,19 @@ public class GimmickGhostPreview : MonoBehaviour
     {
         mainCam = Camera.main;
 
-        // ƒS[ƒXƒg©‹@‚Ì‰Šú‰»i”¼“§–¾‚É‚µ‚ÄÅ‰‚ÍÁ‚µ‚Ä‚¨‚­j
+        Player_walk realPlayer = FindObjectOfType<Player_walk>();
+        if (realPlayer != null)
+        {
+            playerWalkRef = realPlayer;
+            playerRbRef = realPlayer.GetComponent<Rigidbody2D>();
+            baseScale = realPlayer.transform.localScale;
+        }
+
+        if (customGhostScale != Vector3.zero)
+        {
+            baseScale = customGhostScale;
+        }
+
         if (ghostPlayer != null)
         {
             if (ghostSpriteRenderer == null) ghostSpriteRenderer = ghostPlayer.GetComponentInChildren<SpriteRenderer>();
@@ -41,237 +65,471 @@ public class GimmickGhostPreview : MonoBehaviour
                 ghostSpriteRenderer.color = c;
             }
 
+            ghostPlayer.transform.localScale = baseScale;
             ghostPlayer.SetActive(false);
         }
     }
 
     void Update()
     {
-        // ƒGƒfƒBƒbƒgƒ‚[ƒh’†‚Ì‚İ“®ì
         if (GameManager.instance == null || GameManager.instance.currentState != GameManager.GameState.Edit)
         {
             StopPreview();
             return;
         }
 
-        // ƒuƒƒbƒN‚ğƒhƒ‰ƒbƒO’†‚È‚çƒvƒŒƒrƒ…[‚ÍÁ‚·
         if (GameManager.instance.blockManager != null && GameManager.instance.blockManager.IsDragging)
         {
             StopPreview();
             return;
         }
 
-        // ƒ}ƒEƒXˆÊ’u‚É‚ ‚éƒIƒuƒWƒFƒNƒg‚ğŒŸ’m
-        CheckMouseHover();
+        // â˜…æ ï¼ˆDropFrameï¼‰ã‚’ãƒã‚¦ã‚¹ã§ç›£è¦–ã™ã‚‹
+        CheckFrameHover();
     }
 
-    void CheckMouseHover()
+    // â˜…ä¿®æ­£ï¼šå‹•ã‹ãªã„ã€Œæ ã€ã‚’ãƒã‚¦ã‚¹ã§æ‰ãˆã‚‹ï¼
+    void CheckFrameHover()
     {
         if (mainCam == null) mainCam = Camera.main;
-        if (mainCam == null) return;
+        if (mainCam == null || Mouse.current == null) return;
 
-        Vector3 mouseWorldPos = mainCam.ScreenToWorldPoint(Input.mousePosition);
-        Collider2D hit = Physics2D.OverlapPoint(mouseWorldPos);
+        Vector2 mouseScreen = Mouse.current.position.ReadValue();
+        Vector3 mouseWorld = mainCam.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, -mainCam.transform.position.z));
+        mouseWorld.z = 0f;
 
-        if (hit != null && (hit.CompareTag("PlacedBlock") || hit.GetComponentInParent<BlockInfo>() != null))
+        Collider2D[] hits = Physics2D.OverlapPointAll(mouseWorld);
+        DynamicDropFrame foundFrame = null;
+
+        // ãƒã‚¦ã‚¹ä½ç½®ã«ã‚ã‚‹ã€Œæ ï¼ˆDynamicDropFrameï¼‰ã€ã‚’æ¢ã™
+        foreach (var hit in hits)
         {
-            GameObject blockObj = hit.gameObject;
-
-            // V‚µ‚¢ƒuƒƒbƒN‚Éƒ}ƒEƒX‚ªæ‚Á‚½‚çÀ‰‰ŠJn
-            if (currentHoveredBlock != blockObj)
+            DynamicDropFrame frame = hit.GetComponent<DynamicDropFrame>();
+            if (frame != null)
             {
-                currentHoveredBlock = blockObj;
-                StartPreview(blockObj);
+                foundFrame = frame;
+                break;
+            }
+        }
+
+        if (foundFrame != null)
+        {
+            if (currentHoveredFrame != foundFrame)
+            {
+                currentHoveredFrame = foundFrame;
+
+                // ãã®æ ã®ä¸Šã«ç½®ã‹ã‚Œã¦ã„ã‚‹ãƒ–ãƒ­ãƒƒã‚¯ã‚’æ¢ã—ã¦å®Ÿæ¼”é–‹å§‹
+                GameObject blockOnFrame = GetBlockOnPosition(foundFrame.transform.position);
+                if (blockOnFrame != null)
+                {
+                    StartPreview(blockOnFrame, (int)foundFrame.previewDirection);
+                }
+                else
+                {
+                    StopPreview();
+                }
             }
         }
         else
         {
-            // ƒ}ƒEƒX‚ªŠO‚ê‚½‚çÀ‰‰I—¹
-            if (currentHoveredBlock != null)
+            if (currentHoveredFrame != null)
             {
                 StopPreview();
             }
         }
     }
 
-    void StartPreview(GameObject block)
+    // æ ã¨åŒã˜åº§æ¨™ã«ã‚ã‚‹é…ç½®æ¸ˆã¿ãƒ–ãƒ­ãƒƒã‚¯ã‚’æ¢ã™
+    GameObject GetBlockOnPosition(Vector3 pos)
     {
-        if (ghostPlayer == null) return;
+        Collider2D[] hits = Physics2D.OverlapPointAll(pos);
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag("PlacedBlock") || hit.GetComponentInParent<BlockInfo>() != null || hit.GetComponentInParent<PlacedBlockMarker>() != null)
+            {
+                return hit.GetComponentInParent<PlacedBlockMarker>()?.gameObject
+                       ?? hit.GetComponentInParent<BlockInfo>()?.gameObject
+                       ?? hit.gameObject;
+            }
+        }
+        return null;
+    }
+
+    void StartPreview(GameObject block, int dir)
+    {
+        if (ghostPlayer == null || block == null) return;
 
         if (currentDemoRoutine != null) StopCoroutine(currentDemoRoutine);
         ghostPlayer.SetActive(true);
+        currentActiveBlock = block;
 
-        // “®•¨‚Ìí—Ş‚É‡‚í‚¹‚Äƒ~ƒj¡Œ€‚ğ•ªŠò
+        // å‹•ç‰©ã‚’åŠé€æ˜ã«ã™ã‚‹
+        currentAnimalRenderer = block.GetComponentInChildren<SpriteRenderer>();
+        if (currentAnimalRenderer != null)
+        {
+            originalAnimalColor = currentAnimalRenderer.color;
+            Color c = originalAnimalColor;
+            c.a = ghostAlpha + 0.15f;
+            currentAnimalRenderer.color = c;
+        }
+        originalAnimalPos = block.transform.position;
+
+        // â˜…æ ã§æŒ‡å®šã•ã‚ŒãŸã€Œç¢ºå®Ÿãªå‘ã(dir)ã€ã‚’ä½¿ã£ã¦å„å®Ÿæ¼”ã‚’é–‹å§‹ï¼
         if (block.GetComponentInChildren<PlayerJumpBlock>() != null)
         {
-            currentDemoRoutine = StartCoroutine(DemoJumpRoutine(block.transform));
+            currentDemoRoutine = StartCoroutine(DemoJumpRoutine(block.GetComponentInChildren<PlayerJumpBlock>(), dir));
         }
         else if (block.GetComponentInChildren<ReverseGimmick>() != null)
         {
-            currentDemoRoutine = StartCoroutine(DemoReverseRoutine(block.transform));
+            currentDemoRoutine = StartCoroutine(DemoReverseRoutine(block.transform, dir));
         }
         else if (block.GetComponentInChildren<BirdCarrier>() != null)
         {
-            currentDemoRoutine = StartCoroutine(DemoBirdRoutine(block.transform));
+            currentDemoRoutine = StartCoroutine(DemoBirdRoutine(block.GetComponentInChildren<BirdCarrier>(), dir));
         }
-        else if (block.GetComponentInChildren<LiftBlock>() != null || block.GetComponentInChildren<SpiderLift>() != null)
+        else if (block.GetComponentInChildren<LiftBlock>() != null)
         {
-            currentDemoRoutine = StartCoroutine(DemoLiftRoutine(block.transform));
+            currentDemoRoutine = StartCoroutine(DemoLiftRoutine(block.GetComponentInChildren<LiftBlock>()));
         }
         else if (block.GetComponentInChildren<VanishingBlock>() != null)
         {
-            currentDemoRoutine = StartCoroutine(DemoVanishRoutine(block.transform));
+            currentDemoRoutine = StartCoroutine(DemoVanishRoutine(block.GetComponentInChildren<VanishingBlock>()));
         }
-        else
+        else if (block.GetComponentInChildren<WarpEntrance>() != null)
         {
-            // ‚»‚Ì‘¼FƒuƒƒbƒN‚Ìã‚É—§‚½‚¹‚é‚¾‚¯
-            ghostPlayer.transform.position = block.transform.position + Vector3.up * 0.5f;
+            currentDemoRoutine = StartCoroutine(DemoWarpRoutine(block.GetComponentInChildren<WarpEntrance>()));
         }
     }
 
     void StopPreview()
     {
-        currentHoveredBlock = null;
+        currentHoveredFrame = null;
+
+        if (currentAnimalRenderer != null)
+        {
+            currentAnimalRenderer.color = originalAnimalColor;
+            currentAnimalRenderer = null;
+        }
+        if (currentActiveBlock != null)
+        {
+            currentActiveBlock.transform.position = originalAnimalPos;
+            currentActiveBlock = null;
+        }
+
         if (currentDemoRoutine != null)
         {
             StopCoroutine(currentDemoRoutine);
             currentDemoRoutine = null;
         }
-        if (ghostPlayer != null) ghostPlayer.SetActive(false);
-    }
-
-    // --- ‡@ ƒlƒYƒ~iƒWƒƒƒ“ƒv‘äjFƒ|ƒ“ƒ|ƒ“’µ‚Ë‚éÀ‰‰ ---
-    IEnumerator DemoJumpRoutine(Transform block)
-    {
-        Vector3 basePos = block.position + Vector3.up * 0.6f;
-
-        while (true)
+        if (ghostPlayer != null)
         {
-            ghostPlayer.transform.position = basePos;
-            if (ghostAnimator != null) ghostAnimator.SetBool("isWalk", false);
-            yield return new WaitForSecondsRealtime(0.4f);
-
-            // ƒWƒƒƒ“ƒvã¸
-            float t = 0f;
-            float jumpHeight = 1.8f;
-            float duration = 0.6f;
-
-            while (t < duration)
-            {
-                t += Time.unscaledDeltaTime;
-                float progress = t / duration;
-                // •ú•¨ü‚Ì“®‚«
-                float yOffset = Mathf.Sin(progress * Mathf.PI) * jumpHeight;
-                ghostPlayer.transform.position = basePos + new Vector3(progress * 1.2f, yOffset, 0);
-                yield return null;
-            }
-
-            yield return new WaitForSecondsRealtime(0.2f);
+            ResetGhostAnim();
+            ghostPlayer.SetActive(false);
         }
     }
 
-    // --- ‡A ƒwƒri”½“]jF—ˆ‚ÄA‰ñ‚Á‚ÄA–ß‚éÀ‰‰ ---
-    IEnumerator DemoReverseRoutine(Transform block)
+    void ResetGhostAnim()
     {
-        Vector3 centerPos = block.position + Vector3.up * 0.2f;
-
-        while (true)
+        if (ghostAnimator != null)
         {
-            // ¶‚©‚ç•à‚¢‚Ä‚­‚é
-            ghostPlayer.transform.localScale = new Vector3(1, 1, 1);
-            float t = 0f;
-            while (t < 0.4f)
-            {
-                t += Time.unscaledDeltaTime;
-                ghostPlayer.transform.position = Vector3.Lerp(centerPos + Vector3.left * 1.2f, centerPos, t / 0.4f);
-                yield return null;
-            }
-
-            // ƒNƒ‹ƒb‚Æ”½“]I
-            yield return new WaitForSecondsRealtime(0.2f);
-            ghostPlayer.transform.localScale = new Vector3(-1, 1, 1); // Œü‚«”½“]
-            yield return new WaitForSecondsRealtime(0.2f);
-
-            // ¶‚Ö•à‚¢‚Ä–ß‚Á‚Ä‚¢‚­
-            t = 0f;
-            while (t < 0.4f)
-            {
-                t += Time.unscaledDeltaTime;
-                ghostPlayer.transform.position = Vector3.Lerp(centerPos, centerPos + Vector3.left * 1.2f, t / 0.4f);
-                yield return null;
-            }
-
-            yield return new WaitForSecondsRealtime(0.3f);
+            ghostAnimator.SetBool("isWalk", false);
+            ghostAnimator.SetBool("isCharging", false);
+            ghostAnimator.SetBool("isFalling", false);
+            ghostAnimator.SetBool("isLanding", false);
         }
     }
 
-    // --- ‡B ’¹F‚Ô‚ç‰º‚ª‚Á‚Ä”ò‚ñ‚Å‚¢‚­À‰‰ ---
-    IEnumerator DemoBirdRoutine(Transform block)
+    // ==========================================
+    // å„ã‚®ãƒŸãƒƒã‚¯å®Ÿæ¼”ï¼ˆæ ã§é¸ã‚“ã  dir ã‚’ä½¿ç”¨ï¼‰
+    // ==========================================
+    IEnumerator DemoJumpRoutine(PlayerJumpBlock jumpBlock, int dir)
     {
-        Vector3 startPos = block.position + new Vector3(0, -0.7f, 0);
-
         while (true)
         {
+            if (jumpBlock == null) { StopPreview(); yield break; }
+
+            Transform blockT = jumpBlock.transform;
+            Vector3 startPos = blockT.position + Vector3.up * 0.5f;
+
+            float vx = (playerWalkRef != null ? playerWalkRef.playerJumpForwardPower : 3.6f) * dir;
+            float vy = playerWalkRef != null ? playerWalkRef.playerJumpPower : 11.5f;
+            float gravity = playerRbRef != null ? Physics2D.gravity.y * playerRbRef.gravityScale : -9.81f * 3f;
+
             ghostPlayer.transform.position = startPos;
-            yield return new WaitForSecondsRealtime(0.3f);
+            ghostPlayer.transform.localScale = new Vector3(baseScale.x * dir, baseScale.y, baseScale.z);
+            ResetGhostAnim();
+
+            if (ghostAnimator != null) ghostAnimator.SetBool("isCharging", true);
+            yield return new WaitForSecondsRealtime(0.45f);
+
+            if (jumpBlock == null) { StopPreview(); yield break; }
+            jumpBlock.TriggerJumpAnimation();
+
+            if (ghostAnimator != null)
+            {
+                ghostAnimator.SetBool("isCharging", false);
+                ghostAnimator.SetBool("isFalling", true);
+            }
 
             float t = 0f;
-            float flyDist = 2.5f;
-            float duration = 0.8f;
-
-            // ‘O•û‚ÖƒX[ƒb‚Æ‰^‚Î‚ê‚Ä‚¢‚­
-            while (t < duration)
+            Vector3 lastPos = startPos;
+            while (t < 1.5f)
             {
+                if (jumpBlock == null) { StopPreview(); yield break; }
+
                 t += Time.unscaledDeltaTime;
-                float progress = t / duration;
-                ghostPlayer.transform.position = startPos + new Vector3(progress * flyDist, 0, 0);
+                float x = vx * t;
+                float y = (vy * t) + (0.5f * gravity * t * t);
+                Vector3 currentPos = startPos + new Vector3(x, y, 0);
+
+                LayerMask groundMask = playerWalkRef != null ? playerWalkRef.groundLayer : LayerMask.GetMask("Ground");
+                RaycastHit2D hit = Physics2D.Linecast(lastPos, currentPos, groundMask);
+                if (hit.collider != null && t > 0.1f)
+                {
+                    ghostPlayer.transform.position = hit.point;
+                    break;
+                }
+
+                ghostPlayer.transform.position = currentPos;
+                lastPos = currentPos;
                 yield return null;
             }
 
-            yield return new WaitForSecondsRealtime(0.3f);
+            if (ghostAnimator != null)
+            {
+                ghostAnimator.SetBool("isFalling", false);
+                ghostAnimator.SetBool("isLanding", true);
+            }
+            yield return new WaitForSecondsRealtime(0.4f);
         }
     }
 
-    // --- ‡C ƒNƒ‚iƒŠƒtƒgjFã‰º‚É—h‚ê‚éÀ‰‰ ---
-    IEnumerator DemoLiftRoutine(Transform block)
+    IEnumerator DemoReverseRoutine(Transform block, int approachDir)
     {
-        Vector3 basePos = block.position + Vector3.up * 0.5f;
-
         while (true)
         {
-            float t = 0f;
-            // ã‰º‚ÉƒX[ƒb‚Æ“®‚¢‚ÄŒ©‚¹‚é
-            while (t < 1.2f)
+            if (block == null) { StopPreview(); yield break; }
+
+            Vector3 centerPos = block.position;
+            float speed = playerWalkRef != null ? playerWalkRef.PlayerSpeed : 5.0f;
+            float walkDist = 1.2f;
+
+            ResetGhostAnim();
+            ghostPlayer.transform.localScale = new Vector3(baseScale.x * approachDir, baseScale.y, baseScale.z);
+
+            if (ghostAnimator != null) ghostAnimator.SetBool("isWalk", true);
+            float elapsed = 0f;
+            float dur = walkDist / speed;
+            while (elapsed < dur)
             {
-                t += Time.unscaledDeltaTime;
-                float y = Mathf.Sin(t * Mathf.PI) * 1.5f;
-                ghostPlayer.transform.position = basePos + new Vector3(0, y, 0);
+                if (block == null) { StopPreview(); yield break; }
+                elapsed += Time.unscaledDeltaTime;
+                ghostPlayer.transform.position = Vector3.Lerp(centerPos - Vector3.right * approachDir * walkDist, centerPos, elapsed / dur);
                 yield return null;
             }
+
+            if (ghostAnimator != null) ghostAnimator.SetBool("isWalk", false);
             yield return new WaitForSecondsRealtime(0.2f);
-        }
-    }
 
-    // --- ‡D –ÈiÁ‚¦‚é‘«êjFæ‚Á‚Ä—‚¿‚éÀ‰‰ ---
-    IEnumerator DemoVanishRoutine(Transform block)
-    {
-        Vector3 standPos = block.position + Vector3.up * 0.5f;
-
-        while (true)
-        {
-            ghostPlayer.transform.position = standPos;
-            yield return new WaitForSecondsRealtime(0.4f);
-
-            // ƒXƒgƒ“‚Æ‰º‚É—‚¿‚é
-            float t = 0f;
-            while (t < 0.3f)
+            Animator snakeAnim = block.GetComponentInChildren<Animator>();
+            if (snakeAnim != null)
             {
-                t += Time.unscaledDeltaTime;
-                ghostPlayer.transform.position = standPos + Vector3.down * (t * 4f);
+                snakeAnim.SetTrigger(approachDir > 0 ? "ReverseFromLeft" : "ReverseFromRight");
+            }
+
+            ghostPlayer.transform.localScale = new Vector3(-baseScale.x * approachDir, baseScale.y, baseScale.z);
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            if (ghostAnimator != null) ghostAnimator.SetBool("isWalk", true);
+            elapsed = 0f;
+            while (elapsed < dur)
+            {
+                if (block == null) { StopPreview(); yield break; }
+                elapsed += Time.unscaledDeltaTime;
+                ghostPlayer.transform.position = Vector3.Lerp(centerPos, centerPos - Vector3.right * approachDir * walkDist, elapsed / dur);
                 yield return null;
             }
 
+            yield return new WaitForSecondsRealtime(0.3f);
+        }
+    }
+
+    IEnumerator DemoBirdRoutine(BirdCarrier bird, int dir)
+    {
+        while (true)
+        {
+            if (bird == null || bird.gameObject == null) { StopPreview(); yield break; }
+
+            Vector3 birdOrigin = originalAnimalPos;
+            Vector3 startPlayerPos = birdOrigin + new Vector3(0, bird.grabOffsetY, 0);
+
+            bird.transform.position = birdOrigin;
+            ghostPlayer.transform.position = startPlayerPos;
+            ghostPlayer.transform.localScale = new Vector3(baseScale.x * dir, baseScale.y, baseScale.z);
+
+            ResetGhostAnim();
+            if (ghostAnimator != null) ghostAnimator.SetBool("isFalling", true);
+
+            Vector2 rayDir = new Vector2(dir, 0);
+            LayerMask mask = bird.landableLayer | bird.blockingLayer;
+            RaycastHit2D hit = Physics2D.Raycast(startPlayerPos + (Vector3)rayDir * 1.5f, rayDir, bird.maxSearchDistance, mask);
+
+            Vector3 destPos = startPlayerPos + (Vector3)rayDir * 4f;
+            if (hit.collider != null && ((1 << hit.collider.gameObject.layer) & bird.landableLayer) != 0)
+            {
+                destPos = new Vector3(hit.point.x + (dir * 0.8f), startPlayerPos.y, 0);
+            }
+
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            if (bird.animator != null) bird.animator.SetBool(bird.flyBoolParam, true);
+
+            float elapsed = 0f;
+            float dur = Vector3.Distance(startPlayerPos, destPos) / bird.speed;
+            while (elapsed < dur)
+            {
+                if (bird == null) { StopPreview(); yield break; }
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / dur;
+
+                Vector3 currentP = Vector3.Lerp(startPlayerPos, destPos, t);
+                ghostPlayer.transform.position = currentP;
+                bird.transform.position = currentP - new Vector3(0, bird.grabOffsetY, 0);
+
+                yield return null;
+            }
+
+            if (bird.animator != null) bird.animator.SetBool(bird.flyBoolParam, false);
+            if (ghostAnimator != null)
+            {
+                ghostAnimator.SetBool("isFalling", false);
+                ghostAnimator.SetBool("isLanding", true);
+            }
             yield return new WaitForSecondsRealtime(0.4f);
+
+            bird.transform.position = birdOrigin;
+        }
+    }
+
+    IEnumerator DemoLiftRoutine(LiftBlock lift)
+    {
+        while (true)
+        {
+            if (lift == null) { StopPreview(); yield break; }
+
+            Vector3 liftOrigin = originalAnimalPos;
+            Vector3 startP = liftOrigin + new Vector3(0, lift.playerYOffsetOnLift, 0);
+
+            lift.transform.position = liftOrigin;
+            ghostPlayer.transform.position = startP;
+            ghostPlayer.transform.localScale = baseScale;
+            ResetGhostAnim();
+
+            Vector3 endPos = startP;
+            Collider2D myCol = lift.GetComponent<Collider2D>();
+            float halfH = myCol != null ? myCol.bounds.extents.y : 0.5f;
+            RaycastHit2D hitUp = Physics2D.Raycast(lift.transform.position + Vector3.up * (halfH + 0.1f), Vector2.up, lift.maxSearchDistance, lift.obstacleLayer);
+            RaycastHit2D hitDown = Physics2D.Raycast(lift.transform.position + Vector3.down * (halfH + 0.1f), Vector2.down, lift.maxSearchDistance, lift.obstacleLayer);
+
+            if (hitUp.collider != null) endPos = new Vector3(startP.x, hitUp.point.y - halfH + lift.playerYOffsetOnLift, 0);
+            else if (hitDown.collider != null) endPos = new Vector3(startP.x, hitDown.point.y + halfH + lift.playerYOffsetOnLift, 0);
+
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            if (lift.spiderAnimator != null) lift.spiderAnimator.SetBool(lift.animBoolName, true);
+
+            float elapsed = 0f;
+            float dur = Mathf.Abs(startP.y - endPos.y) / lift.speed;
+            if (dur < 0.2f) dur = 1.0f;
+
+            while (elapsed < dur)
+            {
+                if (lift == null) { StopPreview(); yield break; }
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.SmoothStep(0, 1, elapsed / dur);
+
+                Vector3 cur = Vector3.Lerp(startP, endPos, t);
+                ghostPlayer.transform.position = cur;
+                lift.transform.position = cur - new Vector3(0, lift.playerYOffsetOnLift, 0);
+
+                yield return null;
+            }
+
+            if (lift.spiderAnimator != null) lift.spiderAnimator.SetBool(lift.animBoolName, false);
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            lift.transform.position = liftOrigin;
+        }
+    }
+
+    IEnumerator DemoVanishRoutine(VanishingBlock vanish)
+    {
+        while (true)
+        {
+            if (vanish == null) { StopPreview(); yield break; }
+
+            Vector3 standPos = vanish.transform.position + Vector3.up * 0.5f;
+            ghostPlayer.transform.position = standPos;
+            ghostPlayer.transform.localScale = baseScale;
+            ResetGhostAnim();
+
+            if (vanish.animator != null) vanish.animator.SetTrigger(vanish.vanishTriggerParam);
+
+            yield return new WaitForSecondsRealtime(vanish.vanishDelay);
+
+            if (vanish == null) { StopPreview(); yield break; }
+            if (ghostAnimator != null) ghostAnimator.SetBool("isFalling", true);
+
+            float t = 0f;
+            while (t < 0.35f)
+            {
+                if (vanish == null) { StopPreview(); yield break; }
+                t += Time.unscaledDeltaTime;
+                ghostPlayer.transform.position = standPos + Vector3.down * (t * 6f);
+                yield return null;
+            }
+
+            yield return new WaitForSecondsRealtime(0.3f);
+            if (vanish.animator != null) { vanish.animator.Rebind(); vanish.animator.Update(0f); }
+        }
+    }
+
+    IEnumerator DemoWarpRoutine(WarpEntrance warp)
+    {
+        while (true)
+        {
+            if (warp == null) { StopPreview(); yield break; }
+
+            Vector3 inPos = warp.transform.position;
+            ghostPlayer.transform.position = inPos;
+            ghostPlayer.transform.localScale = baseScale;
+            ResetGhostAnim();
+
+            yield return new WaitForSecondsRealtime(0.4f);
+            ghostPlayer.SetActive(false);
+
+            yield return new WaitForSecondsRealtime(0.6f);
+
+            if (warp == null) { StopPreview(); yield break; }
+
+            if (warp.exitPoint != null)
+            {
+                ghostPlayer.transform.position = warp.exitPoint.position + new Vector3(0, warp.exitYOffset, 0);
+                ghostPlayer.SetActive(true);
+                if (ghostAnimator != null) ghostAnimator.SetBool("isWalk", true);
+
+                float elapsed = 0f;
+                Vector3 outStart = ghostPlayer.transform.position;
+                while (elapsed < 0.4f)
+                {
+                    if (warp == null) { StopPreview(); yield break; }
+                    elapsed += Time.unscaledDeltaTime;
+                    ghostPlayer.transform.position = outStart + Vector3.right * (elapsed * 3f);
+                    yield return null;
+                }
+            }
+
+            yield return new WaitForSecondsRealtime(0.5f);
         }
     }
 }

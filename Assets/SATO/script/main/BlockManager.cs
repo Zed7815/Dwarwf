@@ -377,6 +377,8 @@ public class BlockManager : MonoBehaviour
             blockTypes[activeTypeIndex].currentCount++;
             draggingBlock = null;
             activeFrame = null;
+
+            Physics2D.SyncTransforms();
         }
         else
         {
