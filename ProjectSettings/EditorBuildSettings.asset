@@ -15,7 +15,13 @@ EditorBuildSettings:
     path: Assets/SATO/Scene/1.unity
     guid: 78103d06f37bebc4cae974dca5885150
   - enabled: 1
-    path: Assets/SATO/Scene/2.unity
+    path: Assets/SATO/Scene/2D.unity
+    guid: 38eeb293722fafc41a1aa07f7a9dd03c
+  - enabled: 1
+    path: Assets/SATO/Scene/2E.unity
+    guid: 72d7bf401a4dbbb4bb093b2f1ee7c5bc
+  - enabled: 1
+    path: Assets/SATO/Scene/2H.unity
     guid: fffd7b13561c28a49bc084eb6266fed6
   - enabled: 1
     path: Assets/SATO/Scene/3.unity
