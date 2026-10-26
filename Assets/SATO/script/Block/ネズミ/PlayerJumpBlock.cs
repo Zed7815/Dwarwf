@@ -75,9 +75,22 @@ public class PlayerJumpBlock : MonoBehaviour
     /// <summary>
     /// プレイヤーを弾き飛ばす瞬間に、ジャンプ台自身のアニメーションと音を再生
     /// </summary>
+    /// 
+
     public void TriggerJumpAnimation()
     {
-        // ★SE再生
+        if (anim == null) return;
+
+        if (activeAnimRoutine != null)
+        {
+            StopCoroutine(activeAnimRoutine);
+        }
+        activeAnimRoutine = StartCoroutine(PlayJumpSequenceRoutine());
+    }
+
+    // 本番プレイ専用（アニメと音の両方を再生する）
+    public void TriggerJumpAnimationWithSound()
+    {
         if (audioSource != null && jumpSE != null)
         {
             audioSource.PlayOneShot(jumpSE);
