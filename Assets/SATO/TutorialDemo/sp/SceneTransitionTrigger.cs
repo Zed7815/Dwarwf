@@ -13,6 +13,9 @@ public class SceneTransitionTrigger : MonoBehaviour
     [Header("演出参照")]
     public nextscene fadeOutScript; // オプション（もし暗転させたい場合）
 
+    [Header("待機時間")]
+    public float waitTime = 0.4f;
+
     private bool isTriggered = false;
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -39,7 +42,7 @@ public class SceneTransitionTrigger : MonoBehaviour
 
         // 2. カメラがプレイヤーを追い越して右へスライドする演出を待つ（または即座に遷移）
         // ※もしカメラをスーッと右に逃がしたい場合はここで少し待機します
-        yield return new WaitForSeconds(0.4f);
+        yield return new WaitForSeconds(waitTime);
 
         // 3. 次のシーンへダイレクトにジャンプ！
         // （ローディング画面を挟まず、スパッと次のシーンの左端へ繋がります）

@@ -554,11 +554,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: stageTitle
-      value: "\u306F\u306A\u306E\u5DE3\u7A9F"
+      value: "\u306F\u306A\u306E\u5DE3\u7A9F-2-"
       objectReference: {fileID: 0}
     - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: stageNumber
-      value: 4
+      value: 43
       objectReference: {fileID: 0}
     - target: {fileID: 1549730107975776798, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemo
@@ -594,7 +594,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: nextStageSceneName
-      value: 5
+      value: 51
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: returnToSelectButton
