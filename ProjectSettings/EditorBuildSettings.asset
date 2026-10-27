@@ -45,7 +45,13 @@ EditorBuildSettings:
     path: Assets/SATO/Scene/4stage/43.unity
     guid: 87dd1db6f27dc5e41acf20c102bae837
   - enabled: 1
-    path: Assets/SATO/Scene/5stage/5.unity
+    path: Assets/SATO/Scene/5stage/51.unity
+    guid: eb62facddf52a294c8981c2d6eb62771
+  - enabled: 1
+    path: Assets/SATO/Scene/5stage/52.unity
+    guid: e0b6a263206f25247b0b7e60ff8e2abb
+  - enabled: 1
+    path: Assets/SATO/Scene/5stage/53.unity
     guid: 8a90fabfb6a329348b51cb877ed18767
   - enabled: 1
     path: Assets/SATO/Scene/6stage/6.unity
