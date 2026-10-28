@@ -282,7 +282,7 @@ public class Player_walk : MonoBehaviour
         yield return new WaitForSeconds(0.75f);
         anim.SetBool("isCharging", false);
         StateChange(2);
-        if (jumpBlock != null) { PlayerJumpBlock block = jumpBlock.GetComponent<PlayerJumpBlock>(); if (block) block.TriggerJumpAnimation(); }
+        if (jumpBlock != null) { PlayerJumpBlock block = jumpBlock.GetComponent<PlayerJumpBlock>(); if (block) block.TriggerJumpAnimationWithSound(); }
         rb.linearVelocity = new Vector2(direction * playerJumpForwardPower, playerJumpPower);
         yield return new WaitForSeconds(0.2f);
         yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);
@@ -333,7 +333,7 @@ public class Player_walk : MonoBehaviour
         StateChange(0);
         yield return new WaitForSeconds(0.75f);
         StateChange(2);
-        if (targetBlock != null) { PlayerJumpBlock bs = targetBlock.GetComponent<PlayerJumpBlock>(); if (bs) bs.TriggerJumpAnimation(); }
+        if (targetBlock != null) { PlayerJumpBlock bs = targetBlock.GetComponent<PlayerJumpBlock>(); if (bs) bs.TriggerJumpAnimationWithSound(); }
         if (rb != null) rb.linearVelocity = new Vector2(direction * playerJumpForwardPower, playerJumpPower);
         yield return new WaitForSeconds(0.2f);
         yield return new WaitUntil(() => isGrounded && rb.linearVelocity.y <= 0.1f);

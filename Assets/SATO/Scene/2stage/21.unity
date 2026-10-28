@@ -1681,7 +1681,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 146fb638fbfbe214c9b7d74db4050108, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageBGMManager
-  editModeBGM: {fileID: 8300000, guid: 01dd7ff629e605c40972f2a12b2946f3, type: 3}
+  editModeBGM: {fileID: 0}
   playModeBGM: {fileID: 8300000, guid: 2e37eb36ffe753f4288ff1ca5c90c275, type: 3}
   volume: 0.25
 --- !u!4 &1503054148
@@ -8485,7 +8485,7 @@ PrefabInstance:
     - target: {fileID: 8623674320817455016, guid: 18b0277284aa9954888e7ececf20801c, type: 3}
       propertyPath: startGameSE
       value: 
-      objectReference: {fileID: 8300000, guid: 80d849991ba03394ab9baa606caa81c8, type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 8623674320817455016, guid: 18b0277284aa9954888e7ececf20801c, type: 3}
       propertyPath: blockManager
       value: 
