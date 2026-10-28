@@ -10206,7 +10206,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: stageNumber
-      value: 6
+      value: 63
       objectReference: {fileID: 0}
     - target: {fileID: 1549730107975776798, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemo

@@ -6471,7 +6471,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5802287109320496970, guid: 5780d2582a146224987d64932494ddc0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -10.87
+      value: -9.27
       objectReference: {fileID: 0}
     - target: {fileID: 5802287109320496970, guid: 5780d2582a146224987d64932494ddc0, type: 3}
       propertyPath: m_LocalPosition.y
@@ -8001,7 +8001,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -3084784789533453587, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: stageNumber
-      value: 0
+      value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 1549730107975776798, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: hintMemo
@@ -8033,7 +8033,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: nextStageSceneName
-      value: 3
+      value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 4319654133325846315, guid: c34aec4519a87ab469981c7ad5be4bcf, type: 3}
       propertyPath: returnToSelectButton
