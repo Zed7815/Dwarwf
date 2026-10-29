@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class StageSelectPopupButton : MonoBehaviour
 {
@@ -8,7 +9,11 @@ public class StageSelectPopupButton : MonoBehaviour
     [Tooltip("クリア済みで星未獲得時に表示するビックリマーク")]
     public GameObject missingStarVisual;
 
-    [Header("Animatorステート名（大文字小文字に注意）")]
+    [Header("★演出スクリプト参照")]
+    [Tooltip("黒い板で暗転させるnextsceneスクリプト（空なら自動でシーン内から探します）")]
+    public nextscene fadeOutScript;
+
+    [Header("Animatorステート名")]
     public string lockedStateName = "Locked";       // 挑戦不可時のidol
     public string availableStateName = "Available"; // 挑戦可能時のidol
     public string clearedStateName = "Cleared";     // クリア済み時のidol
@@ -25,6 +30,8 @@ public class StageSelectPopupButton : MonoBehaviour
     private string targetSceneName;
     private GimmickType targetGimmick;
     private StageSelectNest parentNest;
+    private string currentStateName;
+    private bool isTransitioning = false; // 二重クリック防止フラグ
 
     void Awake()
     {
@@ -33,11 +40,15 @@ public class StageSelectPopupButton : MonoBehaviour
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
         if (hoverFrameObject != null) hoverFrameObject.SetActive(false);
+        if (fadeOutScript == null) fadeOutScript = FindObjectOfType<nextscene>();
     }
 
-    /// <summary>
-    /// 巣スクリプトからボタンの状態をセットアップ
-    /// </summary>
+    void OnEnable()
+    {
+        isTransitioning = false;
+        PlayCurrentAnimation();
+    }
+
     public void SetupButton(bool unlocked, bool isCleared, bool hasStar, bool hasStarFeatureInStage, string sceneName, GimmickType gimmick, StageSelectNest nest)
     {
         isUnlocked = unlocked;
@@ -45,30 +56,14 @@ public class StageSelectPopupButton : MonoBehaviour
         targetGimmick = gimmick;
         parentNest = nest;
 
-        // ★3つのidolアニメーションの切り替え
-        if (anim != null)
-        {
-            if (!isUnlocked)
-            {
-                // ① 挑戦不可
-                anim.Play(lockedStateName, 0, 0f);
-            }
-            else if (isCleared)
-            {
-                // ③ クリア済みidol
-                anim.Play(clearedStateName, 0, 0f);
-            }
-            else
-            {
-                // ② 挑戦可能idol
-                anim.Play(availableStateName, 0, 0f);
-            }
-        }
+        if (!isUnlocked) currentStateName = lockedStateName;
+        else if (isCleared) currentStateName = clearedStateName;
+        else currentStateName = availableStateName;
 
-        // ★ビックリマークの表示判定（星が存在するステージのみ）
+        PlayCurrentAnimation();
+
         if (missingStarVisual != null)
         {
-            // 「星が存在するステージ」かつ「クリア済み」かつ「星未獲得」のときだけ表示
             bool showWarning = hasStarFeatureInStage && isCleared && !hasStar;
             missingStarVisual.SetActive(showWarning);
         }
@@ -76,10 +71,20 @@ public class StageSelectPopupButton : MonoBehaviour
         if (hoverFrameObject != null) hoverFrameObject.SetActive(false);
     }
 
+    public void PlayCurrentAnimation()
+    {
+        if (anim == null) anim = GetComponent<Animator>();
+
+        if (anim != null && !string.IsNullOrEmpty(currentStateName) && gameObject.activeInHierarchy)
+        {
+            anim.Play(currentStateName, 0, 0f);
+            anim.Update(0f);
+        }
+    }
+
     void OnMouseEnter()
     {
-        // 挑戦可能な場合のみ、ふちが赤い枠を表示しSEを鳴らす
-        if (isUnlocked)
+        if (isUnlocked && !isTransitioning)
         {
             if (hoverFrameObject != null) hoverFrameObject.SetActive(true);
             if (hoverSE != null && audioSource != null) audioSource.PlayOneShot(hoverSE);
@@ -93,19 +98,40 @@ public class StageSelectPopupButton : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (isTransitioning) return;
+
         if (isUnlocked)
         {
-            if (clickSE != null && audioSource != null) audioSource.PlayOneShot(clickSE);
-
-            if (!string.IsNullOrEmpty(targetSceneName))
-            {
-                if (parentNest != null) parentNest.ClosePopup();
-                SceneLoader.Load(targetSceneName, targetGimmick);
-            }
+            StartCoroutine(LoadSequence());
         }
         else
         {
             if (deniedSE != null && audioSource != null) audioSource.PlayOneShot(deniedSE);
+        }
+    }
+
+    // ★フェード演出を挟んでからシーンを読み込む処理
+    IEnumerator LoadSequence()
+    {
+        isTransitioning = true;
+
+        if (clickSE != null && audioSource != null) audioSource.PlayOneShot(clickSE);
+
+        // ★修正点1：ここで ClosePopup() を呼ぶと自分自身が非アクティブになってエラーになるため、呼ばない！
+        // （黒幕が降りて画面全体が隠れるため、閉じる必要はありません）
+
+        // 黒幕が降りてくるアニメーションを実行
+        if (fadeOutScript != null)
+        {
+            // ★修正点2：fadeOutScript 自身にコルーチンを実行させる（最も安全）
+            yield return fadeOutScript.StartCoroutine(fadeOutScript.endKuro());
+        }
+
+        yield return new WaitForSecondsRealtime(0.3f);
+
+        if (!string.IsNullOrEmpty(targetSceneName))
+        {
+            SceneLoader.Load(targetSceneName, targetGimmick);
         }
     }
 }

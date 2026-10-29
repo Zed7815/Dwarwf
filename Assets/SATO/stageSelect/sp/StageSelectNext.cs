@@ -12,7 +12,7 @@ public class StageSelectNest : MonoBehaviour
         public GimmickType gimmick;
         [Tooltip("星管理用のID（例: 1, 2）")]
         public int starStageID = 1;
-        [Tooltip("★このステージに星が存在するか（星がないチュートリアル面などはチェックを外す）")]
+        [Tooltip("このステージに星が存在するか（星がないチュートリアル面などはチェックを外す）")]
         public bool hasStarFeature = true;
     }
 
@@ -20,21 +20,32 @@ public class StageSelectNest : MonoBehaviour
     [Tooltip("巣の番号（1, 2, 3...）")]
     public int nestIndex = 1;
 
+    [Header("巣穴のアニメーション設定")]
+    public Animator nestAnimator;
+    public string lockedStateName = "Locked";
+    public string unlockedStateName = "Unlocked";
+
+    [Header("巣穴の画像設定（フォールバック用）")]
+    public SpriteRenderer nestRenderer;
+    public Sprite lockedNestSprite;
+    public Sprite unlockedNestSprite;
+
+    [Header("★巣穴本体のビックリマーク")]
+    [Tooltip("簡単・難しいのどちらかに星の取り逃しがある時に表示するビックリマーク")]
+    public GameObject nestMissingStarVisual;
+
     [Header("難易度別ステージ設定")]
     public StageData easyStage;
     public StageData hardStage;
 
     [Header("巣穴本体のホバー演出")]
-    [Tooltip("★巣穴にカーソルを乗せた時に表示する枠Sprite")]
     public GameObject nestHoverFrame;
     public AudioClip nestHoverSE;
 
     [Header("UI・ビジュアル参照")]
-    [Tooltip("巣の頭上に配置するポップアップルートオブジェクト")]
     public GameObject popupRoot;
     public StageSelectPopupButton easyButton;
     public StageSelectPopupButton hardButton;
-    [Tooltip("両方クリア時に表示する動物ビジュアル")]
     public GameObject animalVisual;
 
     [Header("SE")]
@@ -49,6 +60,8 @@ public class StageSelectNest : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
+        if (nestRenderer == null) nestRenderer = GetComponent<SpriteRenderer>();
+        if (nestAnimator == null) nestAnimator = GetComponent<Animator>();
         if (nestHoverFrame != null) nestHoverFrame.SetActive(false);
     }
 
@@ -65,7 +78,6 @@ public class StageSelectNest : MonoBehaviour
 
     void Update()
     {
-        // ポップアップが開いている時に画面の他の場所をクリックしたら閉じる
         if (popupRoot != null && popupRoot.activeSelf)
         {
             if (Input.GetMouseButtonDown(0))
@@ -86,6 +98,8 @@ public class StageSelectNest : MonoBehaviour
         int clearedNestCount = PlayerPrefs.GetInt("NestClearedCount", 0);
         isNestUnlocked = (nestIndex <= clearedNestCount + 1);
 
+        UpdateNestVisual();
+
         string easyKey = $"Nest_{nestIndex}_Easy_Cleared";
         string hardKey = $"Nest_{nestIndex}_Hard_Cleared";
 
@@ -97,6 +111,16 @@ public class StageSelectNest : MonoBehaviour
 
         bool isFullyCleared = isEasyCleared && isHardCleared;
         if (animalVisual != null) animalVisual.SetActive(isFullyCleared);
+
+        // ★各ステージのビックリマーク条件
+        bool easyWarning = easyStage.hasStarFeature && isEasyCleared && !hasEasyStar;
+        bool hardWarning = hardStage.hasStarFeature && isHardCleared && !hasHardStar;
+
+        // ★どちらか片方でも星の取り逃しがあれば、巣穴本体にもビックリマークを表示！
+        if (nestMissingStarVisual != null)
+        {
+            nestMissingStarVisual.SetActive(easyWarning || hardWarning);
+        }
 
         bool canPlayEasy = isNestUnlocked;
         bool canPlayHard = isNestUnlocked && isEasyCleared;
@@ -112,10 +136,33 @@ public class StageSelectNest : MonoBehaviour
         }
     }
 
-    // ★巣穴本体のマウスホバー処理
+    void UpdateNestVisual()
+    {
+        if (nestAnimator == null) nestAnimator = GetComponent<Animator>();
+        if (nestRenderer == null) nestRenderer = GetComponent<SpriteRenderer>();
+
+        if (nestAnimator != null)
+        {
+            string targetState = isNestUnlocked ? unlockedStateName : lockedStateName;
+            nestAnimator.Play(targetState, 0, 0f);
+            nestAnimator.Update(0f);
+        }
+
+        if (nestRenderer != null)
+        {
+            if (isNestUnlocked && unlockedNestSprite != null)
+            {
+                nestRenderer.sprite = unlockedNestSprite;
+            }
+            else if (!isNestUnlocked && lockedNestSprite != null)
+            {
+                nestRenderer.sprite = lockedNestSprite;
+            }
+        }
+    }
+
     void OnMouseEnter()
     {
-        // 巣が解放されており、ポップアップがまだ開いていない時だけ枠を出す
         if (isNestUnlocked && (popupRoot == null || !popupRoot.activeSelf))
         {
             if (nestHoverFrame != null) nestHoverFrame.SetActive(true);
@@ -139,12 +186,16 @@ public class StageSelectNest : MonoBehaviour
             bool nextState = !popupRoot.activeSelf;
             popupRoot.SetActive(nextState);
 
-            // ポップアップを開いた時は巣穴のホバー枠を消す
             if (nestHoverFrame != null) nestHoverFrame.SetActive(false);
 
-            if (nextState && popupOpenSE != null && audioSource != null)
+            if (nextState)
             {
-                audioSource.PlayOneShot(popupOpenSE);
+                RefreshNestStatus();
+
+                if (popupOpenSE != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(popupOpenSE);
+                }
             }
         }
     }
