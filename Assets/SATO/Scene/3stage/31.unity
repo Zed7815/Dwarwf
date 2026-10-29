@@ -360,7 +360,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -20
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -4178046375966092550, guid: de9e1d7461bcc6b42a21f68c6dafed4f, type: 3}
+  m_Sprite: {fileID: 3873087697204469031, guid: 6cdb31cf8afe3fe4eb2921a0f3709dd5, type: 3}
   m_Color: {r: 0.4113207, g: 0.4113207, b: 0.4113207, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -380,7 +380,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.12, y: 8.89, z: 0}
-  m_LocalScale: {x: 1.0877, y: 1.0877, z: 1.0877}
+  m_LocalScale: {x: 6.1446347, y: 6.1446347, z: 6.1446347}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -3059,6 +3059,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecf7587730a7781408fd496d678571a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalPoint
+  nestIndex: 1
+  isEasyStage: 1
   thisStageNumber: 2
   nextSceneScript: {fileID: 0}
   isFinalStage: 0
@@ -6698,10 +6700,7 @@ MonoBehaviour:
   dropSE: {fileID: 8300000, guid: 1e0b91d95eca3624cb5bc0db50eb42ce, type: 3}
   deleteSE: {fileID: 8300000, guid: bd91827ff1c852747b41a2f15c29d9ef, type: 3}
   startDeniedSE: {fileID: 8300000, guid: 0e2c2f08d10128c4089b057e4013b6b7, type: 3}
-  lockDeniedSE: {fileID: 8300000, guid: 0e2c2f08d10128c4089b057e4013b6b7, type: 3}
   poofEffectPrefab: {fileID: 0}
-  padlockPrefab: {fileID: 1449824555594404072, guid: 89bc0216b49c8a948b64f95604210cee, type: 3}
-  padlockOffset: {x: 0.3, y: 0.36, z: 0}
 --- !u!4 &1901478530
 Transform:
   m_ObjectHideFlags: 0
