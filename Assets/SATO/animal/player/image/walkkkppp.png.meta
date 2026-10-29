@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: e5b32000bba2a5348840141aa44cb51c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3352319227186728859
+    second: walkkkppp_0
+  - first:
+      213: 7991797321764824099
+    second: walkkkppp_1
+  - first:
+      213: 9179385724408304267
+    second: walkkkppp_2
+  - first:
+      213: 7835388092685315095
+    second: walkkkppp_3
+  - first:
+      213: 3026125764244697243
+    second: walkkkppp_4
+  - first:
+      213: 8351836215797220232
+    second: walkkkppp_5
+  - first:
+      213: -7525755020880577681
+    second: walkkkppp_6
+  - first:
+      213: -1254651092614572422
+    second: walkkkppp_7
+  - first:
+      213: 9048185243767274022
+    second: walkkkppp_8
+  - first:
+      213: 2710217337310948541
+    second: walkkkppp_9
+  - first:
+      213: -7222880813870479430
+    second: walkkkppp_10
+  - first:
+      213: -8803325392139177671
+    second: walkkkppp_11
+  - first:
+      213: -7442674318366374504
+    second: walkkkppp_12
+  - first:
+      213: -6135342463234058846
+    second: walkkkppp_13
+  - first:
+      213: -3013997232634340370
+    second: walkkkppp_14
+  - first:
+      213: -2976114015960035499
+    second: walkkkppp_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 205
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: walkkkppp_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1
+        width: 115
+        height: 125
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9f4d266394d58e20800000000000000
+      internalID: 3352319227186728859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_1
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 0
+        width: 88
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 324e5b0625198ee60800000000000000
+      internalID: 7991797321764824099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_2
+      rect:
+        serializedVersion: 2
+        x: 241
+        y: 0
+        width: 94
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8216af8eaab36f70800000000000000
+      internalID: 9179385724408304267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_3
+      rect:
+        serializedVersion: 2
+        x: 353
+        y: 0
+        width: 108
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71c65d5e4f3ecbc60800000000000000
+      internalID: 7835388092685315095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_4
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 0
+        width: 110
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9076777955fef920800000000000000
+      internalID: 3026125764244697243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_5
+      rect:
+        serializedVersion: 2
+        x: 582
+        y: 0
+        width: 108
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 88306d0d9cea7e370800000000000000
+      internalID: 8351836215797220232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_6
+      rect:
+        serializedVersion: 2
+        x: 699
+        y: 0
+        width: 96
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f6bfcc18ea52f8790800000000000000
+      internalID: -7525755020880577681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_7
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 0
+        width: 102
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7617ab8a75969ee0800000000000000
+      internalID: -1254651092614572422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_8
+      rect:
+        serializedVersion: 2
+        x: 919
+        y: 1
+        width: 116
+        height: 125
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62afda43a8c919d70800000000000000
+      internalID: 9048185243767274022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_9
+      rect:
+        serializedVersion: 2
+        x: 1052
+        y: 0
+        width: 88
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbc26861f40ac9520800000000000000
+      internalID: 2710217337310948541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_10
+      rect:
+        serializedVersion: 2
+        x: 1161
+        y: 0
+        width: 94
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab704421b2c23cb90800000000000000
+      internalID: -7222880813870479430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_11
+      rect:
+        serializedVersion: 2
+        x: 1272
+        y: 0
+        width: 108
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9313e57a23e44d580800000000000000
+      internalID: -8803325392139177671
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_12
+      rect:
+        serializedVersion: 2
+        x: 1385
+        y: 0
+        width: 110
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89589d2f32f46b890800000000000000
+      internalID: -7442674318366374504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_13
+      rect:
+        serializedVersion: 2
+        x: 1501
+        y: 0
+        width: 108
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a5509f3982eadaa0800000000000000
+      internalID: -6135342463234058846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_14
+      rect:
+        serializedVersion: 2
+        x: 1619
+        y: 0
+        width: 96
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eebd1da5c712c26d0800000000000000
+      internalID: -3013997232634340370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: walkkkppp_15
+      rect:
+        serializedVersion: 2
+        x: 1730
+        y: 0
+        width: 102
+        height: 128
+      alignment: 9
+      pivot: {x: 0.7, y: 0.01}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55f04a31218b2b6d0800000000000000
+      internalID: -2976114015960035499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: f21251e4e7456964ba443b0c105b0f0f
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      walkkkppp_0: 3352319227186728859
+      walkkkppp_1: 7991797321764824099
+      walkkkppp_10: -7222880813870479430
+      walkkkppp_11: -8803325392139177671
+      walkkkppp_12: -7442674318366374504
+      walkkkppp_13: -6135342463234058846
+      walkkkppp_14: -3013997232634340370
+      walkkkppp_15: -2976114015960035499
+      walkkkppp_2: 9179385724408304267
+      walkkkppp_3: 7835388092685315095
+      walkkkppp_4: 3026125764244697243
+      walkkkppp_5: 8351836215797220232
+      walkkkppp_6: -7525755020880577681
+      walkkkppp_7: -1254651092614572422
+      walkkkppp_8: 9048185243767274022
+      walkkkppp_9: 2710217337310948541
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

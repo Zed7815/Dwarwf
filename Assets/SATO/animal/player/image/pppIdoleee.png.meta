@@ -1,0 +1,585 @@
+fileFormatVersion: 2
+guid: 866158647df17564d8cccab5bc6dc13e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8399729026590455895
+    second: pppIdoleee_0
+  - first:
+      213: 2255315500394673883
+    second: pppIdoleee_1
+  - first:
+      213: -1568285325968831926
+    second: pppIdoleee_2
+  - first:
+      213: 25410900953078074
+    second: pppIdoleee_3
+  - first:
+      213: -6397475603134544588
+    second: pppIdoleee_4
+  - first:
+      213: 1236372332499897257
+    second: pppIdoleee_5
+  - first:
+      213: -6752058050176215035
+    second: pppIdoleee_6
+  - first:
+      213: 6002283290124825695
+    second: pppIdoleee_7
+  - first:
+      213: -513272799279049948
+    second: pppIdoleee_8
+  - first:
+      213: 5763126988629129646
+    second: pppIdoleee_9
+  - first:
+      213: 3979418296227578041
+    second: pppIdoleee_10
+  - first:
+      213: 1174620858941105517
+    second: pppIdoleee_11
+  - first:
+      213: 7852323514795049259
+    second: pppIdoleee_12
+  - first:
+      213: -3512429070805724204
+    second: pppIdoleee_13
+  - first:
+      213: 389381853709681605
+    second: pppIdoleee_14
+  - first:
+      213: 3814414957195490908
+    second: pppIdoleee_15
+  - first:
+      213: -753636667937673323
+    second: pppIdoleee_16
+  - first:
+      213: 8562511079601742967
+    second: pppIdoleee_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 205
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: pppIdoleee_0
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7583677cb05d19470800000000000000
+      internalID: 8399729026590455895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_1
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd6f4799f7d7c4f10800000000000000
+      internalID: 2255315500394673883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_2
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4a8b2f1ec45c3ae0800000000000000
+      internalID: -1568285325968831926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_3
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a391bbc64174a5000800000000000000
+      internalID: 25410900953078074
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_4
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43500ff85d99737a0800000000000000
+      internalID: -6397475603134544588
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_5
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ab07c8f51a782110800000000000000
+      internalID: 1236372332499897257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_6
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5081e603afedb42a0800000000000000
+      internalID: -6752058050176215035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_7
+      rect:
+        serializedVersion: 2
+        x: 568
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f543725d9d46c4350800000000000000
+      internalID: 6002283290124825695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_8
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4231a16cb1d70e8f0800000000000000
+      internalID: -513272799279049948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_9
+      rect:
+        serializedVersion: 2
+        x: 728
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea9b4b8367dbaff40800000000000000
+      internalID: 5763126988629129646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_10
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b0c5574bdbb93730800000000000000
+      internalID: 3979418296227578041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_11
+      rect:
+        serializedVersion: 2
+        x: 891
+        y: 0
+        width: 76
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d65e2f2a2771d4010800000000000000
+      internalID: 1174620858941105517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_12
+      rect:
+        serializedVersion: 2
+        x: 972
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b214ec022ae09fc60800000000000000
+      internalID: 7852323514795049259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_13
+      rect:
+        serializedVersion: 2
+        x: 1053
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d39ed7ae58514fc0800000000000000
+      internalID: -3512429070805724204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_14
+      rect:
+        serializedVersion: 2
+        x: 1134
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c34950abbc576500800000000000000
+      internalID: 389381853709681605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_15
+      rect:
+        serializedVersion: 2
+        x: 1214
+        y: 0
+        width: 81
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c56f295a1368fe430800000000000000
+      internalID: 3814414957195490908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_16
+      rect:
+        serializedVersion: 2
+        x: 1296
+        y: 0
+        width: 80
+        height: 131
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59fadd5817b8a85f0800000000000000
+      internalID: -753636667937673323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pppIdoleee_17
+      rect:
+        serializedVersion: 2
+        x: 1377
+        y: 0
+        width: 75
+        height: 128
+      alignment: 9
+      pivot: {x: 0.66, y: 0.004}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7742205f57624d670800000000000000
+      internalID: 8562511079601742967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: f448ff8ee83a34c4fb245dbe24b50141
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      pppIdoleee_0: 8399729026590455895
+      pppIdoleee_1: 2255315500394673883
+      pppIdoleee_10: 3979418296227578041
+      pppIdoleee_11: 1174620858941105517
+      pppIdoleee_12: 7852323514795049259
+      pppIdoleee_13: -3512429070805724204
+      pppIdoleee_14: 389381853709681605
+      pppIdoleee_15: 3814414957195490908
+      pppIdoleee_16: -753636667937673323
+      pppIdoleee_17: 8562511079601742967
+      pppIdoleee_2: -1568285325968831926
+      pppIdoleee_3: 25410900953078074
+      pppIdoleee_4: -6397475603134544588
+      pppIdoleee_5: 1236372332499897257
+      pppIdoleee_6: -6752058050176215035
+      pppIdoleee_7: 6002283290124825695
+      pppIdoleee_8: -513272799279049948
+      pppIdoleee_9: 5763126988629129646
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
