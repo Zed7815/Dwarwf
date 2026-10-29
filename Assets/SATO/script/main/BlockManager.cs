@@ -53,6 +53,8 @@ public class BlockManager : MonoBehaviour
 
     void Update()
     {
+        if (InGameMenuController.IsMenuOpen) return;
+
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
         if (draggingBlock == null && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())

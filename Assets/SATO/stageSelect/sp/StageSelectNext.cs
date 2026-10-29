@@ -90,6 +90,8 @@ public class StageSelectNest : MonoBehaviour
 
     void Update()
     {
+        if (InGameMenuController.IsMenuOpen) return;
+
         // Lキーでデバッグ全開放
         if ((Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) || Input.GetKeyDown(KeyCode.L))
         {
@@ -233,6 +235,7 @@ public class StageSelectNest : MonoBehaviour
 
     void OnMouseEnter()
     {
+        if (InGameMenuController.IsMenuOpen) return;
         if (StageSelectPopupButton.isAnyTransitioning) return;
 
         if (isNestUnlocked && (popupRoot == null || !popupRoot.activeSelf))
@@ -249,6 +252,7 @@ public class StageSelectNest : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (InGameMenuController.IsMenuOpen) return;
         if (StageSelectPopupButton.isAnyTransitioning) return;
 
         // ロック中なら拒否音を鳴らして終了

@@ -57,6 +57,8 @@ public class StageSelectCameraController : MonoBehaviour
 
     void Update()
     {
+        if (InGameMenuController.IsMenuOpen) return;
+
         if (isIntroPlaying) return;
 
         HandleCameraScroll();

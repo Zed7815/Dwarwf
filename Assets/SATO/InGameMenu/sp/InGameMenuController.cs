@@ -67,6 +67,8 @@ public class InGameMenuController : MonoBehaviour
     private bool isAnimating = false;
     private Vector3 bookCenterWorldPos;
 
+    public static bool IsMenuOpen => instance != null && (instance.isMenuOpen || instance.isAnimating);
+
     void Awake()
     {
         instance = this;

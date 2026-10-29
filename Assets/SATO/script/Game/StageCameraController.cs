@@ -135,6 +135,9 @@ public class StageCameraController : MonoBehaviour
 
     void LateUpdate()
     {
+        if (InGameMenuController.IsMenuOpen) return;
+
+
         if (gameManager == null || isEffectPlaying) return;
 
         if (gameManager.currentState == GameManager.GameState.Edit)
