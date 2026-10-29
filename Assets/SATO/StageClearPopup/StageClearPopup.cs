@@ -18,15 +18,14 @@ public class StageClearPopup : MonoBehaviour
     public bool isFinalStage = false;
     public string endingSceneName = "Ending";
 
-    // ★【新機能】最終ステージへの門番設定
     [Header("★最終ステージ前の制限設定")]
-    [Tooltip("次のステージが『最終ステージ』ならチェックを入れる！")]
+    [Tooltip("次のステージが『最終ステージ』ならチェックを入れる")]
     public bool isNextStageFinal = false;
-    [Tooltip("最終ステージに挑むために必要な星の合計数")]
-    public int requiredStarsForNextStage = 5;
-    public Button nextStageButton; // 「つぎへ」ボタン
+    [Tooltip("最終ステージに挑むために必要な星の合計数（例: 10 など）")]
+    public int requiredStarsForNextStage = 10;
+    public Button nextStageButton;
 
-    [Header("星の獲得演出（任意）")]
+    [Header("星の獲得演出")]
     public GameObject starAchievedIcon;
 
     [Header("演出参照")]
@@ -37,10 +36,10 @@ public class StageClearPopup : MonoBehaviour
     public AudioClip popInSE;
     public AudioClip hoverSE;
     public AudioClip buttonClickSE;
-    public AudioClip deniedSE; // ★追加：星が足りない時の警告音
+    public AudioClip deniedSE;
 
     [Header("別Canvasの遮断設定")]
-    public Canvas hudCanvas; // スタートボタン側のCanvas
+    public Canvas hudCanvas;
 
     private bool isTransitioning = false;
 
@@ -150,31 +149,31 @@ public class StageClearPopup : MonoBehaviour
         }
     }
 
-    // --- ボタン1：次のステージへ進む ---
     public void OnNextStageClicked()
     {
         if (isTransitioning) return;
 
-        // ★【最重要ガード！】次が最終ステージなのに、星の数が足りない場合
+        // ★最終ステージ制限の判定
         if (isNextStageFinal)
         {
-            int currentTotalStars = GetCurrentTotalStars();
+            int currentTotalStars = StageSelectNest.GetCurrentTotalStars();
+
+            // ★診断ログ：何個持っていて何個必要なのかをコンソールに完全表示
+            Debug.Log($"<color=cyan>【次ステージ判定】現在星: {currentTotalStars}個 / 必要星: {requiredStarsForNextStage}個</color>");
 
             if (currentTotalStars < requiredStarsForNextStage)
             {
-                // 警告音を鳴らす
                 if (audioSource != null && deniedSE != null) audioSource.PlayOneShot(deniedSE);
 
-                int remaining = requiredStarsForNextStage - currentTotalStars;
+                int remaining = Mathf.Max(0, requiredStarsForNextStage - currentTotalStars);
 
-                // メッセージを画面に出して進ませない！
                 if (TutorialMessageUI.instance != null)
                 {
                     TutorialMessageUI.instance.ShowMessage($"最終ステージの解放には\n星があと {remaining} 個必要だよ！\nセレクト画面に戻って集めよう！");
                 }
 
-                Debug.Log($"<color=red>【入場拒否】星が足りません！ 現在: {currentTotalStars}個 / 必要: {requiredStarsForNextStage}個</color>");
-                return; // ★ここで完全に阻止！
+                Debug.Log($"<color=red>【入場拒否】星が足りません！ 現在: {currentTotalStars}個 / 必要: {requiredStarsForNextStage}個 (不足: {remaining}個)</color>");
+                return;
             }
         }
 
@@ -194,7 +193,6 @@ public class StageClearPopup : MonoBehaviour
         else SceneLoader.Load(nextStageSceneName, nextStageGimmick);
     }
 
-    // --- ボタン2：ステージセレクトへ戻る ---
     public void OnReturnToSelectClicked()
     {
         if (isTransitioning) return;
@@ -212,17 +210,6 @@ public class StageClearPopup : MonoBehaviour
         yield return new WaitForSecondsRealtime(0.2f);
 
         SceneLoader.Load("StageSelect", GimmickType.Generic);
-    }
-
-    // 現在の合計スター数を正確に計算
-    int GetCurrentTotalStars()
-    {
-        int count = 0;
-        for (int i = 1; i <= 30; i++)
-        {
-            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) count++;
-        }
-        return count;
     }
 
     void PlayClickSE()

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro; // ★TextMeshPro用に追加
+using TMPro;
 
 public class StageSelectNest : MonoBehaviour
 {
@@ -12,7 +12,6 @@ public class StageSelectNest : MonoBehaviour
     {
         public string sceneName;
         public GimmickType gimmick;
-        [Tooltip("星管理用のID（例: 1, 2）")]
         public int starStageID = 1;
         [Tooltip("このステージに星が存在するか（星がないチュートリアル面などはチェックを外す）")]
         public bool hasStarFeature = true;
@@ -23,13 +22,10 @@ public class StageSelectNest : MonoBehaviour
     public int nestIndex = 1;
 
     [Header("★星の数によるロック設定（第6ステージ用）")]
-    [Tooltip("解放に必要な星の合計数（0なら星ロックなし）")]
+    [Tooltip("解放に必要な星の合計数（例: 10 など）")]
     public int requiredStarsToUnlock = 0;
-    [Tooltip("ロック中に表示する鍵マークのオブジェクト")]
     public GameObject starLockGraphic;
-    [Tooltip("鍵マークの上に表示する星の個数テキスト（TextMeshPro）")]
     public TMP_Text starLockCountText;
-    [Tooltip("ロック中にクリックした時の拒否音")]
     public AudioClip lockedDeniedSE;
 
     [Header("巣穴のアニメーション設定")]
@@ -43,7 +39,6 @@ public class StageSelectNest : MonoBehaviour
     public Sprite unlockedNestSprite;
 
     [Header("巣穴本体のビックリマーク")]
-    [Tooltip("簡単・難しいのどちらかに星の取り逃しがある時に表示するビックリマーク")]
     public GameObject nestMissingStarVisual;
 
     [Header("難易度別ステージ設定")]
@@ -92,17 +87,14 @@ public class StageSelectNest : MonoBehaviour
     {
         if (InGameMenuController.IsMenuOpen) return;
 
-        // Lキーでデバッグ全開放
         if ((Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) || Input.GetKeyDown(KeyCode.L))
         {
             StageSelectManager ssm = FindObjectOfType<StageSelectManager>();
             if (ssm != null) ssm.UnlockAllStages();
         }
 
-        // フェード中（シーン遷移中）ならクリック判定を一切行わない
         if (StageSelectPopupButton.isAnyTransitioning) return;
 
-        // ポップアップが開いている時に画面の他の場所をクリックしたら閉じる
         if (popupRoot != null && popupRoot.activeSelf)
         {
             if (Input.GetMouseButtonDown(0))
@@ -123,35 +115,28 @@ public class StageSelectNest : MonoBehaviour
         int clearedNestCount = PlayerPrefs.GetInt("NestClearedCount", 0);
         bool isPrevNestCleared = (nestIndex <= clearedNestCount + 1);
 
-        // 現在集めている星の総数をカウント
+        // 星の合計数を計算
         int currentTotalStars = GetCurrentTotalStars();
 
-        // ★星のロック判定
         bool isStarConditionMet = true;
         if (requiredStarsToUnlock > 0)
         {
             isStarConditionMet = (currentTotalStars >= requiredStarsToUnlock);
         }
 
-        // 前の巣をクリアしており、かつ必要な星の数も満たしていれば解放！
         isNestUnlocked = isPrevNestCleared && isStarConditionMet;
 
-        // ★鍵マークと星の個数テキストの表示更新
+        // 鍵マークの更新
         if (requiredStarsToUnlock > 0)
         {
-            // 必要数の星を集めたら鍵マークを消す（集まっていなければ表示）
             bool showLock = !isStarConditionMet;
-
-            if (starLockGraphic != null)
-            {
-                starLockGraphic.SetActive(showLock);
-            }
+            if (starLockGraphic != null) starLockGraphic.SetActive(showLock);
 
             if (starLockCountText != null)
             {
                 starLockCountText.gameObject.SetActive(showLock);
-                // 例: 「3 / 10」のように表示（現在の個数だけ出したい場合は currentTotalStars.ToString() に変更可）
-                starLockCountText.text = $"{currentTotalStars} / {requiredStarsToUnlock}";
+                // 文字化けを防ぐため「★」と「/」を明確に表示
+                starLockCountText.text = $"★ {currentTotalStars} / {requiredStarsToUnlock}";
             }
         }
         else
@@ -168,13 +153,17 @@ public class StageSelectNest : MonoBehaviour
         bool isEasyCleared = PlayerPrefs.GetInt(easyKey, 0) == 1;
         bool isHardCleared = PlayerPrefs.GetInt(hardKey, 0) == 1;
 
-        bool hasEasyStar = PlayerPrefs.GetInt($"StarCollected_Stage_{easyStage.starStageID}", 0) == 1;
-        bool hasHardStar = PlayerPrefs.GetInt($"StarCollected_Stage_{hardStage.starStageID}", 0) == 1;
+        // ★自動キーと旧キーの両方をチェック（絶対に星を落とさない）
+        bool hasEasyStar = PlayerPrefs.GetInt($"Nest_{nestIndex}_Easy_Star", 0) == 1
+                        || PlayerPrefs.GetInt($"StarCollected_Stage_{easyStage.starStageID}", 0) == 1;
+
+        bool hasHardStar = PlayerPrefs.GetInt($"Nest_{nestIndex}_Hard_Star", 0) == 1
+                        || PlayerPrefs.GetInt($"StarCollected_Stage_{hardStage.starStageID}", 0) == 1;
 
         bool isFullyCleared = isEasyCleared && isHardCleared;
         if (animalVisual != null) animalVisual.SetActive(isFullyCleared);
 
-        // 各ステージのビックリマーク条件
+        // ビックリマーク判定
         bool easyWarning = easyStage.hasStarFeature && isEasyCleared && !hasEasyStar;
         bool hardWarning = hardStage.hasStarFeature && isHardCleared && !hasHardStar;
 
@@ -197,15 +186,23 @@ public class StageSelectNest : MonoBehaviour
         }
     }
 
-    // 獲得している星の総数を計算
-    int GetCurrentTotalStars()
+    // ★全星の集計（新旧どちらのキーも合算）
+    public static int GetCurrentTotalStars()
     {
-        int totalStars = 0;
+        int total = 0;
+        // 巣穴方式の星
+        for (int n = 1; n <= 10; n++)
+        {
+            if (PlayerPrefs.GetInt($"Nest_{n}_Easy_Star", 0) == 1) total++;
+            if (PlayerPrefs.GetInt($"Nest_{n}_Hard_Star", 0) == 1) total++;
+        }
+        // 旧方式の星（もしあれば重複しないよう大きい方を採用）
+        int legacyTotal = 0;
         for (int i = 1; i <= 30; i++)
         {
-            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) totalStars++;
+            if (PlayerPrefs.GetInt("StarCollected_Stage_" + i, 0) == 1) legacyTotal++;
         }
-        return totalStars;
+        return Mathf.Max(total, legacyTotal);
     }
 
     void UpdateNestVisual()
@@ -255,13 +252,14 @@ public class StageSelectNest : MonoBehaviour
         if (InGameMenuController.IsMenuOpen) return;
         if (StageSelectPopupButton.isAnyTransitioning) return;
 
-        // ロック中なら拒否音を鳴らして終了
         if (!isNestUnlocked)
         {
             if (lockedDeniedSE != null && audioSource != null)
             {
                 audioSource.PlayOneShot(lockedDeniedSE);
             }
+            // ★診断用：なぜ入れないのかコンソールに出力
+            Debug.Log($"<color=orange>【巣穴ロック中】現在の星: {GetCurrentTotalStars()}個 / 必要: {requiredStarsToUnlock}個</color>");
             return;
         }
 

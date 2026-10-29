@@ -7,10 +7,10 @@ public class GoalPoint : MonoBehaviour
     [Header("巣穴・難易度設定")]
     [Tooltip("このステージが属する巣の番号（1, 2, 3...）")]
     public int nestIndex = 1;
-    [Tooltip("チェックを入れると『簡単』、外すと『難しい』ステージとして記録")]
+    [Tooltip("チェックを入れると『簡単』、外すと『難しい』ステージ")]
     public bool isEasyStage = true;
 
-    [Header("ステージ番号設定（星や既存システム用）")]
+    [Header("ステージ番号設定（旧システム互換用）")]
     public int thisStageNumber = 1;
 
     [Header("演出設定")]
@@ -28,7 +28,6 @@ public class GoalPoint : MonoBehaviour
     public AudioClip goalSE;
 
     private bool isGoalReached = false;
-
 
     private void Start()
     {
@@ -77,38 +76,29 @@ public class GoalPoint : MonoBehaviour
 
     IEnumerator GoalSequence()
     {
-        // 1. SE再生
         if (audioSource != null && goalSE != null)
         {
             audioSource.PlayOneShot(goalSE);
         }
 
-        // 2. ★巣のクリア判定セーブ
+        // 1. ステージクリア保存
         string clearKey = isEasyStage ? $"Nest_{nestIndex}_Easy_Cleared" : $"Nest_{nestIndex}_Hard_Cleared";
-
-        PlayerPrefs.SetInt("LastSelectedNest", nestIndex);
-        PlayerPrefs.Save();
-
         PlayerPrefs.SetInt(clearKey, 1);
-        Debug.Log($"<color=green>【クリア記録】{clearKey} を保存しました！</color>");
 
-        // 簡単と難しいの両方がクリアされたかチェック
         bool easyDone = PlayerPrefs.GetInt($"Nest_{nestIndex}_Easy_Cleared", 0) == 1;
         bool hardDone = PlayerPrefs.GetInt($"Nest_{nestIndex}_Hard_Cleared", 0) == 1;
 
         if (easyDone && hardDone)
         {
-            // 両方クリアなら巣全体のクリア数を更新
             int currentNestCleared = PlayerPrefs.GetInt("NestClearedCount", 0);
             if (nestIndex > currentNestCleared)
             {
                 PlayerPrefs.SetInt("NestClearedCount", nestIndex);
-                PlayerPrefs.SetInt("StageCleared", nestIndex); // 図鑑等の連動用
-                Debug.Log($"<color=yellow>【巣完全制覇】巣 {nestIndex} を完全クリアしました！</color>");
+                PlayerPrefs.SetInt("StageCleared", nestIndex);
             }
         }
 
-        // 星の獲得セーブ
+        // 2. ★星の獲得セーブ（二重保存で絶対に外さない）
         bool hasStar = false;
         if (GameManager.instance != null)
         {
@@ -117,22 +107,35 @@ public class GoalPoint : MonoBehaviour
 
         if (hasStar)
         {
+            // 自動キー（巣の番号 ＋ 難易度）で保存！
+            string autoStarKey = $"Nest_{nestIndex}_{(isEasyStage ? "Easy" : "Hard")}_Star";
+            PlayerPrefs.SetInt(autoStarKey, 1);
+
+            // 従来の番号キーでも念のため保存
             PlayerPrefs.SetInt("StarCollected_Stage_" + thisStageNumber, 1);
-            Debug.Log($"<color=yellow>【星獲得】ステージ {thisStageNumber} の星を保存しました！</color>");
+            if (GameManager.instance != null)
+            {
+                PlayerPrefs.SetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 1);
+            }
+
+            Debug.Log($"<color=yellow>【星獲得成功！】キー「{autoStarKey}」を確実に保存しました！</color>");
+        }
+        else
+        {
+            Debug.Log("<color=orange>【ゴール】このプレイでは星を獲得していません</color>");
         }
 
+        PlayerPrefs.SetInt("LastSelectedNest", nestIndex);
         PlayerPrefs.Save();
 
         yield return new WaitForSecondsRealtime(0.5f);
 
-        // 3. クリア画面のポップアップ表示
         if (StageClearPopup.instance != null)
         {
             StageClearPopup.instance.ShowClearPopup();
             yield break;
         }
 
-        // フォールバック
         if (nextSceneScript != null)
         {
             yield return StartCoroutine(nextSceneScript.endKuro());
