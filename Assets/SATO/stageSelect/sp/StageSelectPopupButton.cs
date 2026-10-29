@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class StageSelectPopupButton : MonoBehaviour
 {
@@ -9,9 +8,10 @@ public class StageSelectPopupButton : MonoBehaviour
     [Tooltip("クリア済みで星未獲得時に表示するビックリマーク")]
     public GameObject missingStarVisual;
 
-    [Header("アニメーター設定")]
-    [Tooltip("挑戦可能な時にTRUEになるBoolパラメータ名")]
-    public string unlockedBoolName = "isUnlocked";
+    [Header("Animatorステート名（大文字小文字に注意）")]
+    public string lockedStateName = "Locked";       // 挑戦不可時のidol
+    public string availableStateName = "Available"; // 挑戦可能時のidol
+    public string clearedStateName = "Cleared";     // クリア済み時のidol
 
     [Header("SE設定")]
     public AudioClip hoverSE;
@@ -38,23 +38,38 @@ public class StageSelectPopupButton : MonoBehaviour
     /// <summary>
     /// 巣スクリプトからボタンの状態をセットアップ
     /// </summary>
-    public void SetupButton(bool unlocked, bool isCleared, bool hasStar, string sceneName, GimmickType gimmick, StageSelectNest nest)
+    public void SetupButton(bool unlocked, bool isCleared, bool hasStar, bool hasStarFeatureInStage, string sceneName, GimmickType gimmick, StageSelectNest nest)
     {
         isUnlocked = unlocked;
         targetSceneName = sceneName;
         targetGimmick = gimmick;
         parentNest = nest;
 
-        // アニメーションの切り替え（挑戦可能か不可か）
+        // ★3つのidolアニメーションの切り替え
         if (anim != null)
         {
-            anim.SetBool(unlockedBoolName, isUnlocked);
+            if (!isUnlocked)
+            {
+                // ① 挑戦不可
+                anim.Play(lockedStateName, 0, 0f);
+            }
+            else if (isCleared)
+            {
+                // ③ クリア済みidol
+                anim.Play(clearedStateName, 0, 0f);
+            }
+            else
+            {
+                // ② 挑戦可能idol
+                anim.Play(availableStateName, 0, 0f);
+            }
         }
 
-        // ビックリマークの表示（クリア済み かつ 星未獲得）
+        // ★ビックリマークの表示判定（星が存在するステージのみ）
         if (missingStarVisual != null)
         {
-            bool showWarning = isCleared && !hasStar;
+            // 「星が存在するステージ」かつ「クリア済み」かつ「星未獲得」のときだけ表示
+            bool showWarning = hasStarFeatureInStage && isCleared && !hasStar;
             missingStarVisual.SetActive(showWarning);
         }
 
@@ -84,14 +99,12 @@ public class StageSelectPopupButton : MonoBehaviour
 
             if (!string.IsNullOrEmpty(targetSceneName))
             {
-                // ポップアップを閉じてシーン遷移
                 if (parentNest != null) parentNest.ClosePopup();
                 SceneLoader.Load(targetSceneName, targetGimmick);
             }
         }
         else
         {
-            // ロックされている場合は拒否音を鳴らす
             if (deniedSE != null && audioSource != null) audioSource.PlayOneShot(deniedSE);
         }
     }

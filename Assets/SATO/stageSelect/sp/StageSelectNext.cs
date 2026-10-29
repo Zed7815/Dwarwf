@@ -12,6 +12,8 @@ public class StageSelectNest : MonoBehaviour
         public GimmickType gimmick;
         [Tooltip("星管理用のID（例: 1, 2）")]
         public int starStageID = 1;
+        [Tooltip("★このステージに星が存在するか（星がないチュートリアル面などはチェックを外す）")]
+        public bool hasStarFeature = true;
     }
 
     [Header("巣の識別")]
@@ -21,6 +23,11 @@ public class StageSelectNest : MonoBehaviour
     [Header("難易度別ステージ設定")]
     public StageData easyStage;
     public StageData hardStage;
+
+    [Header("巣穴本体のホバー演出")]
+    [Tooltip("★巣穴にカーソルを乗せた時に表示する枠Sprite")]
+    public GameObject nestHoverFrame;
+    public AudioClip nestHoverSE;
 
     [Header("UI・ビジュアル参照")]
     [Tooltip("巣の頭上に配置するポップアップルートオブジェクト")]
@@ -41,6 +48,8 @@ public class StageSelectNest : MonoBehaviour
         if (!allNests.Contains(this)) allNests.Add(this);
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+
+        if (nestHoverFrame != null) nestHoverFrame.SetActive(false);
     }
 
     void OnDestroy()
@@ -64,7 +73,6 @@ public class StageSelectNest : MonoBehaviour
                 Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
 
-                // クリック対象がこの巣またはポップアップに含まれていなければ閉じる
                 if (hit.collider == null || (hit.collider.gameObject != gameObject && !hit.collider.transform.IsChildOf(transform)))
                 {
                     ClosePopup();
@@ -73,17 +81,11 @@ public class StageSelectNest : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// セーブデータをもとに巣と各ボタンの状態を更新
-    /// </summary>
     public void RefreshNestStatus()
     {
         int clearedNestCount = PlayerPrefs.GetInt("NestClearedCount", 0);
-
-        // 前の巣を完全クリアしているか、最初の巣であれば開放
         isNestUnlocked = (nestIndex <= clearedNestCount + 1);
 
-        // クリア判定キー
         string easyKey = $"Nest_{nestIndex}_Easy_Cleared";
         string hardKey = $"Nest_{nestIndex}_Hard_Cleared";
 
@@ -93,38 +95,52 @@ public class StageSelectNest : MonoBehaviour
         bool hasEasyStar = PlayerPrefs.GetInt($"StarCollected_Stage_{easyStage.starStageID}", 0) == 1;
         bool hasHardStar = PlayerPrefs.GetInt($"StarCollected_Stage_{hardStage.starStageID}", 0) == 1;
 
-        // 簡単と難しいの両方がクリアされていれば巣全体のクリア
         bool isFullyCleared = isEasyCleared && isHardCleared;
         if (animalVisual != null) animalVisual.SetActive(isFullyCleared);
 
-        // 「かんたん」は巣が開いていれば挑戦可能
         bool canPlayEasy = isNestUnlocked;
-        // 「むずかしい」は「かんたん」クリアで挑戦可能
         bool canPlayHard = isNestUnlocked && isEasyCleared;
 
         if (easyButton != null)
         {
-            easyButton.SetupButton(canPlayEasy, isEasyCleared, hasEasyStar, easyStage.sceneName, easyStage.gimmick, this);
+            easyButton.SetupButton(canPlayEasy, isEasyCleared, hasEasyStar, easyStage.hasStarFeature, easyStage.sceneName, easyStage.gimmick, this);
         }
 
         if (hardButton != null)
         {
-            hardButton.SetupButton(canPlayHard, isHardCleared, hasHardStar, hardStage.sceneName, hardStage.gimmick, this);
+            hardButton.SetupButton(canPlayHard, isHardCleared, hasHardStar, hardStage.hasStarFeature, hardStage.sceneName, hardStage.gimmick, this);
         }
+    }
+
+    // ★巣穴本体のマウスホバー処理
+    void OnMouseEnter()
+    {
+        // 巣が解放されており、ポップアップがまだ開いていない時だけ枠を出す
+        if (isNestUnlocked && (popupRoot == null || !popupRoot.activeSelf))
+        {
+            if (nestHoverFrame != null) nestHoverFrame.SetActive(true);
+            if (nestHoverSE != null && audioSource != null) audioSource.PlayOneShot(nestHoverSE);
+        }
+    }
+
+    void OnMouseExit()
+    {
+        if (nestHoverFrame != null) nestHoverFrame.SetActive(false);
     }
 
     void OnMouseDown()
     {
         if (!isNestUnlocked) return;
 
-        // 他の巣のポップアップを閉じる
-        CloseAllOtherPopups();
+        CloseAllOtherPopups(this);
 
-        // ポップアップを開く
         if (popupRoot != null)
         {
             bool nextState = !popupRoot.activeSelf;
             popupRoot.SetActive(nextState);
+
+            // ポップアップを開いた時は巣穴のホバー枠を消す
+            if (nestHoverFrame != null) nestHoverFrame.SetActive(false);
 
             if (nextState && popupOpenSE != null && audioSource != null)
             {
