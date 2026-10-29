@@ -32,16 +32,9 @@ public class BlockManager : MonoBehaviour
     public AudioClip dropSE;
     public AudioClip deleteSE;
     public AudioClip startDeniedSE;
-    public AudioClip lockDeniedSE;
 
     [Header("エフェクト設定")]
     public GameObject poofEffectPrefab;
-
-    [Header("南京錠プレハブ（任意）")]
-    public GameObject padlockPrefab;
-
-    [Tooltip("動物の中心から南京錠をどれくらいずらして配置するか（Yを増やすと高くなります）")]
-    public Vector3 padlockOffset = new Vector3(0, 0.8f, 0);
 
     private GameObject draggingBlock;
     private SpriteRenderer previewSR;
@@ -53,16 +46,16 @@ public class BlockManager : MonoBehaviour
 
     void Update()
     {
-        if (InGameMenuController.IsMenuOpen) return;
-
         if (gameManager.currentState != GameManager.GameState.Edit) return;
+
+        if (InGameMenuController.IsMenuOpen) return;
 
         if (draggingBlock == null && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }
 
-        // 右クリック
+        // 右クリック（削除・キャンセル）
         if (Mouse.current.rightButton.wasPressedThisFrame)
         {
             if (draggingBlock != null)
@@ -75,7 +68,7 @@ public class BlockManager : MonoBehaviour
             }
         }
 
-        // 左クリック押し込み
+        // 左クリック（掴む）
         if (Mouse.current.leftButton.wasPressedThisFrame && draggingBlock == null)
         {
             if (EventSystem.current != null && !EventSystem.current.IsPointerOverGameObject())
@@ -89,7 +82,7 @@ public class BlockManager : MonoBehaviour
             UpdateDraggingPosition();
         }
 
-        // 左クリックを離して配置
+        // 左クリック離す（配置）
         if (Mouse.current.leftButton.wasReleasedThisFrame && draggingBlock != null)
         {
             DropBlock();
@@ -138,13 +131,12 @@ public class BlockManager : MonoBehaviour
         RecalculateAllCounts();
     }
 
-
+    // ★修正：ロックチェックを削除し、いつでも回収可能に
     void TryGrabPlacedBlock()
     {
         Vector3 mousePos = GetMouseWorldPosition();
         Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
 
-        // ★追加：ブロック本体に当たっていなくても、同じ位置の枠(DropFrame)をクリックしていれば中のブロックを回収する！
         if (hit == null)
         {
             Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
@@ -156,15 +148,6 @@ public class BlockManager : MonoBehaviour
 
         if (hit != null)
         {
-            PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
-            if (marker != null && marker.isLocked)
-            {
-                marker.PlayLockDeniedEffect();
-                PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
-                Debug.Log("<color=yellow>このブロックは固定されています！</color>");
-                return;
-            }
-
             BlockInfo info = hit.GetComponent<BlockInfo>();
             if (info != null)
             {
@@ -183,9 +166,6 @@ public class BlockManager : MonoBehaviour
     {
         if (gameManager.currentState != GameManager.GameState.Edit) return;
 
-        // ★修正：個数制限チェックと古いブロックの削除を完全に撤廃！
-        // 何個でも好きなだけ新しい動物を取り出して配置できます。
-
         activeTypeIndex = typeIndex;
         PlaySE(dragSE);
 
@@ -198,67 +178,11 @@ public class BlockManager : MonoBehaviour
         previewBlock.GetComponent<Collider2D>().enabled = false;
         previewBlock.transform.position += new Vector3(0, 0, 0.1f);
 
-        // プレビューの無力化（半透明用）
         previewBlock.tag = "Untagged";
         MonoBehaviour[] scripts = previewBlock.GetComponentsInChildren<MonoBehaviour>();
         foreach (var s in scripts) s.enabled = false;
         Animator anim = previewBlock.GetComponentInChildren<Animator>();
         if (anim != null) anim.enabled = false;
-    }
-
-    bool RemoveOldestUnlockedBlockOfType(int typeIndex)
-    {
-        GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
-        foreach (GameObject b in placedBlocks)
-        {
-            BlockInfo info = b.GetComponent<BlockInfo>();
-            if (info != null && info.typeIndex == typeIndex)
-            {
-                // ★最重要：ロックされているブロックなら絶対に消さない！スキップ！
-                PlacedBlockMarker marker = b.GetComponent<PlacedBlockMarker>();
-                if (marker != null && marker.isLocked)
-                {
-                    continue; // 次のブロックを探す
-                }
-
-                // ロックされていないブロックを見つけたら、それを消去して枠を空ける
-                InstantiatePoof(b.transform.position);
-                PlaySE(deleteSE);
-
-                Collider2D frameHit = GetColliderAtPos(b.transform.position, "DropFrame");
-                if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
-
-                b.tag = "Untagged"; // 即座にタグを外す
-                b.SetActive(false);
-                Destroy(b);
-                blockTypes[typeIndex].currentCount--;
-                return true; // 1つ消去成功
-            }
-        }
-
-        // 消せるブロック（未ロックのもの）が1つも無かった
-        return false;
-    }
-
-    void RemoveOldestBlockOfType(int typeIndex)
-    {
-        GameObject[] placedBlocks = GameObject.FindGameObjectsWithTag("PlacedBlock");
-        foreach (GameObject b in placedBlocks)
-        {
-            BlockInfo info = b.GetComponent<BlockInfo>();
-            if (info != null && info.typeIndex == typeIndex)
-            {
-                InstantiatePoof(b.transform.position);
-                PlaySE(deleteSE);
-
-                Collider2D frameHit = GetColliderAtPos(b.transform.position, "DropFrame");
-                if (frameHit != null) frameHit.GetComponent<DynamicDropFrame>()?.ResetScale();
-
-                Destroy(b);
-                blockTypes[typeIndex].currentCount--;
-                break;
-            }
-        }
     }
 
     void UpdateDraggingPosition()
@@ -283,8 +207,6 @@ public class BlockManager : MonoBehaviour
             }
 
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
-
-            SpriteRenderer[] allPreviewSRs = previewBlock.GetComponentsInChildren<SpriteRenderer>();
 
             if (blockHit != null)
             {
@@ -326,6 +248,7 @@ public class BlockManager : MonoBehaviour
         }
     }
 
+    // ★修正：ロックチェックを削除し、いつでも上書き配置可能に
     void DropBlock()
     {
         Vector3 mousePos = GetMouseWorldPosition();
@@ -336,23 +259,9 @@ public class BlockManager : MonoBehaviour
             Vector3 snapPos = frameHit.transform.position;
             Collider2D blockHit = GetColliderAtPos(snapPos, "PlacedBlock");
 
-            // すでに置いてあるブロックがロックされていたら上書き不可
+            // すでにブロックがあるなら削除して上書き
             if (blockHit != null)
             {
-                PlacedBlockMarker existingMarker = blockHit.GetComponent<PlacedBlockMarker>();
-                if (existingMarker != null && existingMarker.isLocked)
-                {
-                    existingMarker.PlayLockDeniedEffect();
-                    PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
-
-                    Destroy(draggingBlock);
-                    draggingBlock = null;
-                    if (previewBlock != null) Destroy(previewBlock);
-                    if (activeFrame != null) { activeFrame.ResetScale(); activeFrame = null; }
-                    ResetOldBlockHighlight();
-                    return;
-                }
-
                 DeleteBlockAt(blockHit.gameObject);
                 InstantiatePoof(snapPos);
             }
@@ -367,8 +276,6 @@ public class BlockManager : MonoBehaviour
 
             PlacedBlockMarker marker = draggingBlock.AddComponent<PlacedBlockMarker>();
             marker.SavePlacedState();
-
-            SetupLockIconForMarker(marker);
 
             blockTypes[activeTypeIndex].currentCount++;
             draggingBlock = null;
@@ -398,12 +305,12 @@ public class BlockManager : MonoBehaviour
         Destroy(target);
     }
 
+    // ★修正：ロックチェックを削除し、いつでも右クリック削除可能に
     void DeleteBlockAtMouse()
     {
         Vector3 mousePos = GetMouseWorldPosition();
         Collider2D hit = GetColliderAtPos(mousePos, "PlacedBlock");
 
-        // ★追加：枠を右クリックした場合も同様に中のブロックを検知
         if (hit == null)
         {
             Collider2D frameHit = GetColliderAtPos(mousePos, "DropFrame");
@@ -415,14 +322,6 @@ public class BlockManager : MonoBehaviour
 
         if (hit != null)
         {
-            PlacedBlockMarker marker = hit.GetComponent<PlacedBlockMarker>();
-            if (marker != null && marker.isLocked)
-            {
-                marker.PlayLockDeniedEffect();
-                PlaySE(lockDeniedSE != null ? lockDeniedSE : startDeniedSE);
-                return;
-            }
-
             InstantiatePoof(hit.transform.position);
             PlaySE(deleteSE);
 
@@ -446,19 +345,6 @@ public class BlockManager : MonoBehaviour
         Collider2D[] hits = Physics2D.OverlapPointAll(pos);
         foreach (var hit in hits) { if (hit.CompareTag(tag)) return hit; }
         return null;
-    }
-
-    void SetupLockIconForMarker(PlacedBlockMarker marker)
-    {
-        if (padlockPrefab != null)
-        {
-            GameObject lockObj = Instantiate(padlockPrefab, marker.transform);
-
-            lockObj.transform.localPosition = padlockOffset;
-
-            lockObj.SetActive(false);
-            marker.lockIconObject = lockObj;
-        }
     }
 
     Vector3 GetMouseWorldPosition()
@@ -529,8 +415,6 @@ public class BlockManager : MonoBehaviour
         {
             if (type.individualCountText != null)
             {
-                // 無限に置けるので、「今何個置いているか（例: × 3）」を表示
-                // ※「∞」とだけ表示したい場合は "∞" に書き換えてください
                 type.individualCountText.text = "× " + type.currentCount;
             }
         }

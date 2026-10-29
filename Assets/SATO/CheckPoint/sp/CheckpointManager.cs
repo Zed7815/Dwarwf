@@ -15,14 +15,11 @@ public class CheckpointManager : MonoBehaviour
     private List<int> snapshotCollectedKeyIDs = new List<int>();
     private int snapshotStarCount = 0;
 
-    // ★追加：リフトの位置を記憶するディクショナリ
     private Dictionary<LiftBlock, Vector3> snapshotLiftPositions = new Dictionary<LiftBlock, Vector3>();
     private Dictionary<SpiderLift, Vector3> snapshotSpiderLiftPositions = new Dictionary<SpiderLift, Vector3>();
 
     private Vector3 stageDefaultSpawnPos;
     private int stageDefaultDirection = 1;
-
-    private List<PlacedBlockMarker> snapshotLockedBlocks = new List<PlacedBlockMarker>();
 
     public bool HasActiveCheckpoint => currentActiveCheckpoint != null;
 
@@ -52,19 +49,17 @@ public class CheckpointManager : MonoBehaviour
         savedPlayerDirection = playerDirection;
         currentActiveCheckpoint.SetVisualState(true);
 
-        // ★追加：初めて旗に触れた時だけメッセージを出す
         bool hasSeenCheckTutorial = PlayerPrefs.GetInt("Tutorial_Seen_Checkpoint", 0) == 1;
         if (!hasSeenCheckTutorial)
         {
             PlayerPrefs.SetInt("Tutorial_Seen_Checkpoint", 1);
             PlayerPrefs.Save();
 
-            Time.timeScale = 0f; // 一時停止してじっくり読ませる
+            Time.timeScale = 0f;
             if (TutorialMessageUI.instance != null)
             {
                 TutorialMessageUI.instance.ShowMessage("チェックポイント通過！\nリセットしても、ここからやり直せるよ！\n(クリックで再開)");
             }
-            // ※メッセージを閉じた時に時間を戻す処理が必要であればここで制御
         }
 
         CaptureSnapshot();
@@ -72,7 +67,6 @@ public class CheckpointManager : MonoBehaviour
         Debug.Log($"<color=green>【旗セーブ】「{newFlag.gameObject.name}」通過！世界のセーブ完了</color>");
     }
 
-    // ★旗を踏んだ瞬間：リフトの位置も丸ごと記録する！
     void CaptureSnapshot()
     {
         // 1. 星の記録
@@ -115,7 +109,7 @@ public class CheckpointManager : MonoBehaviour
             }
         }
 
-        // ★4. リフト（LiftBlock & SpiderLift）の現在座標を記録！
+        // 4. リフトの現在座標を記録
         snapshotLiftPositions.Clear();
         LiftBlock[] allLifts = FindObjectsByType<LiftBlock>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var lift in allLifts)
@@ -130,21 +124,9 @@ public class CheckpointManager : MonoBehaviour
             snapshotSpiderLiftPositions[sl] = sl.transform.position;
         }
 
-        PlacedBlockMarker[] allMarkers = FindObjectsByType<PlacedBlockMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        foreach (var marker in allMarkers)
-        {
-            if (marker.isUsedInThisRun || marker.isLocked)
-            {
-                marker.LockBlock(); // 南京錠をONにしてロック！
-                if (!snapshotLockedBlocks.Contains(marker))
-                {
-                    snapshotLockedBlocks.Add(marker);
-                }
-            }
-        }
+        // ★削除：ブロックの南京錠ロック処理を完全撤廃
     }
 
-    // ★リセット時に呼ばれる：リフトの位置も旗を踏んだ瞬間の高さへ復元！
     public void RestoreSnapshot()
     {
         if (!HasActiveCheckpoint) return;
@@ -209,13 +191,12 @@ public class CheckpointManager : MonoBehaviour
             if (col != null) col.enabled = !wasGotBeforeFlag;
         }
 
-        // ★4. リフトの位置を、旗を踏んだ瞬間の高さへ復元！
+        // 4. リフトの位置復元
         foreach (var pair in snapshotLiftPositions)
         {
             if (pair.Key != null)
             {
                 pair.Key.transform.position = pair.Value;
-                // 移動コルーチンを止め、物理速度をゼロにする
                 pair.Key.StopAllCoroutines();
                 var rb = pair.Key.GetComponent<Rigidbody2D>();
                 if (rb != null) rb.linearVelocity = Vector2.zero;
@@ -231,21 +212,9 @@ public class CheckpointManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"<color=cyan>【「{currentActiveCheckpoint.gameObject.name}」の状態へリフトも含めて復元完了】</color>");
+        Debug.Log($"<color=cyan>【「{currentActiveCheckpoint.gameObject.name}」の状態へ復元完了】</color>");
 
-
-        PlacedBlockMarker[] allMarkers = FindObjectsByType<PlacedBlockMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        foreach (var marker in allMarkers)
-        {
-            if (snapshotLockedBlocks.Contains(marker))
-            {
-                marker.LockBlock(); // 旗の手前で使ったものはロック維持
-            }
-            else
-            {
-                marker.UnlockBlock(); // 旗の後に置いた/触ったものはロック解除
-            }
-        }
+        // ★削除：南京錠のロック維持・解除ループを完全撤廃
     }
 
     public Vector3 GetRespawnPosition()
@@ -258,7 +227,6 @@ public class CheckpointManager : MonoBehaviour
         return currentActiveCheckpoint != null ? savedPlayerDirection : stageDefaultDirection;
     }
 
-    // 最初からやり直す（全リセット）用：リフトの位置データも初期化
     public void ClearCheckpoint()
     {
         if (currentActiveCheckpoint != null)
@@ -274,11 +242,6 @@ public class CheckpointManager : MonoBehaviour
         snapshotSpiderLiftPositions.Clear();
         snapshotStarCount = 0;
 
-        PlacedBlockMarker[] allMarkers = FindObjectsByType<PlacedBlockMarker>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        foreach (var marker in allMarkers)
-        {
-            marker.UnlockBlock();
-        }
-        snapshotLockedBlocks.Clear();
+        // ★削除：南京錠の初期化処理を完全撤廃
     }
 }

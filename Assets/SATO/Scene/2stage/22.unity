@@ -9170,6 +9170,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: fadein
       objectReference: {fileID: 0}
+    - target: {fileID: 6713848981442890908, guid: ab2fa2bc207558c43a947bb38ba68a6a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
