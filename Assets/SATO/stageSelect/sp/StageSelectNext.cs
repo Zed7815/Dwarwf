@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class StageSelectNest : MonoBehaviour
 {
@@ -78,6 +79,18 @@ public class StageSelectNest : MonoBehaviour
 
     void Update()
     {
+
+        // StageSelectNest.cs の Update() の先頭に追加
+        if ((Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) || Input.GetKeyDown(KeyCode.L))
+        {
+            StageSelectManager ssm = FindObjectOfType<StageSelectManager>();
+            if (ssm != null) ssm.UnlockAllStages();
+        }
+
+        // ★追加：フェード中（シーン遷移中）ならクリック判定を一切行わない！
+        if (StageSelectPopupButton.isAnyTransitioning) return;
+
+        // ポップアップが開いている時に画面の他の場所をクリックしたら閉じる
         if (popupRoot != null && popupRoot.activeSelf)
         {
             if (Input.GetMouseButtonDown(0))
@@ -163,6 +176,9 @@ public class StageSelectNest : MonoBehaviour
 
     void OnMouseEnter()
     {
+        // 遷移中ならホバー枠を出さない
+        if (StageSelectPopupButton.isAnyTransitioning) return;
+
         if (isNestUnlocked && (popupRoot == null || !popupRoot.activeSelf))
         {
             if (nestHoverFrame != null) nestHoverFrame.SetActive(true);
@@ -177,6 +193,8 @@ public class StageSelectNest : MonoBehaviour
 
     void OnMouseDown()
     {
+        // ★追加：遷移中ならクリックを完全無視！
+        if (StageSelectPopupButton.isAnyTransitioning) return;
         if (!isNestUnlocked) return;
 
         CloseAllOtherPopups(this);

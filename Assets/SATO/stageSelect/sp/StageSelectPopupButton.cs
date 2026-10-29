@@ -3,20 +3,29 @@ using System.Collections;
 
 public class StageSelectPopupButton : MonoBehaviour
 {
-    [Header("UI演出参照")]
-    [Tooltip("マウスを乗せた時に表示する赤い枠Sprite")]
+    // ★追加：画面全体の「遷移中ロック」フラグ（どこをクリックしても無視させる）
+    public static bool isAnyTransitioning = false;
+
+    [Header("ホバー枠演出参照")]
     public GameObject hoverFrameObject;
-    [Tooltip("クリア済みで星未獲得時に表示するビックリマーク")]
+    public SpriteRenderer hoverFrameRenderer;
+
+    [Header("ホバー枠の切り替え設定（画像 ＆ 色）")]
+    public Sprite normalHoverSprite;
+    public Color normalHoverColor = Color.white;
+    public Sprite clearedHoverSprite;
+    public Color clearedHoverColor = Color.yellow;
+
+    [Header("UI演出参照")]
     public GameObject missingStarVisual;
 
-    [Header("★演出スクリプト参照")]
-    [Tooltip("黒い板で暗転させるnextsceneスクリプト（空なら自動でシーン内から探します）")]
+    [Header("演出スクリプト参照")]
     public nextscene fadeOutScript;
 
     [Header("Animatorステート名")]
-    public string lockedStateName = "Locked";       // 挑戦不可時のidol
-    public string availableStateName = "Available"; // 挑戦可能時のidol
-    public string clearedStateName = "Cleared";     // クリア済み時のidol
+    public string lockedStateName = "Locked";
+    public string availableStateName = "Available";
+    public string clearedStateName = "Cleared";
 
     [Header("SE設定")]
     public AudioClip hoverSE;
@@ -27,34 +36,46 @@ public class StageSelectPopupButton : MonoBehaviour
     private AudioSource audioSource;
 
     private bool isUnlocked = false;
+    private bool isStageCleared = false;
     private string targetSceneName;
     private GimmickType targetGimmick;
     private StageSelectNest parentNest;
     private string currentStateName;
-    private bool isTransitioning = false; // 二重クリック防止フラグ
 
     void Awake()
     {
+        isAnyTransitioning = false; // シーン開始時にロック解除
         anim = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
-        if (hoverFrameObject != null) hoverFrameObject.SetActive(false);
+        if (hoverFrameObject != null)
+        {
+            if (hoverFrameRenderer == null)
+            {
+                hoverFrameRenderer = hoverFrameObject.GetComponent<SpriteRenderer>()
+                                   ?? hoverFrameObject.GetComponentInChildren<SpriteRenderer>();
+            }
+            hoverFrameObject.SetActive(false);
+        }
+
         if (fadeOutScript == null) fadeOutScript = FindObjectOfType<nextscene>();
     }
 
     void OnEnable()
     {
-        isTransitioning = false;
         PlayCurrentAnimation();
     }
 
     public void SetupButton(bool unlocked, bool isCleared, bool hasStar, bool hasStarFeatureInStage, string sceneName, GimmickType gimmick, StageSelectNest nest)
     {
         isUnlocked = unlocked;
+        isStageCleared = isCleared;
         targetSceneName = sceneName;
         targetGimmick = gimmick;
         parentNest = nest;
+
+        UpdateHoverFrameVisual();
 
         if (!isUnlocked) currentStateName = lockedStateName;
         else if (isCleared) currentStateName = clearedStateName;
@@ -71,6 +92,29 @@ public class StageSelectPopupButton : MonoBehaviour
         if (hoverFrameObject != null) hoverFrameObject.SetActive(false);
     }
 
+    void UpdateHoverFrameVisual()
+    {
+        if (hoverFrameRenderer == null && hoverFrameObject != null)
+        {
+            hoverFrameRenderer = hoverFrameObject.GetComponent<SpriteRenderer>()
+                               ?? hoverFrameObject.GetComponentInChildren<SpriteRenderer>();
+        }
+
+        if (hoverFrameRenderer != null)
+        {
+            if (isStageCleared)
+            {
+                if (clearedHoverSprite != null) hoverFrameRenderer.sprite = clearedHoverSprite;
+                hoverFrameRenderer.color = clearedHoverColor;
+            }
+            else
+            {
+                if (normalHoverSprite != null) hoverFrameRenderer.sprite = normalHoverSprite;
+                hoverFrameRenderer.color = normalHoverColor;
+            }
+        }
+    }
+
     public void PlayCurrentAnimation()
     {
         if (anim == null) anim = GetComponent<Animator>();
@@ -84,8 +128,9 @@ public class StageSelectPopupButton : MonoBehaviour
 
     void OnMouseEnter()
     {
-        if (isUnlocked && !isTransitioning)
+        if (isUnlocked && !isAnyTransitioning)
         {
+            UpdateHoverFrameVisual();
             if (hoverFrameObject != null) hoverFrameObject.SetActive(true);
             if (hoverSE != null && audioSource != null) audioSource.PlayOneShot(hoverSE);
         }
@@ -98,7 +143,8 @@ public class StageSelectPopupButton : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (isTransitioning) return;
+        // 遷移中なら連打を完全無視
+        if (isAnyTransitioning) return;
 
         if (isUnlocked)
         {
@@ -110,20 +156,21 @@ public class StageSelectPopupButton : MonoBehaviour
         }
     }
 
-    // ★フェード演出を挟んでからシーンを読み込む処理
     IEnumerator LoadSequence()
     {
-        isTransitioning = true;
+        isAnyTransitioning = true;
+
+        // ★追加：遊んだ巣穴の番号を保存する！
+        if (parentNest != null)
+        {
+            PlayerPrefs.SetInt("LastSelectedNest", parentNest.nestIndex);
+            PlayerPrefs.Save();
+        }
 
         if (clickSE != null && audioSource != null) audioSource.PlayOneShot(clickSE);
 
-        // ★修正点1：ここで ClosePopup() を呼ぶと自分自身が非アクティブになってエラーになるため、呼ばない！
-        // （黒幕が降りて画面全体が隠れるため、閉じる必要はありません）
-
-        // 黒幕が降りてくるアニメーションを実行
         if (fadeOutScript != null)
         {
-            // ★修正点2：fadeOutScript 自身にコルーチンを実行させる（最も安全）
             yield return fadeOutScript.StartCoroutine(fadeOutScript.endKuro());
         }
 

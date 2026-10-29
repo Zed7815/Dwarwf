@@ -29,6 +29,7 @@ public class GoalPoint : MonoBehaviour
 
     private bool isGoalReached = false;
 
+
     private void Start()
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
@@ -84,6 +85,10 @@ public class GoalPoint : MonoBehaviour
 
         // 2. ★巣のクリア判定セーブ
         string clearKey = isEasyStage ? $"Nest_{nestIndex}_Easy_Cleared" : $"Nest_{nestIndex}_Hard_Cleared";
+
+        PlayerPrefs.SetInt("LastSelectedNest", nestIndex);
+        PlayerPrefs.Save();
+
         PlayerPrefs.SetInt(clearKey, 1);
         Debug.Log($"<color=green>【クリア記録】{clearKey} を保存しました！</color>");
 

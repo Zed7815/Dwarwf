@@ -36,9 +36,11 @@ public class StageSelectCameraController : MonoBehaviour
     public Color darkColor = new Color(0.2f, 0.2f, 0.2f, 1f);
     public AnimationCurve darknessCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
-    [Header("ステージから戻った時の設定")]
-    public Button[] stageButtons;
-    public float playerYOffset = 1.2f;
+    [Header("ステージから戻った時の設定（巣穴連動）")]
+    [Tooltip("手動で巣穴を登録したい場合（空でも自動検索されます）")]
+    public StageSelectNest[] stageNests;
+    [Tooltip("巣穴の上に自機が立つ高さ（Y軸オフセット）")]
+    public float playerYOffset = 0.8f;
 
     void Start()
     {
@@ -57,67 +59,77 @@ public class StageSelectCameraController : MonoBehaviour
     {
         if (isIntroPlaying) return;
 
-        HandleCameraScroll(); // ドラッグからスクロールに変更
+        HandleCameraScroll();
         UpdateRockBrightness();
         UpdateAnimationState();
     }
 
-    // ★修正：ホイールをコロコロして移動する処理
     void HandleCameraScroll()
     {
         if (Camera.main == null) return;
 
-        // ホイールの回転量を取得
-        float scrollValue = Mouse.current.scroll.ReadValue().y;
+        float scrollValue = Mouse.current != null ? Mouse.current.scroll.ReadValue().y : Input.mouseScrollDelta.y;
 
         if (Mathf.Abs(scrollValue) > 0.1f)
         {
-            // 移動量を計算（下回しで右へ、上回しで左へ）
             float moveX = -scrollValue * scrollSensitivity;
             Vector3 nextPos = transform.position + new Vector3(moveX, 0, 0);
             nextPos.x = Mathf.Clamp(nextPos.x, minX, maxX);
             transform.position = nextPos;
 
-            // プレイヤーの演出用タイマーと向き
             stopTimer = walkStopDelay;
             if (playerSR != null)
             {
-                if (moveX > 0) playerSR.flipX = false; // 右へ
-                else if (moveX < 0) playerSR.flipX = true; // 左へ
+                if (moveX > 0) playerSR.flipX = false;
+                else if (moveX < 0) playerSR.flipX = true;
             }
         }
     }
 
-    // --- 以下、既存の演出ロジック（変更なし） ---
-    // StageSelectCameraController.cs の SetPlayerAtClearedStage を修正
-
     void SetPlayerAtClearedStage()
     {
-        // ★【修正】StageCleared ではなく、保存しておいた LastSelectedStage を使う
-        // 保存されていない場合（初めての起動など）はデフォルトで1にする
-        int lastPlayedStage = PlayerPrefs.GetInt("LastSelectedStage", 1);
+        int lastNestIndex = PlayerPrefs.GetInt("LastSelectedNest", 1);
 
-        // インデックスは番号マイナス1
-        int targetIndex = Mathf.Max(0, lastPlayedStage - 1);
+        Vector3 targetNestPos = Vector3.zero;
+        bool found = false;
 
-        if (stageButtons != null && targetIndex < stageButtons.Length && stageButtons[targetIndex] != null)
+        // 1. 自動登録されている巣穴リストから検索
+        StageSelectNest targetNest = StageSelectNest.allNests.Find(n => n != null && n.nestIndex == lastNestIndex);
+        if (targetNest != null)
         {
-            Vector3 buttonWorldPos = stageButtons[targetIndex].transform.position;
+            targetNestPos = targetNest.transform.position;
+            found = true;
+        }
+        // 2. Inspectorで手動登録されていた場合のフォールバック
+        else if (stageNests != null && stageNests.Length > 0)
+        {
+            int idx = Mathf.Clamp(lastNestIndex - 1, 0, stageNests.Length - 1);
+            if (stageNests[idx] != null)
+            {
+                targetNestPos = stageNests[idx].transform.position;
+                found = true;
+            }
+        }
 
-            // カメラの位置を調整
-            float camX = Mathf.Clamp(buttonWorldPos.x, minX, maxX);
+        if (found)
+        {
+            float camX = Mathf.Clamp(targetNestPos.x, minX, maxX);
             transform.position = new Vector3(camX, transform.position.y, transform.position.z);
 
             UpdateRockBrightness();
 
-            // プレイヤーの位置をボタンの上に配置
-            playerAnimator.transform.position = new Vector3(
-                buttonWorldPos.x,
-                buttonWorldPos.y + playerYOffset,
-                playerAnimator.transform.position.z
-            );
+            if (playerAnimator != null)
+            {
+                playerAnimator.transform.position = new Vector3(
+                    targetNestPos.x,
+                    targetNestPos.y + playerYOffset,
+                    playerAnimator.transform.position.z
+                );
 
-            playerAnimator.SetBool(animBoolName, false);
+                playerAnimator.SetBool(animBoolName, false);
+            }
+
+            Debug.Log($"<color=green>【自回復帰】巣穴 {lastNestIndex} の上に自機を配置しました</color>");
         }
     }
 

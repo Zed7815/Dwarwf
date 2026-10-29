@@ -10,18 +10,17 @@ using TMPro;
 public class StageSelectManager : MonoBehaviour
 {
     [Header("左上の図鑑ボタン（シーン移動時に消す用）")]
-    public GameObject openBookButton; // ★追加：左上の本ボタンをドラッグ＆ドロップ
+    public GameObject openBookButton;
 
-    // 各ステージの設定をまとめるクラス
     [System.Serializable]
     public class StageSetting
     {
-        public string stageName;           // 識別用（例：Stage1）
-        public Button button;              // ステージボタン
-        public string sceneName;           // 遷移先シーン名
-        public GimmickType stageGimmick;　 // このステージで紹介したいギミックを選択
-        public GameObject animalVisual;    // クリア時に出る動物
-        public GameObject missingStarVisual; // 【追加】クリア済みかつ星未獲得時に出るビックリマーク等
+        public string stageName;
+        public Button button;
+        public string sceneName;
+        public GimmickType stageGimmick;
+        public GameObject animalVisual;
+        public GameObject missingStarVisual;
     }
 
     [Header("ステージ別設定")]
@@ -61,7 +60,6 @@ public class StageSelectManager : MonoBehaviour
         UpdateStarCountUI();
         RefreshStageButtons();
 
-        // ★追加：ステージ1をクリアして戻ってきた時、かつまだこのチュートリアルを見ていない場合
         int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
         bool hasSeenBookTutorial = PlayerPrefs.GetInt("Tutorial_Seen_SelectBook", 0) == 1;
 
@@ -69,8 +67,6 @@ public class StageSelectManager : MonoBehaviour
         {
             PlayerPrefs.SetInt("Tutorial_Seen_SelectBook", 1);
             PlayerPrefs.Save();
-
-            // 少し遅れてメッセージを表示（画面がフェードインし終わるのを待つ）
             StartCoroutine(ShowBookTutorialDelay());
         }
     }
@@ -86,7 +82,15 @@ public class StageSelectManager : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) UnlockAllStages();
+        // ★新旧入力システム両対応で確実にLキーを検知
+        bool lKeyPressed = false;
+        if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame) lKeyPressed = true;
+        if (Input.GetKeyDown(KeyCode.L)) lKeyPressed = true;
+
+        if (lKeyPressed)
+        {
+            UnlockAllStages();
+        }
     }
 
     public void RefreshStageButtons()
@@ -106,16 +110,13 @@ public class StageSelectManager : MonoBehaviour
             setting.button.interactable = isUnlocked;
             setting.button.onClick.RemoveAllListeners();
 
-            // 1. 動物ビジュアルの表示切り替え（直接指定）
             if (setting.animalVisual != null)
             {
                 setting.animalVisual.SetActive(isActuallyCleared);
             }
 
-            // 2. 星未獲得ビジュアルの表示切り替え（直接指定）
             if (setting.missingStarVisual != null)
             {
-                // 「クリア済み」かつ「星を持っていない」時だけ表示
                 bool shouldShowWarning = (isActuallyCleared && !hasStar);
                 setting.missingStarVisual.SetActive(shouldShowWarning);
             }
@@ -152,21 +153,56 @@ public class StageSelectManager : MonoBehaviour
         if (totalStarText != null) totalStarText.text = totalStars.ToString();
     }
 
-    void UnlockAllStages()
+    // ★ここを巣穴システム完全対応に修正！
+    public void UnlockAllStages()
     {
-        PlayerPrefs.SetInt("StageCleared", stageSettings.Count + 1);
-        for (int i = 1; i <= 20; i++) PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
+        // 1. 巣穴（Nest）の数を計算（最低でも10個分保存）
+        int totalNests = Mathf.Max(10, StageSelectNest.allNests.Count);
+        if (stageSettings != null && stageSettings.Count > 0)
+        {
+            totalNests = Mathf.Max(totalNests, stageSettings.Count);
+        }
 
-        // ★追加：エンディング入り口も強制的に解放する
+        // 2. 巣穴システム用のセーブデータを全解放
+        PlayerPrefs.SetInt("NestClearedCount", totalNests);
+        PlayerPrefs.SetInt("StageCleared", totalNests + 1);
+
+        for (int i = 1; i <= totalNests; i++)
+        {
+            PlayerPrefs.SetInt($"Nest_{i}_Easy_Cleared", 1); // 簡単クリア
+            PlayerPrefs.SetInt($"Nest_{i}_Hard_Cleared", 1); // 難しいクリア
+        }
+
+        // 3. 星も全ステージ（1〜30）獲得済みにする
+        for (int i = 1; i <= 30; i++)
+        {
+            PlayerPrefs.SetInt("StarCollected_Stage_" + i, 1);
+        }
+
+        // 4. エンディング・最終面フラグも解放
         PlayerPrefs.SetInt("GameFullCleared", 1);
-
         PlayerPrefs.Save();
+
+        // 5. ★最重要：画面上のすべての巣穴（StageSelectNest）に「見た目を更新せよ！」と命令を送る
+        foreach (var nest in StageSelectNest.allNests)
+        {
+            if (nest != null)
+            {
+                nest.RefreshNestStatus();
+            }
+        }
+
+        // 6. UIと各ボタン・ロック表示をすべて更新
         UpdateStarCountUI();
         RefreshStageButtons();
 
-        // ★追加：シーン内の入口スクリプトに「今すぐ表示して」と命令を送る
+        FinalStageLock fsl = FindObjectOfType<FinalStageLock>();
+        if (fsl != null) fsl.RefreshLockStatus();
+
         FinalEntrance entrance = FindObjectOfType<FinalEntrance>();
         if (entrance != null) entrance.RefreshEntrance();
+
+        Debug.Log("<color=green>【デバッグ】Lキー入力：全巣穴・全難易度（簡単/難しい）・全スターを完全開放しました！</color>");
     }
 
     void AddHoverEvent(Button btn)
@@ -188,19 +224,15 @@ public class StageSelectManager : MonoBehaviour
         if (audioSource != null && clickSE != null) audioSource.PlayOneShot(clickSE);
         if (audioSource != null && enterSE != null) audioSource.PlayOneShot(enterSE);
 
-        // ★【ここが解決のキモ！】
-        // 黒い板が降りてくる「前」に、左上の本ボタンを即座に消す！
         if (openBookButton != null)
         {
             openBookButton.SetActive(false);
         }
-        // InGameMenuController側で管理しているボタンも念のため即座に消す
         if (InGameMenuController.instance != null && InGameMenuController.instance.openBookButtonInSelect != null)
         {
             InGameMenuController.instance.openBookButtonInSelect.SetActive(false);
         }
 
-        // ボタンが綺麗に消えた画面の上に、黒い板がスッと降りてくる
         if (fadeOutScript != null)
         {
             yield return StartCoroutine(fadeOutScript.endKuro());
@@ -208,7 +240,6 @@ public class StageSelectManager : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(0.5f);
 
-        // ステージを読み込む
         SceneLoader.Load(sceneName, gimmick);
     }
 }
