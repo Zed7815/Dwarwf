@@ -4,7 +4,14 @@ using System.Collections;
 
 public class GoalPoint : MonoBehaviour
 {
-    public int thisStageNumber;
+    [Header("巣穴・難易度設定")]
+    [Tooltip("このステージが属する巣の番号（1, 2, 3...）")]
+    public int nestIndex = 1;
+    [Tooltip("チェックを入れると『簡単』、外すと『難しい』ステージとして記録")]
+    public bool isEasyStage = true;
+
+    [Header("ステージ番号設定（星や既存システム用）")]
+    public int thisStageNumber = 1;
 
     [Header("演出設定")]
     public nextscene nextSceneScript;
@@ -31,11 +38,7 @@ public class GoalPoint : MonoBehaviour
     {
         if (collision.CompareTag("Player") && !isGoalReached)
         {
-
-            if (WarpEntrance.isAnyWarping)
-            {
-                return;
-            }
+            if (WarpEntrance.isAnyWarping) return;
 
             isGoalReached = true;
 
@@ -44,8 +47,6 @@ public class GoalPoint : MonoBehaviour
 
             if (pWalk != null)
             {
-                // ★修正：空中にいる（着地していない）場合は、すぐに止めずに
-                // 「地面に降りるまで少し待つ（または落下させる）」処理を挟む！
                 StartCoroutine(StopPlayerWhenGrounded(pWalk));
             }
 
@@ -56,25 +57,16 @@ public class GoalPoint : MonoBehaviour
     IEnumerator StopPlayerWhenGrounded(Player_walk pWalk)
     {
         Rigidbody2D rb = pWalk.GetComponent<Rigidbody2D>();
-
-        // プレイヤーが地面（Grounded）に触れるまで、あるいは0.5秒経つまで待つ
         float timeout = 0.5f;
         while (timeout > 0)
         {
-            // Player_walkの中にある地面判定がtrueになったら終了
-            // ※もしPlayer_walkのisGroundedがprivateなら、Rigidbodyの縦速度がほぼ0になったらでもOKです
-            if (rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.05f)
-            {
-                break;
-            }
+            if (rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.05f) break;
             timeout -= Time.deltaTime;
             yield return null;
         }
 
-        // 1. すべてのコルーチンを完全停止
         pWalk.ForceStopAbilities();
 
-        // 2. 物理演算をフリーズさせてピタッと止める
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
@@ -90,14 +82,28 @@ public class GoalPoint : MonoBehaviour
             audioSource.PlayOneShot(goalSE);
         }
 
-        // 2. セーブデータの処理
-        int clearedStage = PlayerPrefs.GetInt("StageCleared", 0);
-        if (thisStageNumber > clearedStage)
+        // 2. ★巣のクリア判定セーブ
+        string clearKey = isEasyStage ? $"Nest_{nestIndex}_Easy_Cleared" : $"Nest_{nestIndex}_Hard_Cleared";
+        PlayerPrefs.SetInt(clearKey, 1);
+        Debug.Log($"<color=green>【クリア記録】{clearKey} を保存しました！</color>");
+
+        // 簡単と難しいの両方がクリアされたかチェック
+        bool easyDone = PlayerPrefs.GetInt($"Nest_{nestIndex}_Easy_Cleared", 0) == 1;
+        bool hardDone = PlayerPrefs.GetInt($"Nest_{nestIndex}_Hard_Cleared", 0) == 1;
+
+        if (easyDone && hardDone)
         {
-            PlayerPrefs.SetInt("StageCleared", thisStageNumber);
+            // 両方クリアなら巣全体のクリア数を更新
+            int currentNestCleared = PlayerPrefs.GetInt("NestClearedCount", 0);
+            if (nestIndex > currentNestCleared)
+            {
+                PlayerPrefs.SetInt("NestClearedCount", nestIndex);
+                PlayerPrefs.SetInt("StageCleared", nestIndex); // 図鑑等の連動用
+                Debug.Log($"<color=yellow>【巣完全制覇】巣 {nestIndex} を完全クリアしました！</color>");
+            }
         }
 
-        // 星の獲得セーブ（二重ガード）
+        // 星の獲得セーブ
         bool hasStar = false;
         if (GameManager.instance != null)
         {
@@ -106,8 +112,8 @@ public class GoalPoint : MonoBehaviour
 
         if (hasStar)
         {
-            PlayerPrefs.SetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 1);
-            Debug.Log($"<color=yellow>【ゴール】ステージ {GameManager.instance.stageNumber} の星を正常に保存しました！</color>");
+            PlayerPrefs.SetInt("StarCollected_Stage_" + thisStageNumber, 1);
+            Debug.Log($"<color=yellow>【星獲得】ステージ {thisStageNumber} の星を保存しました！</color>");
         }
 
         PlayerPrefs.Save();
@@ -118,10 +124,10 @@ public class GoalPoint : MonoBehaviour
         if (StageClearPopup.instance != null)
         {
             StageClearPopup.instance.ShowClearPopup();
-            yield break; // ★ここで完全に停止し、ボタン操作を待つ！
+            yield break;
         }
 
-        // --- 以下、万が一ポップアップが無い場合のフォールバック ---
+        // フォールバック
         if (nextSceneScript != null)
         {
             yield return StartCoroutine(nextSceneScript.endKuro());
@@ -129,13 +135,7 @@ public class GoalPoint : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(0.5f);
 
-        if (isFinalStage)
-        {
-            SceneManager.LoadScene(endingSceneName);
-        }
-        else
-        {
-            SceneLoader.Load("StageSelect", returnGimmickType);
-        }
+        if (isFinalStage) SceneManager.LoadScene(endingSceneName);
+        else SceneLoader.Load("StageSelect", returnGimmickType);
     }
 }
