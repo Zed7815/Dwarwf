@@ -332,7 +332,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
-  previewDirection: -1
+  previewDirection: 1
   enableBirdFlight: 0
   birdFlightDistance: 4
   lerpSpeed: 8
@@ -686,7 +686,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05592e980819a73459e4fbd2e43dbabf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
-  previewDirection: -1
+  previewDirection: 1
   enableBirdFlight: 0
   birdFlightDistance: 4
   lerpSpeed: 8

@@ -46,17 +46,31 @@ public class TutorialManager : MonoBehaviour
     }
 
     // カメラの移動(Update)が完全に終わった直後の LateUpdate で実行
+    // カメラの移動(Update)が完全に終わった直後の LateUpdate で実行
     void LateUpdate()
     {
         if (gameManager == null || gameManager.blockManager == null) return;
 
         int placedCount = GetPlacedCount();
 
-        // 1. 設置ガイドの消去判定
+        // 1. 設置ガイドの消去判定 ＆ メッセージ表示
         if (!isPlacementDone && placedCount >= 1)
         {
             isPlacementDone = true;
             if (placementHand) placementHand.gameObject.SetActive(false);
+
+            // ★追加：初めてブロックを置いた時だけチュートリアルメッセージを表示！
+            bool hasSeenGhostTutorial = PlayerPrefs.GetInt("Tutorial_Seen_GhostPreview", 0) == 1;
+            if (!hasSeenGhostTutorial)
+            {
+                PlayerPrefs.SetInt("Tutorial_Seen_GhostPreview", 1);
+                PlayerPrefs.Save();
+
+                if (TutorialMessageUI.instance != null)
+                {
+                    TutorialMessageUI.instance.ShowMessage("配置した動物にカーソルを合わせると\nどんな動きをするか確認できるよ！\n(クリックで閉じる)");
+                }
+            }
         }
 
         // 2. スタートガイドの表示と【Viewport精密同期】

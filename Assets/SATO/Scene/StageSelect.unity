@@ -14567,7 +14567,7 @@ MonoBehaviour:
     sceneName: 13
     gimmick: 6
     starStageID: 13
-    hasStarFeature: 0
+    hasStarFeature: 1
   nestHoverFrame: {fileID: 778172363}
   nestHoverSE: {fileID: 8300000, guid: 483dc5fce26ea644c8de1936640c956c, type: 3}
   popupRoot: {fileID: 443620378}

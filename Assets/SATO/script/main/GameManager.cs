@@ -69,7 +69,7 @@ public class GameManager : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
-        // ★修正：Lキーで強制開始（未定義の関数を消して直接動かすように修正）
+        // Lキーで強制開始
         if (Keyboard.current.lKey.wasPressedThisFrame && currentState == GameState.Edit)
         {
             Debug.Log("Debug: Force Start");
@@ -79,13 +79,9 @@ public class GameManager : MonoBehaviour
             SetUI();
         }
 
-        // デバッグ用：Rキーでリセット
-        if (Keyboard.current.rKey.wasPressedThisFrame)
-        {
-            ResetGame();
-        }
+        // ★Rキーの判定を削除しました（画面上のリセットボタンからのみリセットされます）
 
-        // ★デバッグ用：O（オー）キーでこのステージの星データを消去＆即座に復活！
+        // デバッグ用：Oキーで星データを消去
         if (Keyboard.current.oKey.wasPressedThisFrame)
         {
             ResetStarSaveDataForDebug();

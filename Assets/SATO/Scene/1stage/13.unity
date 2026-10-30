@@ -1143,11 +1143,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 423561155264815572, guid: e4512645445a90646b28190c6720fda7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.77
+      value: 3.99
       objectReference: {fileID: 0}
     - target: {fileID: 423561155264815572, guid: e4512645445a90646b28190c6720fda7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.12
+      value: 3.47
       objectReference: {fileID: 0}
     - target: {fileID: 423561155264815572, guid: e4512645445a90646b28190c6720fda7, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2343,7 +2343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicDropFrame
   previewDirection: 1
-  enableBirdFlight: 1
+  enableBirdFlight: 0
   birdFlightDistance: 4
   lerpSpeed: 8
 --- !u!1 &1652346508 stripped
