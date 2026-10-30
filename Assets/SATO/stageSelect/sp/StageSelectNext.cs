@@ -136,7 +136,7 @@ public class StageSelectNest : MonoBehaviour
             {
                 starLockCountText.gameObject.SetActive(showLock);
                 // 文字化けを防ぐため「★」と「/」を明確に表示
-                starLockCountText.text = $"★ {currentTotalStars} / {requiredStarsToUnlock}";
+                starLockCountText.text = $" {currentTotalStars} / {requiredStarsToUnlock}";
             }
         }
         else

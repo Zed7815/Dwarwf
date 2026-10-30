@@ -40,46 +40,55 @@ public class CheckpointManager : MonoBehaviour
 
     public void ActivateCheckpoint(CheckpointFlag newFlag, int playerDirection)
     {
+        // 別の旗に切り替わった場合、古い旗をグレーに戻す
         if (currentActiveCheckpoint != null && currentActiveCheckpoint != newFlag)
         {
             currentActiveCheckpoint.SetVisualState(false);
         }
 
+        bool isNewFlag = (currentActiveCheckpoint != newFlag);
         currentActiveCheckpoint = newFlag;
         savedPlayerDirection = playerDirection;
         currentActiveCheckpoint.SetVisualState(true);
 
-        bool hasSeenCheckTutorial = PlayerPrefs.GetInt("Tutorial_Seen_Checkpoint", 0) == 1;
-        if (!hasSeenCheckTutorial)
+        // 初めて旗に触れた時だけチュートリアル表示
+        if (isNewFlag)
         {
-            PlayerPrefs.SetInt("Tutorial_Seen_Checkpoint", 1);
-            PlayerPrefs.Save();
-
-            Time.timeScale = 0f;
-            if (TutorialMessageUI.instance != null)
+            bool hasSeenCheckTutorial = PlayerPrefs.GetInt("Tutorial_Seen_Checkpoint", 0) == 1;
+            if (!hasSeenCheckTutorial)
             {
-                TutorialMessageUI.instance.ShowMessage("チェックポイント通過！\nリセットしても、ここからやり直せるよ！\n(クリックで再開)");
+                PlayerPrefs.SetInt("Tutorial_Seen_Checkpoint", 1);
+                PlayerPrefs.Save();
+
+                Time.timeScale = 0f;
+                if (TutorialMessageUI.instance != null)
+                {
+                    TutorialMessageUI.instance.ShowMessage("チェックポイント通過！\nリセットしても、ここからやり直せるよ！\n(クリックで再開)");
+                }
             }
         }
 
+        // ★通過するたびに、星や世界の状態を最新にスナップショット保存！
         CaptureSnapshot();
 
-        Debug.Log($"<color=green>【旗セーブ】「{newFlag.gameObject.name}」通過！世界のセーブ完了</color>");
+        Debug.Log($"<color=green>【旗セーブ】「{newFlag.gameObject.name}」通過！ 星の所持数({snapshotStarCount}個)を記録完了</color>");
     }
 
     void CaptureSnapshot()
     {
-        // 1. 星の記録
+        // 1. 星の確実な記録（isCollectedフラグで直接判定）
         snapshotCollectedItems.Clear();
         Item[] allItems = FindObjectsByType<Item>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var item in allItems)
         {
             Collider2D col = item.GetComponent<Collider2D>();
-            if (!item.gameObject.activeSelf || (col != null && !col.enabled))
+            // isCollectedがTrue、または非アクティブ、またはコライダーOFFなら「獲得済み」と確定
+            if (item.isCollected || !item.gameObject.activeSelf || (col != null && !col.enabled))
             {
                 snapshotCollectedItems.Add(item.gameObject);
             }
         }
+
         if (GameManager.instance != null)
         {
             snapshotStarCount = GameManager.instance.totalItemCount;
@@ -109,7 +118,7 @@ public class CheckpointManager : MonoBehaviour
             }
         }
 
-        // 4. リフトの現在座標を記録
+        // 4. リフトの記録
         snapshotLiftPositions.Clear();
         LiftBlock[] allLifts = FindObjectsByType<LiftBlock>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var lift in allLifts)
@@ -123,28 +132,29 @@ public class CheckpointManager : MonoBehaviour
         {
             snapshotSpiderLiftPositions[sl] = sl.transform.position;
         }
-
-        // ★削除：ブロックの南京錠ロック処理を完全撤廃
     }
 
     public void RestoreSnapshot()
     {
         if (!HasActiveCheckpoint) return;
 
-        // 1. 星の復元
+        // 1. 星の確実な復元
         Item[] allItems = FindObjectsByType<Item>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var item in allItems)
         {
             bool wasCollectedBeforeFlag = snapshotCollectedItems.Contains(item.gameObject);
             if (wasCollectedBeforeFlag)
             {
-                item.gameObject.SetActive(false);
+                // 旗の手前で取った星は、消えた状態を強制維持
+                item.ForceCollectedState();
             }
             else
             {
                 item.OnGimmickReset();
             }
         }
+
+        // ★GameManagerの星所持フラグとUIを直接確実に復元！
         if (GameManager.instance != null)
         {
             GameManager.instance.totalItemCount = snapshotStarCount;
@@ -153,7 +163,9 @@ public class CheckpointManager : MonoBehaviour
             {
                 GameManager.instance.hasCollectedStarInThisRun = true;
             }
-            GameManager.instance.SendMessage("UpdateItemUI", SendMessageOptions.DontRequireReceiver);
+
+            // 直接UIを更新（SendMessageを使わず確実に実行）
+            GameManager.instance.UpdateItemUI();
         }
 
         // 2. 綿ブロックの復元
@@ -161,14 +173,8 @@ public class CheckpointManager : MonoBehaviour
         foreach (var vb in allVBlocks)
         {
             bool wasVanishedBeforeFlag = snapshotVanishedBlocks.Contains(vb);
-            if (wasVanishedBeforeFlag)
-            {
-                vb.ForceVanishedState();
-            }
-            else
-            {
-                vb.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
-            }
+            if (wasVanishedBeforeFlag) vb.ForceVanishedState();
+            else vb.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
 
         // 3. 鍵の復元
@@ -191,7 +197,7 @@ public class CheckpointManager : MonoBehaviour
             if (col != null) col.enabled = !wasGotBeforeFlag;
         }
 
-        // 4. リフトの位置復元
+        // 4. リフトの復元
         foreach (var pair in snapshotLiftPositions)
         {
             if (pair.Key != null)
@@ -212,9 +218,7 @@ public class CheckpointManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"<color=cyan>【「{currentActiveCheckpoint.gameObject.name}」の状態へ復元完了】</color>");
-
-        // ★削除：南京錠のロック維持・解除ループを完全撤廃
+        Debug.Log($"<color=cyan>【チェックポイント復元】星の所持数({snapshotStarCount}個)を完全に復元しました！</color>");
     }
 
     public Vector3 GetRespawnPosition()
@@ -241,7 +245,5 @@ public class CheckpointManager : MonoBehaviour
         snapshotLiftPositions.Clear();
         snapshotSpiderLiftPositions.Clear();
         snapshotStarCount = 0;
-
-        // ★削除：南京錠の初期化処理を完全撤廃
     }
 }
