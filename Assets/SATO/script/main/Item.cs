@@ -3,7 +3,6 @@ using System.Collections;
 
 public class Item : MonoBehaviour
 {
-    // ★外部から確実に獲得状態を判定・操作できるように公開
     public bool isCollected = false;
 
     private Vector3 originPos;
@@ -25,12 +24,21 @@ public class Item : MonoBehaviour
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        if (GameManager.instance != null)
+        // ★過去に獲得済みなら最初から消す
+        if (IsAlreadySavedCollected())
         {
-            int alreadyGot = PlayerPrefs.GetInt("StarCollected_Stage_" + GameManager.instance.stageNumber, 0);
-            if (alreadyGot == 1)
+            ForceCollectedState();
+        }
+        else
+        {
+            // 未獲得なら確実に表示
+            gameObject.SetActive(true);
+            if (col != null) col.enabled = true;
+            if (sr != null)
             {
-                gameObject.SetActive(false);
+                Color c = sr.color;
+                c.a = 1f;
+                sr.color = c;
             }
         }
     }
@@ -46,7 +54,11 @@ public class Item : MonoBehaviour
                 audioSource.PlayOneShot(collectSE);
             }
 
-            GameManager.instance.AddItem();
+            if (GameManager.instance != null)
+            {
+                GameManager.instance.AddItem();
+            }
+
             StartCoroutine(CollectRoutine());
         }
     }
@@ -74,7 +86,24 @@ public class Item : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // ★チェックポイント復元用：獲得済み状態を強制適用
+    // ★修正：他のステージやイージー/ハードと絶対に混ざらない独立判定
+    public bool IsAlreadySavedCollected()
+    {
+        GoalPoint goal = FindObjectOfType<GoalPoint>();
+        if (goal != null)
+        {
+            // 巣の番号 ＋ 難易度 の専用キーだけを見る（古い番号は見ない！）
+            string key = $"Nest_{goal.nestIndex}_{(goal.isEasyStage ? "Easy" : "Hard")}_Star";
+            bool hasStar = PlayerPrefs.GetInt(key, 0) == 1;
+
+            Debug.Log($"<color=cyan>【星の出現判定】参照キー: {key} | 保存値: {PlayerPrefs.GetInt(key, 0)} ➔ {(hasStar ? "★獲得済みのため非表示" : "未獲得のため【星を表示】")}</color>");
+
+            return hasStar;
+        }
+
+        return false;
+    }
+
     public void ForceCollectedState()
     {
         StopAllCoroutines();
@@ -92,6 +121,13 @@ public class Item : MonoBehaviour
     public void OnGimmickReset()
     {
         StopAllCoroutines();
+
+        if (IsAlreadySavedCollected())
+        {
+            ForceCollectedState();
+            return;
+        }
+
         isCollected = false;
         transform.position = originPos;
 

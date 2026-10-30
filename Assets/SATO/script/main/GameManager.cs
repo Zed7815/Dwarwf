@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     public nextscene fadeInScript;
 
     [Header("ステージ番号設定")]
-    public int stageNumber; // このステージの番号 (1, 2, 3...)
+    public int stageNumber;
     public bool hasCollectedStarInThisRun = false;
 
     [Header("SE設定")]
@@ -47,9 +47,14 @@ public class GameManager : MonoBehaviour
     {
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        GameObject[] items = GameObject.FindGameObjectsWithTag("Item");
+        // ★非アクティブになっている星も含めてシーン内から漏れなく検索
+        Item[] items = FindObjectsByType<Item>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         allItems.Clear();
-        allItems.AddRange(items);
+        foreach (var it in items)
+        {
+            allItems.Add(it.gameObject);
+        }
+
         UpdateItemUI();
 
         if (fadeInScript != null)
@@ -69,7 +74,6 @@ public class GameManager : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
-        // Lキーで強制開始
         if (Keyboard.current.lKey.wasPressedThisFrame && currentState == GameState.Edit)
         {
             Debug.Log("Debug: Force Start");
@@ -79,37 +83,34 @@ public class GameManager : MonoBehaviour
             SetUI();
         }
 
-        // ★Rキーの判定を削除しました（画面上のリセットボタンからのみリセットされます）
-
-        // デバッグ用：Oキーで星データを消去
         if (Keyboard.current.oKey.wasPressedThisFrame)
         {
             ResetStarSaveDataForDebug();
         }
     }
 
-    // デバッグ用星復活関数
     public void ResetStarSaveDataForDebug()
     {
-        // 1. このステージの星セーブデータを消去
         PlayerPrefs.DeleteKey("StarCollected_Stage_" + stageNumber);
+        GoalPoint goal = FindObjectOfType<GoalPoint>();
+        if (goal != null)
+        {
+            PlayerPrefs.DeleteKey($"Nest_{goal.nestIndex}_{(goal.isEasyStage ? "Easy" : "Hard")}_Star");
+        }
         PlayerPrefs.Save();
 
-        // 2. 状態変数をリセット
         hasCollectedStarInThisRun = false;
         totalItemCount = 0;
         UpdateItemUI();
 
-        // 3. シーン内のすべての星を強制的に新品状態で復活！
         Item[] allStageItems = FindObjectsByType<Item>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var item in allStageItems)
         {
             item.gameObject.SetActive(true);
-            // public/privateに関係なく呼べる安全なSendMessageを使用
             item.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
         }
 
-        Debug.Log($"<color=yellow>【デバッグ】ステージ {stageNumber} の星セーブデータを削除し、星を完全復活させました！</color>");
+        Debug.Log($"<color=yellow>【デバッグ】星データをリセットし、完全復活させました</color>");
     }
 
     public void AddItem()
@@ -121,17 +122,13 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        // ★修正：「すべて置き切らないとスタートできない」ガードを完全に削除！
-        // 0個でも、1個でも、何個置いていても即座にスタートします。
+        playCount++;
 
-        playCount++; // 実行回数をカウント
-
-        PlaySE(startGameSE); // 正常な開始音
+        PlaySE(startGameSE);
         currentState = GameState.Play;
         player.StartMove();
         if (editUIController != null) editUIController.HideEditUI();
 
-        // 2回目以降のスタートなら早送りボタンを表示
         if (ffScript != null)
         {
             if (playCount >= 2) ffScript.SetUIState("Active");
@@ -143,32 +140,11 @@ public class GameManager : MonoBehaviour
         SetUI();
     }
 
-    // 倍速ボタンを押した瞬間の処理
-    public void SetFastSpeed(bool isFast)
-    {
-        if (isFast)
-        {
-            Time.timeScale = 3.0f; // 3倍速
-
-            // ★最重要：物理演算の間隔を広げて、通常時と同じ計算負荷（1秒に50回）に抑える！
-            Time.fixedDeltaTime = 0.02f * Time.timeScale;
-
-            // ★最重要：計算遅れが発生しても、最大0.1秒分で打ち切る（デススパイラルの防止）
-            Time.maximumDeltaTime = 0.1f;
-        }
-        else
-        {
-            Time.timeScale = 1.0f;
-            Time.fixedDeltaTime = 0.02f;
-            Time.maximumDeltaTime = 0.333f;
-        }
-    }
     public void ResetGame()
     {
         Time.timeScale = 1.0f;
         Time.fixedDeltaTime = 0.02f;
         Time.maximumDeltaTime = 0.333f;
-
 
         if (GameSpeedManager.instance != null) GameSpeedManager.instance.ResetToBaseSpeed();
         else Time.timeScale = 1.0f;
@@ -200,17 +176,25 @@ public class GameManager : MonoBehaviour
         player.ResetPosition();
         if (editUIController != null) editUIController.ShowEditUI();
 
-        // 4. ブロックの状態とカウントのリセット
+        // 4. ブロックのリセット
         if (blockManager != null) blockManager.ResetAllBlocks();
 
-        // 5. アイテムの初期化
+        // 5. ★アイテムの初期化（セーブデータがある星は復活させない！）
         totalItemCount = 0;
         foreach (GameObject item in allItems)
         {
             if (item != null)
             {
-                item.SetActive(true);
-                item.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+                Item itemComp = item.GetComponent<Item>();
+                if (itemComp != null && itemComp.IsAlreadySavedCollected())
+                {
+                    itemComp.ForceCollectedState();
+                }
+                else
+                {
+                    item.SetActive(true);
+                    item.SendMessage("OnGimmickReset", SendMessageOptions.DontRequireReceiver);
+                }
             }
         }
 
@@ -227,9 +211,20 @@ public class GameManager : MonoBehaviour
         SetUI();
     }
 
+    // ★最初から星がないステージはUIを隠す！
     public void UpdateItemUI()
     {
-        if (itemCountText != null) itemCountText.text = "Star: " + totalItemCount;
+        if (itemCountText == null) return;
+
+        // シーン内に星が1つもないステージなら、UIを非表示にする
+        if (allItems == null || allItems.Count == 0)
+        {
+            itemCountText.gameObject.SetActive(false);
+            return;
+        }
+
+        itemCountText.gameObject.SetActive(true);
+        itemCountText.text = "Star: " + totalItemCount;
     }
 
     void PlaySE(AudioClip clip) { if (audioSource != null && clip != null) audioSource.PlayOneShot(clip); }
